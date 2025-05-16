@@ -195,8 +195,11 @@ export default function Monthly() {
     
     // Then look for columns that might contain "total" or similar keywords
     const possibleTotalColumns = Object.keys(monthData.eData[0] || {}).filter(key => 
-      key.toLowerCase().includes('total') ||
-      key.toLowerCase().includes('all')
+      key && typeof key === 'string' && (
+        key.toLowerCase().includes('total') ||
+        key.toLowerCase().includes('all') ||
+        key.toLowerCase().includes('sum')
+      )
     );
     
     if (possibleTotalColumns.length > 0) {
@@ -204,7 +207,9 @@ export default function Monthly() {
       return possibleTotalColumns[0];
     }
     
-    return "All Employees"; // Default fallback
+    // If no total column is found, we'll calculate it by summing all individual values
+    console.log("No total column found, will sum individual values instead");
+    return "__calculated_total__"; // Special marker for calculated totals
   }, [monthData]);
 
   // Extract main line items for the table
@@ -338,21 +343,41 @@ export default function Monthly() {
       let totalAllEmployees = 0;
       const totalRow = findRow(monthData.eData, category.searchTerms);
       
-      if (totalRow) {
+      if (totalRow && totalsColumn !== "__calculated_total__") {
+        // Use the existing total column if available
         totalAllEmployees = safeExtractValue(totalRow, totalsColumn);
-      } else if (category.type === 'header' && category.children) {
-        // Calculate the total from child rows
-        category.children.forEach(child => {
-          const childRows = monthData.eData.filter(row => {
-            if (!row['Line Item']) return false;
-            const lineItem = row['Line Item'].toLowerCase();
-            return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+      } else {
+        // Calculate totals by summing all columns or using child rows
+        if (category.type === 'header' && category.children) {
+          // Sum from child categories
+          category.children.forEach(child => {
+            const childRows = monthData.eData.filter(row => {
+              if (!row['Line Item']) return false;
+              const lineItem = row['Line Item'].toLowerCase();
+              return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+            });
+            
+            childRows.forEach(row => {
+              if (totalsColumn !== "__calculated_total__") {
+                // Use the specified totals column
+                totalAllEmployees += safeExtractValue(row, totalsColumn);
+              } else {
+                // Calculate by summing all provider columns
+                columnHeaders.forEach(header => {
+                  totalAllEmployees += safeExtractValue(row, header);
+                });
+              }
+            });
           });
-          
-          childRows.forEach(row => {
-            totalAllEmployees += safeExtractValue(row, totalsColumn);
-          });
-        });
+        } else if (totalsColumn === "__calculated_total__") {
+          // Sum the column totals we already calculated
+          totalAllEmployees = Object.values(values).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+        }
+      }
+      
+      // If this is Net Income and we have financial metrics, use that instead
+      if (category.key === 'net_income' && financialMetrics) {
+        totalAllEmployees = financialMetrics.netIncome;
       }
       
       values['All Employees'] = totalAllEmployees;
@@ -404,19 +429,36 @@ export default function Monthly() {
       return { ...category, values };
     });
     
-    // Use the calculated financial metrics for the Net Income category
-    if (financialMetrics && processedItems.length > 2) {
-      // Override the total row with calculated financials
+    // Calculate Net Income row
+    if (processedItems.length > 2) {
+      // Get the Net Income row
       const netIncomeItem = processedItems[2];
       
-      // For the All Employees column, use the calculated net income
-      netIncomeItem.values['All Employees'] = financialMetrics.netIncome;
+      // Calculate total net income for 'All Employees' column
+      if (financialMetrics && financialMetrics.netIncome !== 0) {
+        // If we have calculated metrics from the actual data, use them
+        netIncomeItem.values['All Employees'] = financialMetrics.netIncome;
+      } else {
+        // Otherwise calculate from our revenue and expense items
+        const totalRevenue = processedItems[0].values['All Employees'] || 0;
+        const totalExpenses = processedItems[1].values['All Employees'] || 0;
+        netIncomeItem.values['All Employees'] = totalRevenue - totalExpenses;
+      }
       
-      // For other columns, try to calculate by taking revenue - expenses for each column
+      // Calculate net income for each individual provider column
       columnHeaders.forEach(header => {
         const columnRevenue = processedItems[0].values[header] || 0;
         const columnExpenses = processedItems[1].values[header] || 0;
         netIncomeItem.values[header] = columnRevenue - columnExpenses;
+      });
+      
+      // Log the final net income calculations
+      console.log("Net Income calculations:", {
+        total: netIncomeItem.values['All Employees'],
+        byProvider: columnHeaders.reduce((acc, header) => {
+          acc[header] = netIncomeItem.values[header];
+          return acc;
+        }, {})
       });
     }
     
