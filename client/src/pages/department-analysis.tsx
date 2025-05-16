@@ -15,11 +15,10 @@ export default function DepartmentAnalysis() {
     return extractDepartmentPerformanceData(monthlyData);
   }, [monthlyData]);
   
-  // Extract monthly performance trend
+  // Extract monthly performance trend using 'o' (other business) file data
   const monthlyTrend = useMemo(() => {
-    // This uses O files data by default as extractMonthlyPerformanceTrend is specifically
-    // configured to use O file data for departments
-    return extractMonthlyPerformanceTrend(monthlyData);
+    // Pass 'o' as the file type parameter to use Other Business data instead of Employee data
+    return extractMonthlyPerformanceTrend(monthlyData, 'o');
   }, [monthlyData]);
 
   // Generate expense categories - extract from department expense data
