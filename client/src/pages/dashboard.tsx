@@ -7,19 +7,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import KPICard from "@/components/dashboard/kpi-card";
 import NetMarginChart from "@/components/dashboard/net-margin-chart";
 import RevenueMixChart from "@/components/dashboard/revenue-mix-chart";
-import PerformersCard from "@/components/dashboard/performers-card";
+import MonthlySummaryCard from "@/components/dashboard/monthly-summary-card";
 import AncillaryRoiCard from "@/components/dashboard/ancillary-roi-card";
 import UploadBanner from "@/components/upload/upload-banner";
 import MonthlyTabs from "@/components/monthly/monthly-tabs";
 import { useStore } from "@/store/data-store";
 import { KPIData, RevenueMixItem, PerformerData, ComparisonData, MarginTrendPoint } from "@/types";
 import { parseFinancialValue } from "@/lib/csv-parser";
+import { extractMonthlySummaryData } from "@/lib/performance-utils";
 
 export default function Dashboard() {
   // Get data directly from the global store
   const { 
     uploadStatus, 
-    annualData, 
+    annualData,
+    monthlyData,
     revenueMix, 
     marginTrend,
     topPerformers,
@@ -215,18 +217,38 @@ export default function Dashboard() {
             <RevenueMixChart data={revenueMix || []} />
           </div>
 
-          {/* Top/Bottom Performers and Ancillary ROI */}
+          {/* Monthly Summary Data and Ancillary ROI */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <PerformersCard 
-              title="Top Performing Providers"
-              performers={topPerformers || []}
-              positiveValues={true}
-            />
-            <PerformersCard 
-              title="Bottom Performing Units"
-              performers={bottomPerformers || []}
-              positiveValues={false}
-            />
+            {/* Process and display monthly data from E-files (Employee/Provider) */}
+            {(() => {
+              const monthlySummary = extractMonthlySummaryData(monthlyData);
+              return (
+                <MonthlySummaryCard 
+                  title="Provider Financial Summary"
+                  fileType="e"
+                  totalRevenue={monthlySummary.e.totalRevenue}
+                  totalExpenses={monthlySummary.e.totalExpenses}
+                  netIncome={monthlySummary.e.netIncome}
+                  monthlyBreakdown={monthlySummary.e.monthlyBreakdown}
+                />
+              );
+            })()}
+            
+            {/* Process and display monthly data from O-files (Other Business) */}
+            {(() => {
+              const monthlySummary = extractMonthlySummaryData(monthlyData);
+              return (
+                <MonthlySummaryCard 
+                  title="Department Financial Summary"
+                  fileType="o"
+                  totalRevenue={monthlySummary.o.totalRevenue}
+                  totalExpenses={monthlySummary.o.totalExpenses}
+                  netIncome={monthlySummary.o.netIncome}
+                  monthlyBreakdown={monthlySummary.o.monthlyBreakdown}
+                />
+              );
+            })()}
+            
             <AncillaryRoiCard 
               comparisonData={ancillaryComparison || []}
               ancillaryMetrics={{

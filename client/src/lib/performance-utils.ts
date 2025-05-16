@@ -537,6 +537,201 @@ export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' |
 }
 
 /**
+ * Extracts monthly summary data for E and O file types
+ * Returns totals for revenue, expenses, and net income across all months
+ */
+export function extractMonthlySummaryData(monthlyData: any) {
+  if (!monthlyData) return { e: {}, o: {} };
+  
+  const result = {
+    e: {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      netIncome: 0,
+      monthlyBreakdown: [] as {month: string, revenue: number, expenses: number, net: number}[]
+    },
+    o: {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      netIncome: 0,
+      monthlyBreakdown: [] as {month: string, revenue: number, expenses: number, net: number}[]
+    }
+  };
+
+  // Standard month order for sorting
+  const monthOrder = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december'
+  ];
+  
+  // Short month names for display
+  const monthAbbrev: Record<string, string> = {
+    'january': 'Jan',
+    'february': 'Feb',
+    'march': 'Mar',
+    'april': 'Apr',
+    'may': 'May',
+    'june': 'Jun',
+    'july': 'Jul',
+    'august': 'Aug',
+    'september': 'Sep',
+    'october': 'Oct',
+    'november': 'Nov',
+    'december': 'Dec'
+  };
+
+  // Process each month for both E and O file types
+  Object.keys(monthlyData || {}).forEach(month => {
+    // Process E file data (Employee/Provider data)
+    if (monthlyData[month]?.e?.lineItems) {
+      const eData = monthlyData[month].e;
+      let revenue = 0;
+      let expenses = 0;
+      
+      // Look for total revenue in the data
+      const revenueItem = eData.lineItems.find((item: any) => 
+        item.name.includes('Total Revenue') || 
+        item.name.includes('Revenue Total') ||
+        item.name === 'Revenue'
+      );
+      
+      if (revenueItem && revenueItem.summaryValue !== undefined) {
+        revenue = parseFloat(revenueItem.summaryValue || 0);
+      } else {
+        // Sum up all revenue items
+        eData.lineItems.filter((item: any) => 
+          item.name.includes('Revenue') || 
+          item.name.includes('Income')
+        ).forEach((item: any) => {
+          if (item.summaryValue !== undefined) {
+            revenue += parseFloat(item.summaryValue || 0);
+          }
+        });
+      }
+      
+      // Look for total expenses in the data
+      const expenseItem = eData.lineItems.find((item: any) => 
+        item.name.includes('Total Expense') || 
+        item.name.includes('Expense Total') ||
+        item.name === 'Expenses'
+      );
+      
+      if (expenseItem && expenseItem.summaryValue !== undefined) {
+        expenses = parseFloat(expenseItem.summaryValue || 0);
+      } else {
+        // Sum up all expense items
+        eData.lineItems.filter((item: any) => 
+          item.name.includes('Expense') || 
+          item.name.includes('Cost')
+        ).forEach((item: any) => {
+          if (item.summaryValue !== undefined) {
+            expenses += parseFloat(item.summaryValue || 0);
+          }
+        });
+      }
+      
+      // Add to monthly breakdown
+      const displayMonth = monthAbbrev[month.toLowerCase()] || month.substring(0, 3);
+      const net = revenue - expenses;
+      
+      // Add to totals
+      result.e.totalRevenue += revenue;
+      result.e.totalExpenses += expenses;
+      result.e.netIncome += net;
+      
+      // Add to monthly breakdown
+      result.e.monthlyBreakdown.push({
+        month: displayMonth,
+        revenue,
+        expenses,
+        net
+      });
+    }
+    
+    // Process O file data (Other Business data)
+    if (monthlyData[month]?.o?.lineItems) {
+      const oData = monthlyData[month].o;
+      let revenue = 0;
+      let expenses = 0;
+      
+      // Look for total revenue in the data
+      const revenueItem = oData.lineItems.find((item: any) => 
+        item.name.includes('Total Revenue') || 
+        item.name.includes('Revenue Total') ||
+        item.name === 'Revenue'
+      );
+      
+      if (revenueItem && revenueItem.summaryValue !== undefined) {
+        revenue = parseFloat(revenueItem.summaryValue || 0);
+      } else {
+        // Sum up all revenue items
+        oData.lineItems.filter((item: any) => 
+          item.name.includes('Revenue') || 
+          item.name.includes('Income')
+        ).forEach((item: any) => {
+          if (item.summaryValue !== undefined) {
+            revenue += parseFloat(item.summaryValue || 0);
+          }
+        });
+      }
+      
+      // Look for total expenses in the data
+      const expenseItem = oData.lineItems.find((item: any) => 
+        item.name.includes('Total Expense') || 
+        item.name.includes('Expense Total') ||
+        item.name === 'Expenses'
+      );
+      
+      if (expenseItem && expenseItem.summaryValue !== undefined) {
+        expenses = parseFloat(expenseItem.summaryValue || 0);
+      } else {
+        // Sum up all expense items
+        oData.lineItems.filter((item: any) => 
+          item.name.includes('Expense') || 
+          item.name.includes('Cost')
+        ).forEach((item: any) => {
+          if (item.summaryValue !== undefined) {
+            expenses += parseFloat(item.summaryValue || 0);
+          }
+        });
+      }
+      
+      // Add to monthly breakdown
+      const displayMonth = monthAbbrev[month.toLowerCase()] || month.substring(0, 3);
+      const net = revenue - expenses;
+      
+      // Add to totals
+      result.o.totalRevenue += revenue;
+      result.o.totalExpenses += expenses;
+      result.o.netIncome += net;
+      
+      // Add to monthly breakdown
+      result.o.monthlyBreakdown.push({
+        month: displayMonth,
+        revenue,
+        expenses,
+        net
+      });
+    }
+  });
+  
+  // Sort monthly breakdowns by month order
+  result.e.monthlyBreakdown.sort((a, b) => {
+    const aIndex = Object.values(monthAbbrev).findIndex(m => m === a.month);
+    const bIndex = Object.values(monthAbbrev).findIndex(m => m === b.month);
+    return aIndex - bIndex;
+  });
+  
+  result.o.monthlyBreakdown.sort((a, b) => {
+    const aIndex = Object.values(monthAbbrev).findIndex(m => m === a.month);
+    const bIndex = Object.values(monthAbbrev).findIndex(m => m === b.month);
+    return aIndex - bIndex;
+  });
+  
+  return result;
+}
+
+/**
  * Extracts ancillary data for ROI analysis from monthly business data
  */
 export function extractAncillaryMetrics(monthlyData: any) {
