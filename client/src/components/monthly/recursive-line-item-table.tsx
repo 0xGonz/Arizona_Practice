@@ -46,7 +46,7 @@ export default function RecursiveLineItemTable({
     const isTotal = item.isTotal || item.name.toLowerCase().includes('total');
     
     return (
-      <React.Fragment>
+      <>
         <tr className={cn(
           "border-b border-neutral-border",
           isTotal ? "font-semibold bg-muted/20" : "bg-card"
@@ -75,7 +75,7 @@ export default function RecursiveLineItemTable({
         {item.children && item.children.map(child => (
           <LineItemRow key={child.id} item={child} level={level + 1} />
         ))}
-      </React.Fragment>
+      </>
     );
   };
   
