@@ -105,7 +105,7 @@ export default function DoctorPerformance() {
             </CardHeader>
             <CardContent>
               {monthlyTrend.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={320}>
                   <BarChart 
                     data={monthlyTrend}
                     margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
@@ -176,20 +176,20 @@ export default function DoctorPerformance() {
               <CardTitle>Provider Profitability</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
+              <ResponsiveContainer width="100%" height={320}>
                 <BarChart 
                   data={filteredData}
-                  margin={{ top: 10, right: 30, left: 20, bottom: 75 }}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="name" 
                     angle={-45} 
                     textAnchor="end" 
-                    height={90}
+                    height={70}
                     interval={0}
                     tick={{ fontSize: 12 }}
-                    tickMargin={25}
+                    tickMargin={10}
                   />
                   <YAxis 
                     tickFormatter={(value) => `$${value.toLocaleString()}`} 
