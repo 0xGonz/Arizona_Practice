@@ -38,15 +38,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database schema if we have a database connection
-  if (process.env.DATABASE_URL) {
-    try {
-      await pushSchema();
-      log("Database initialized successfully");
-    } catch (error) {
-      log(`Database initialization error: ${error}`);
-    }
-  }
+  // Log server startup
+  log("Server starting without database")
 
   const server = await registerRoutes(app);
 
