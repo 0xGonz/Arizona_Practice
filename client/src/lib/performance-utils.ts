@@ -294,8 +294,10 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
 /**
  * Extracts monthly performance trends from all monthly data
  * Useful for charts showing performance over time
+ * This function now supports both employee (E) and other business (O) data
+ * depending on the context in which it's used
  */
-export function extractMonthlyPerformanceTrend(monthlyData: any) {
+export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' | 'o' = 'e') {
   if (!monthlyData) return [];
   
   // Standard month order for sorting
@@ -331,20 +333,21 @@ export function extractMonthlyPerformanceTrend(monthlyData: any) {
   const months = Object.keys(monthlyData || {});
   
   months.forEach(month => {
-    const eData = monthlyData[month]?.e;
+    // Use the appropriate data source (E or O) based on the fileType parameter
+    const monthData = monthlyData[month]?.[fileType];
     
     let monthRevenue = 0;
     let monthExpenses = 0;
     
-    // Process employee data ONLY for consistency with individual month views
-    if (eData?.lineItems && Array.isArray(eData.lineItems)) {
+    // Process data if it exists for this month
+    if (monthData?.lineItems && Array.isArray(monthData.lineItems)) {
       // Look for specific line items that represent overall totals
-      const revenueTotal = eData.lineItems.find((item: any) => 
+      const revenueTotal = monthData.lineItems.find((item: any) => 
         item.name.includes('Total Revenue') ||
         item.name.includes('Revenue Total')
       );
       
-      const expenseTotal = eData.lineItems.find((item: any) => 
+      const expenseTotal = monthData.lineItems.find((item: any) => 
         item.name.includes('Total Expense') ||
         item.name.includes('Expense Total')
       );
@@ -354,7 +357,7 @@ export function extractMonthlyPerformanceTrend(monthlyData: any) {
         monthRevenue = parseFloat(revenueTotal.summaryValue || 0);
       } else {
         // Otherwise sum individual revenue items
-        const revItems = eData.lineItems.filter((item: any) => 
+        const revItems = monthData.lineItems.filter((item: any) => 
           (item.name.includes('Revenue') || item.name.includes('Income')) &&
           !item.name.includes('Total') &&
           item.summaryValue !== undefined
@@ -369,7 +372,7 @@ export function extractMonthlyPerformanceTrend(monthlyData: any) {
         monthExpenses = parseFloat(expenseTotal.summaryValue || 0);
       } else {
         // Otherwise sum individual expense items
-        const expItems = eData.lineItems.filter((item: any) => 
+        const expItems = monthData.lineItems.filter((item: any) => 
           (item.name.includes('Expense') || item.name.includes('Cost')) &&
           !item.name.includes('Total') &&
           item.summaryValue !== undefined
@@ -381,7 +384,7 @@ export function extractMonthlyPerformanceTrend(monthlyData: any) {
       }
       
       // Find Net Income line item if it exists (most accurate)
-      const netIncomeItem = eData.lineItems.find((item: any) => 
+      const netIncomeItem = monthData.lineItems.find((item: any) => 
         item.name.includes('Net Income') ||
         item.name.includes('Net Profit') ||
         item.name.includes('Net Loss')
