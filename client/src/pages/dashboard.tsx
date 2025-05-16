@@ -226,10 +226,10 @@ export default function Dashboard() {
                 <MonthlySummaryCard 
                   title="Provider Financial Summary"
                   fileType="e"
-                  totalRevenue={monthlySummary.e.totalRevenue}
-                  totalExpenses={monthlySummary.e.totalExpenses}
-                  netIncome={monthlySummary.e.netIncome}
-                  monthlyBreakdown={monthlySummary.e.monthlyBreakdown}
+                  totalRevenue={monthlySummary?.e?.totalRevenue || 0}
+                  totalExpenses={monthlySummary?.e?.totalExpenses || 0}
+                  netIncome={monthlySummary?.e?.netIncome || 0}
+                  monthlyBreakdown={monthlySummary?.e?.monthlyBreakdown || []}
                 />
               );
             })()}
@@ -241,10 +241,10 @@ export default function Dashboard() {
                 <MonthlySummaryCard 
                   title="Department Financial Summary"
                   fileType="o"
-                  totalRevenue={monthlySummary.o.totalRevenue}
-                  totalExpenses={monthlySummary.o.totalExpenses}
-                  netIncome={monthlySummary.o.netIncome}
-                  monthlyBreakdown={monthlySummary.o.monthlyBreakdown}
+                  totalRevenue={monthlySummary?.o?.totalRevenue || 0}
+                  totalExpenses={monthlySummary?.o?.totalExpenses || 0}
+                  netIncome={monthlySummary?.o?.netIncome || 0}
+                  monthlyBreakdown={monthlySummary?.o?.monthlyBreakdown || []}
                 />
               );
             })()}

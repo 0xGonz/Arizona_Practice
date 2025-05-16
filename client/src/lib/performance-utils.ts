@@ -587,52 +587,34 @@ export function extractMonthlySummaryData(monthlyData: any) {
       const eData = monthlyData[month].e;
       let revenue = 0;
       let expenses = 0;
+      let net = 0;
       
-      // Look for total revenue in the data
-      const revenueItem = eData.lineItems.find((item: any) => 
-        item.name.includes('Total Revenue') || 
-        item.name.includes('Revenue Total') ||
-        item.name === 'Revenue'
-      );
+      console.log(`Extracting monthly data for ${month} (E-file)...`);
       
-      if (revenueItem && revenueItem.summaryValue !== undefined) {
-        revenue = parseFloat(revenueItem.summaryValue || 0);
-      } else {
-        // Sum up all revenue items
-        eData.lineItems.filter((item: any) => 
-          item.name.includes('Revenue') || 
-          item.name.includes('Income')
-        ).forEach((item: any) => {
-          if (item.summaryValue !== undefined) {
-            revenue += parseFloat(item.summaryValue || 0);
-          }
-        });
+      // Go through all line items to find specific ones by exact match
+      for (const item of eData.lineItems) {
+        if (item.name === "Total Revenue") {
+          revenue = parseFloat(item.summaryValue || 0);
+          console.log(`Found Total Revenue: ${revenue}`);
+        }
+        else if (item.name === "Total Operating Expenses") {
+          expenses = parseFloat(item.summaryValue || 0);
+          console.log(`Found Total Operating Expenses: ${expenses}`);
+        }
+        else if (item.name === "Net Income") {
+          net = parseFloat(item.summaryValue || 0);
+          console.log(`Found Net Income: ${net}`);
+        }
       }
       
-      // Look for total expenses in the data
-      const expenseItem = eData.lineItems.find((item: any) => 
-        item.name.includes('Total Expense') || 
-        item.name.includes('Expense Total') ||
-        item.name === 'Expenses'
-      );
-      
-      if (expenseItem && expenseItem.summaryValue !== undefined) {
-        expenses = parseFloat(expenseItem.summaryValue || 0);
-      } else {
-        // Sum up all expense items
-        eData.lineItems.filter((item: any) => 
-          item.name.includes('Expense') || 
-          item.name.includes('Cost')
-        ).forEach((item: any) => {
-          if (item.summaryValue !== undefined) {
-            expenses += parseFloat(item.summaryValue || 0);
-          }
-        });
+      // Calculate net if we didn't find it but have revenue and expenses
+      if (net === 0 && revenue > 0 && expenses > 0) {
+        net = revenue - expenses;
+        console.log(`Calculated Net Income: ${net}`);
       }
       
       // Add to monthly breakdown
       const displayMonth = monthAbbrev[month.toLowerCase()] || month.substring(0, 3);
-      const net = revenue - expenses;
       
       // Add to totals
       result.e.totalRevenue += revenue;
@@ -653,52 +635,34 @@ export function extractMonthlySummaryData(monthlyData: any) {
       const oData = monthlyData[month].o;
       let revenue = 0;
       let expenses = 0;
+      let net = 0;
       
-      // Look for total revenue in the data
-      const revenueItem = oData.lineItems.find((item: any) => 
-        item.name.includes('Total Revenue') || 
-        item.name.includes('Revenue Total') ||
-        item.name === 'Revenue'
-      );
+      console.log(`Extracting monthly data for ${month} (O-file)...`);
       
-      if (revenueItem && revenueItem.summaryValue !== undefined) {
-        revenue = parseFloat(revenueItem.summaryValue || 0);
-      } else {
-        // Sum up all revenue items
-        oData.lineItems.filter((item: any) => 
-          item.name.includes('Revenue') || 
-          item.name.includes('Income')
-        ).forEach((item: any) => {
-          if (item.summaryValue !== undefined) {
-            revenue += parseFloat(item.summaryValue || 0);
-          }
-        });
+      // Go through all line items to find specific ones by exact match
+      for (const item of oData.lineItems) {
+        if (item.name === "Total Revenue") {
+          revenue = parseFloat(item.summaryValue || 0);
+          console.log(`Found Total Revenue (O): ${revenue}`);
+        }
+        else if (item.name === "Total Operating Expenses") {
+          expenses = parseFloat(item.summaryValue || 0);
+          console.log(`Found Total Operating Expenses (O): ${expenses}`);
+        }
+        else if (item.name === "Net Income") {
+          net = parseFloat(item.summaryValue || 0);
+          console.log(`Found Net Income (O): ${net}`);
+        }
       }
       
-      // Look for total expenses in the data
-      const expenseItem = oData.lineItems.find((item: any) => 
-        item.name.includes('Total Expense') || 
-        item.name.includes('Expense Total') ||
-        item.name === 'Expenses'
-      );
-      
-      if (expenseItem && expenseItem.summaryValue !== undefined) {
-        expenses = parseFloat(expenseItem.summaryValue || 0);
-      } else {
-        // Sum up all expense items
-        oData.lineItems.filter((item: any) => 
-          item.name.includes('Expense') || 
-          item.name.includes('Cost')
-        ).forEach((item: any) => {
-          if (item.summaryValue !== undefined) {
-            expenses += parseFloat(item.summaryValue || 0);
-          }
-        });
+      // Calculate net if we didn't find it but have revenue and expenses
+      if (net === 0 && revenue > 0 && expenses > 0) {
+        net = revenue - expenses;
+        console.log(`Calculated Net Income (O): ${net}`);
       }
       
       // Add to monthly breakdown
       const displayMonth = monthAbbrev[month.toLowerCase()] || month.substring(0, 3);
-      const net = revenue - expenses;
       
       // Add to totals
       result.o.totalRevenue += revenue;
