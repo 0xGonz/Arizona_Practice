@@ -167,250 +167,178 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
     net: number;
   }[] = [];
   
-  // Track departments we've already processed
-  const processedDepartments = new Set<string>();
-  
+  // Define the known department list based on actual data from O CSV files
+  const knownDepartments = [
+    "CBD", "Pharmacy", "DME", "Procedure Charges", "Imaging", 
+    "IncrediWear", "Massage Therapy", "MedShip", "Mobile MRI", 
+    "MRI", "NXT STIM", "Physical Therapy", "UDA", "Therapy"
+  ];
+
   // Find all available months
   const months = Object.keys(monthlyData || {});
   
-  // Process department data from 'o' (other business) type ONLY
-  // This is important for consistency with what's shown in the "Other Business" (O) monthly files
+  // Process only O-file data since these are the proper business departments
   months.forEach(month => {
-    // Try to get monthly data from o files first
-    let monthData = monthlyData[month]?.o;
-    
-    // If no 'o' data, try to get from 'e' files as fallback
-    // This is necessary because the CSV data structure may vary
-    if (!monthData?.lineItems && monthlyData[month]?.e?.lineItems) {
-      monthData = monthlyData[month]?.e;
-      console.log(`Using employee data for departments in month ${month}`);
-    }
+    const monthData = monthlyData[month]?.o;
     
     if (monthData?.lineItems && Array.isArray(monthData.lineItems)) {
-      // First, look for departments in hierarchical structure
-      // Find department headers or section items - typically at depth 1 or 2
-      let departmentItems = monthData.lineItems.filter((item: any) => 
-        (item.depth === 1 || item.depth === 2) &&
-        !item.name.includes('Total') &&
-        !item.name.includes('Revenue') &&
-        !item.name.includes('Expense') &&
-        !item.name.includes('Income') &&
-        item.name.trim() !== ''
-      );
+      console.log(`Processing O-file data for ${month} to extract department data`);
       
-      // If we don't have any departmentItems, try a broader search with specific keywords
-      if (departmentItems.length === 0) {
-        departmentItems = monthData.lineItems.filter((item: any) =>
-          item.name.includes('Department') ||
-          item.name.includes('Clinic') ||
-          item.name.includes('Division') ||
-          item.name.includes('Service Line') ||
-          (item.depth === 1 && !item.name.includes('Total') && !item.name.includes('Revenue') && !item.name.includes('Expense'))
-        );
-      }
-      
-      // Process each potential department
-      departmentItems.forEach((dept: any) => {
-        const deptName = dept.name.trim();
-        
-        // Skip if we already processed this department, it's not a valid name, or a summary item
-        if (processedDepartments.has(deptName) || 
-            deptName.length < 3 || 
-            deptName.toLowerCase().includes('summary') || 
-            deptName.toLowerCase().includes('total')) return;
-        
-        // Mark as processed
-        processedDepartments.add(deptName);
-        
-        // Find department revenue and expense totals
-        // First try to find specific totals for this department
-        const revenueTotalItem = monthData.lineItems.find((item: any) => 
-          item.name.includes(`${deptName} Revenue`) || 
-          item.name.includes(`${deptName} Income`) ||
-          (item.name.includes('Revenue') && item.name.includes(deptName))
-        );
-        
-        const expenseTotalItem = monthData.lineItems.find((item: any) => 
-          item.name.includes(`${deptName} Expense`) || 
-          item.name.includes(`${deptName} Cost`) ||
-          (item.name.includes('Expense') && item.name.includes(deptName))
-        );
-        
-        // Initialize totals
-        let totalRevenue = 0;
-        let totalExpenses = 0;
-        
-        // If we found specific totals, use them
-        if (revenueTotalItem && revenueTotalItem.summaryValue !== undefined) {
-          totalRevenue = parseFloat(revenueTotalItem.summaryValue || 0);
-        }
-        
-        if (expenseTotalItem && expenseTotalItem.summaryValue !== undefined) {
-          totalExpenses = parseFloat(expenseTotalItem.summaryValue || 0);
-        }
-        
-        // If no direct totals, find all line items within this department
-        if (totalRevenue === 0 && totalExpenses === 0) {
-          // Find all line items that might be part of this department
-          // Look for items with name containing the department name or with similar structure
-          const deptLineItems = monthData.lineItems.filter((item: any) => 
-            (item.name.includes(deptName) || 
-             (item.depth > dept.depth && item.id && dept.id && item.id.startsWith(dept.id.split('-')[0])))
-          );
+      // First approach: Directly search for known departments by name
+      knownDepartments.forEach((deptName) => {
+        // Find any line items that mention this department
+        const deptItems = monthData.lineItems.filter((item: any) => {
+          const itemName = item.name.toLowerCase();
+          const searchName = deptName.toLowerCase();
           
-          deptLineItems.forEach((item: any) => {
-            // Check if this is a revenue or expense item
-            const isRevenue = 
-              item.name.includes('Revenue') || 
-              item.name.includes('Income') ||
-              item.name.toLowerCase().includes('charges');
-              
-            const isExpense = 
-              item.name.includes('Expense') || 
-              item.name.includes('Cost') ||
-              item.name.toLowerCase().includes('salary');
-            
-            // Get value from summary column
-            const value = parseFloat(item.summaryValue || 0);
-            
-            if (isRevenue) {
-              totalRevenue += value;
-            } else if (isExpense) {
-              totalExpenses += value;
+          // Handle special cases for departments that might be named differently
+          if (searchName === "physical therapy" && itemName.includes("therapy")) return true;
+          if (searchName === "imaging" && (itemName.includes("imaging") || itemName.includes("mri"))) return true;
+          if (searchName === "mobile mri" && (itemName.includes("mobile") && itemName.includes("mri"))) return true;
+          
+          // Standard search
+          return itemName.includes(searchName);
+        });
+        
+        // Extract financial data for this department
+        let deptRevenue = 0;
+        let deptExpenses = 0;
+        
+        // Process all items related to this department
+        deptItems.forEach((item: any) => {
+          // Check if this is a revenue item
+          const isRevenue = 
+            item.name.toLowerCase().includes("revenue") || 
+            item.name.toLowerCase().includes("income") ||
+            item.name.toLowerCase().includes("charges") ||
+            item.name.toLowerCase().includes("collections");
+          
+          // Check if this is an expense item
+          const isExpense = 
+            item.name.toLowerCase().includes("expense") || 
+            item.name.toLowerCase().includes("cost") ||
+            item.name.toLowerCase().includes("salary") ||
+            item.name.toLowerCase().includes("overhead");
+          
+          // Get the value if present
+          if (item.summaryValue !== undefined) {
+            const value = parseFloat(item.summaryValue);
+            if (!isNaN(value)) {
+              if (isRevenue) {
+                deptRevenue += value;
+              } else if (isExpense) {
+                deptExpenses += value;
+              } else if (value > 0) {
+                // If we can't determine the type but it's positive, assume revenue
+                deptRevenue += value;
+              } else if (value < 0) {
+                // If negative, treat as expense (absolute value)
+                deptExpenses += Math.abs(value);
+              }
             }
-          });
-        }
+          }
+        });
         
-        // If still no data, just create a sample department entry with the name
-        if (totalRevenue === 0 && totalExpenses === 0) {
-          // Set a placeholder value just to show the department
-          totalRevenue = 1000 * (Math.random() * 5 + 1);  // Random value between 1000-6000
-          totalExpenses = totalRevenue * (Math.random() * 0.5 + 0.3);  // 30-80% of revenue
-        }
-        
-        // Only add departments with actual data
-        if (totalRevenue > 0 || totalExpenses > 0) {
-          const netIncome = totalRevenue - totalExpenses;
+        // If we found financial data for this department, add it to the results
+        if (deptRevenue > 0 || deptExpenses > 0) {
+          // Check if we already have this department in our results
+          const existingDept = result.find(d => d.name === deptName);
           
-          // Find existing department or create new
-          const existingDeptIndex = result.findIndex(d => d.name === deptName);
-          
-          if (existingDeptIndex >= 0) {
+          if (existingDept) {
             // Update existing department data
-            result[existingDeptIndex].revenue += totalRevenue;
-            result[existingDeptIndex].expenses += totalExpenses;
-            result[existingDeptIndex].net += netIncome;
+            existingDept.revenue += deptRevenue;
+            existingDept.expenses += deptExpenses;
+            existingDept.net = existingDept.revenue - existingDept.expenses;
           } else {
             // Add new department
             result.push({
               name: deptName,
-              revenue: totalRevenue,
-              expenses: totalExpenses,
-              net: netIncome
+              revenue: deptRevenue,
+              expenses: deptExpenses,
+              net: deptRevenue - deptExpenses
             });
           }
         }
       });
       
-      // If we still don't have any department data, create them based on the actual departments we know exist
-      if (result.length === 0) {
-        // Use the actual department names from the O CSV files
-        const actualDepartments = [
-          "CBD", "Pharmacy", "DME", "Procedure Charges", "Imaging", 
-          "IncrediWear", "Massage Therapy", "MedShip", "Mobile MRI", 
-          "NXT STIM", "Physical Therapy", "UDA"
-        ];
+      // Second approach: Look for items that have a distinct depth pattern
+      // In many CSVs, departments are at a specific hierarchical level (depth)
+      const potentialDeptItems = monthData.lineItems.filter((item: any) => 
+        (item.depth === 1 || item.depth === 2) &&
+        !item.name.toLowerCase().includes("total") &&
+        !item.name.toLowerCase().includes("revenue") &&
+        !item.name.toLowerCase().includes("expense") &&
+        !item.name.toLowerCase().includes("income") &&
+        item.name.trim().length > 2
+      );
+      
+      potentialDeptItems.forEach((item: any) => {
+        const deptName = item.name.trim();
         
-        // Look for any items in the data that match or contain these department names
-        months.forEach(month => {
-          if (monthlyData[month]?.o?.lineItems) {
-            const lineItems = monthlyData[month].o.lineItems;
-            
-            actualDepartments.forEach(deptName => {
-              // Try to find line items matching each department name
-              const deptItems = lineItems.filter((item: any) => 
-                item.name.includes(deptName) || 
-                // Special cases for departments that might have variations
-                (deptName === "Imaging" && (
-                  item.name.includes("imaging") || 
-                  item.name.includes("MRI") || 
-                  item.name.includes("X-ray")
-                )) ||
-                (deptName === "Physical Therapy" && (
-                  item.name.includes("Therapy") || 
-                  item.name.includes("PT")
-                ))
-              );
-              
-              // If we found line items for this department
-              if (deptItems.length > 0) {
-                // Calculate revenue and expenses from these items
-                let deptRevenue = 0;
-                let deptExpenses = 0;
-                
-                deptItems.forEach((item: any) => {
-                  const value = parseFloat(item.summaryValue || 0);
-                  if (!isNaN(value)) {
-                    if (item.name.includes("Revenue") || item.name.includes("Income") || item.name.includes("Charges")) {
-                      deptRevenue += value;
-                    } else if (item.name.includes("Expense") || item.name.includes("Cost")) {
-                      deptExpenses += value;
-                    }
-                  }
-                });
-                
-                // Only add if we have some revenue or expense data
-                if (deptRevenue > 0 || deptExpenses > 0) {
-                  // Check if we already have this department
-                  const existingDept = result.find(d => d.name === deptName);
-                  
-                  if (existingDept) {
-                    // Update existing department
-                    existingDept.revenue += deptRevenue;
-                    existingDept.expenses += deptExpenses;
-                    existingDept.net = existingDept.revenue - existingDept.expenses;
-                  } else {
-                    // Add new department
-                    result.push({
-                      name: deptName,
-                      revenue: deptRevenue,
-                      expenses: deptExpenses,
-                      net: deptRevenue - deptExpenses
-                    });
-                  }
-                }
+        // Skip if this is already a known department or has generic terms
+        if (knownDepartments.some(d => deptName.includes(d)) ||
+            deptName.toLowerCase().includes("summary") ||
+            deptName.toLowerCase().includes("subtotal")) {
+          return;
+        }
+        
+        // Try to find revenue/expense data for this potential department
+        let revenue = 0;
+        let expenses = 0;
+        
+        // Look for revenue/expense items that might be children of this item
+        const childItems = monthData.lineItems.filter((child: any) => 
+          child.depth > item.depth && 
+          child.id && 
+          item.id && 
+          child.id.startsWith(item.id.split('-')[0])
+        );
+        
+        childItems.forEach((child: any) => {
+          if (child.summaryValue !== undefined) {
+            const value = parseFloat(child.summaryValue);
+            if (!isNaN(value)) {
+              if (child.name.toLowerCase().includes("revenue") || 
+                  child.name.toLowerCase().includes("income") ||
+                  child.name.toLowerCase().includes("charges")) {
+                revenue += value;
+              } else if (child.name.toLowerCase().includes("expense") || 
+                      child.name.toLowerCase().includes("cost")) {
+                expenses += value;
               }
-            });
+            }
           }
         });
         
-        // If we still don't have any departments, add them with estimated values
-        if (result.length === 0) {
-          actualDepartments.forEach((deptName, index) => {
-            // Generate some revenue/expense values that look realistic
-            // Larger departments should have more revenue
-            let baseRevenue = 0;
-            if (["Imaging", "Pharmacy", "Physical Therapy"].includes(deptName)) {
-              baseRevenue = 250000 + (Math.random() * 50000);
-            } else if (["DME", "Procedure Charges", "Mobile MRI"].includes(deptName)) {
-              baseRevenue = 150000 + (Math.random() * 40000);
-            } else {
-              baseRevenue = 80000 + (Math.random() * 30000);
-            }
-            
-            const baseExpense = baseRevenue * (0.6 + (Math.random() * 0.3)); // 60-90% of revenue
-            
+        // If we found financial data, add this as a department
+        if (revenue > 0 || expenses > 0) {
+          // Skip adding this department if we already have it
+          if (!result.some(d => d.name === deptName)) {
             result.push({
               name: deptName,
-              revenue: baseRevenue,
-              expenses: baseExpense,
-              net: baseRevenue - baseExpense
+              revenue: revenue,
+              expenses: expenses,
+              net: revenue - expenses
             });
-          });
+          }
         }
-      }
+      });
     }
   });
+  
+  // If we couldn't find any departments, add the known departments with zeros
+  if (result.length === 0) {
+    // Force add the known departments even if we don't have data
+    // This ensures the dropdown shows the proper departments
+    knownDepartments.forEach(deptName => {
+      result.push({
+        name: deptName,
+        revenue: 0,
+        expenses: 0,
+        net: 0
+      });
+    });
+  }
   
   // Sort by revenue (descending)
   return result.sort((a, b) => b.revenue - a.revenue);
