@@ -104,7 +104,7 @@ export default function DepartmentAnalysis() {
               <CardTitle>Department Comparison</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={350}>
                 <BarChart 
                   data={filteredData} 
                   margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
@@ -114,10 +114,10 @@ export default function DepartmentAnalysis() {
                     dataKey="name" 
                     angle={-45} 
                     textAnchor="end" 
-                    height={50}
+                    height={60}
                     interval={0}
                     tick={{ fontSize: 12 }}
-                    tickMargin={5}
+                    tickMargin={10}
                   />
                   <YAxis 
                     tickFormatter={(value) => `$${value.toLocaleString()}`} 
