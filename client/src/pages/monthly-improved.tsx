@@ -131,8 +131,8 @@ export default function MonthlyImproved() {
   };
 
   return (
-    <div className="container px-4 py-6 mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Monthly Financial Analysis</h1>
+    <div className="container px-4 py-6 mx-auto max-w-full">
+      <h1 className="text-3xl font-bold mb-6">Monthly Financial Analysis</h1>
       
       {/* Check if there's any monthly data available */}
       {!hasData && Object.keys(monthlyData || {}).length === 0 && (
@@ -146,7 +146,7 @@ export default function MonthlyImproved() {
       {/* Main content with tabs */}
       <Tabs value={activeMonth} onValueChange={setActiveMonth}>
         <div className="flex justify-between items-center mb-6">
-          <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12">
+          <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 w-full">
             {months.map((month) => {
               const hasData = monthsWithData.has(month);
               return (
@@ -154,7 +154,7 @@ export default function MonthlyImproved() {
                   key={month}
                   value={month}
                   disabled={!hasData}
-                  className={hasData ? "relative" : "opacity-50"}
+                  className={hasData ? "relative text-md" : "opacity-50 text-md"}
                 >
                   {month}
                   {hasData && (
@@ -212,34 +212,34 @@ export default function MonthlyImproved() {
             
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-bold text-blue-600">
                     {formatCurrency(financialMetrics.revenue)}
                   </div>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Expenses</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-bold text-red-600">
                     {formatCurrency(financialMetrics.expenses)}
                   </div>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Net Income</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-bold text-green-600">
                     {formatCurrency(financialMetrics.netIncome)}
                   </div>
                 </CardContent>
@@ -247,24 +247,24 @@ export default function MonthlyImproved() {
             </div>
             
             {/* Primary data table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>
+            <Card className="shadow-lg border-t-4 border-blue-500">
+              <CardHeader className="bg-gray-50">
+                <CardTitle className="text-xl font-semibold">
                   {viewType === 'e' ? 'Employee' : 'Other Business'} Financial Details
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!hasSelectedData ? (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <p className="mb-3">
+                  <div className="py-12 text-center text-muted-foreground">
+                    <p className="mb-4 text-lg">
                       No data available for {viewType === 'e' ? 'employee' : 'other business'} expenses in {month}.
                     </p>
-                    <p>
+                    <p className="text-md">
                       Upload a {viewType === 'e' ? 'monthly-e' : 'monthly-o'} CSV file to see detailed financial data.
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-auto max-h-[600px]">
+                  <div className="overflow-auto max-h-[800px]">
                     <RecursiveLineItemTable 
                       data={lineItems} 
                       entityColumns={columnHeaders}
