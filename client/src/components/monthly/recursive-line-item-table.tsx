@@ -30,7 +30,7 @@ interface RecursiveLineItemTableProps {
 export default function RecursiveLineItemTable({ 
   data, 
   entityColumns,
-  summaryColumn = 'All Employees'
+  summaryColumn = undefined
 }: RecursiveLineItemTableProps) {
   if (!data || data.length === 0) {
     return (
@@ -64,9 +64,11 @@ export default function RecursiveLineItemTable({
             </td>
           ))}
           
-          <td className="py-2 px-4 text-right font-medium">
-            {formatCurrency(item.summaryValue || 0)}
-          </td>
+          {summaryColumn !== 'All Employees' && (
+            <td className="py-2 px-4 text-right font-medium">
+              {formatCurrency(item.summaryValue || 0)}
+            </td>
+          )}
         </tr>
         
         {/* Render children recursively */}
@@ -87,9 +89,11 @@ export default function RecursiveLineItemTable({
               {entityColumns.map(entity => (
                 <th key={entity} className="py-3 px-4 text-right font-medium">{entity}</th>
               ))}
-              <th className="py-3 px-4 text-right font-medium">
-                {summaryColumn || 'Total'}
-              </th>
+              {summaryColumn !== 'All Employees' && (
+                <th className="py-3 px-4 text-right font-medium">
+                  {summaryColumn || 'Total'}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
