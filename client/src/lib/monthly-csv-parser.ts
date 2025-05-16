@@ -6,14 +6,28 @@ import { buildHierarchy } from "./hierarchy-utils";
  * Enhanced processing for Monthly CSV files
  * Returns both flat and hierarchical structures for better data visualization
  */
-export function processMonthlyCSV(data: MonthlyCSVRow[], type: 'monthly-e' | 'monthly-o') {
+export interface ProcessedCSV {
+  flat: any[];
+  nested: any[];
+  meta: {
+    summaryColumn: string | null;
+    entityColumns: string[];
+    type: 'monthly-e' | 'monthly-o';
+  };
+  raw: MonthlyCSVRow[];
+}
+
+export function processMonthlyCSV(data: MonthlyCSVRow[], type: 'monthly-e' | 'monthly-o'): ProcessedCSV {
   if (!data || data.length === 0) {
     return {
-      lineItems: [],
+      flat: [],
       nested: [],
-      entityColumns: [],
-      summaryColumn: null,
-      type
+      meta: {
+        entityColumns: [],
+        summaryColumn: null,
+        type
+      },
+      raw: []
     };
   }
   
@@ -99,10 +113,13 @@ export function processMonthlyCSV(data: MonthlyCSVRow[], type: 'monthly-e' | 'mo
   
   // Return an enhanced object with both flat and nested data
   return {
-    lineItems,
-    nested,
-    entityColumns,
-    summaryColumn,
-    type
+    flat: lineItems,
+    nested: nested,
+    meta: {
+      entityColumns,
+      summaryColumn: summaryColumn || null,
+      type
+    },
+    raw: data
   };
 }

@@ -1,0 +1,106 @@
+// ✅ Goal: Properly ingest, structure, and render deeply nested monthly CSV data
+// Each CSV has a consistent hierarchy of line items as described (Revenue, Operating Expenses, etc.)
+
+// ✅ 1. Update `processMonthlyCSV` to return structured nested data
+type ProcessedCSV = {
+  flat: LineItem[];
+  nested: HierarchyNode[];
+  meta: {
+    summaryColumn: string;
+    entityColumns: string[];
+    type: 'monthly-e' | 'monthly-o';
+  };
+};
+
+export function processMonthlyCSV(data: MonthlyCSVRow[], type: 'monthly-e' | 'monthly-o'): ProcessedCSV {
+  const firstRow = data[0];
+  const columns = Object.keys(firstRow);
+
+  const entityColumns = columns.filter(
+    (col) => col !== 'Line Item' && !col.toLowerCase().includes('all')
+  );
+  const summaryColumn = columns.find((col) => col.toLowerCase().includes('all')) ?? '';
+
+  const lineItems = data.map((row) => {
+    const lineItem = row['Line Item'];
+    const depth = lineItem.startsWith(' ')
+      ? (lineItem.length - lineItem.trimStart().length) / 2
+      : 0;
+
+    const entityValues = entityColumns.reduce((acc, entity) => {
+      acc[entity] = parseFinancialValue(row[entity]);
+      return acc;
+    }, {} as Record<string, number>);
+
+    const summaryValue = summaryColumn
+      ? parseFinancialValue(row[summaryColumn])
+      : Object.values(entityValues).reduce((sum, v) => sum + v, 0);
+
+    return {
+      name: lineItem.trim(),
+      depth,
+      entityValues,
+      summaryValue,
+    };
+  });
+
+  return {
+    flat: lineItems,
+    nested: buildHierarchy(lineItems),
+    meta: {
+      summaryColumn,
+      entityColumns,
+      type,
+    },
+  };
+}
+
+// ✅ 2. Fix Zustand store to save this properly
+processCSVData: (type, data, month) => {
+  if (!month) return;
+  const parsed = processMonthlyCSV(data, type);
+  const key = type === 'monthly-e' ? 'e' : 'o';
+
+  set((state) => ({
+    monthlyData: {
+      ...state.monthlyData,
+      [month.toLowerCase()]: {
+        ...state.monthlyData[month.toLowerCase()],
+        [key]: parsed,
+      },
+    },
+    uploadHistory: [
+      ...state.uploadHistory,
+      {
+        type,
+        date: new Date(),
+        filename: `${month}_${key}.csv`,
+        month,
+      },
+    ],
+  }));
+}
+
+// ✅ 3. In the frontend (e.g., Monthly.tsx), render full nested data
+const nestedData = useStore().monthlyData[selectedMonth]?.e?.nested ?? [];
+
+function RecursiveDisplay({ node, level = 0 }) {
+  return (
+    <>
+      <tr>
+        <td style={{ paddingLeft: `${level * 16}px` }}>{node.name}</td>
+        <td>{node.summaryValue}</td>
+      </tr>
+      {node.children?.map((child) => (
+        <RecursiveDisplay key={child.id} node={child} level={level + 1} />
+      ))}
+    </>
+  );
+}
+
+// Then inside the table:
+<tbody>
+  {nestedData.map((node) => (
+    <RecursiveDisplay key={node.id} node={node} />
+  ))}
+</tbody>

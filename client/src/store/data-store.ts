@@ -534,9 +534,10 @@ export const useStore = create<DataStore>((set, get) => ({
       // Process the monthly data with enhanced parser
       console.log(`Processing monthly-e data for ${month}`, data ? data.length : 0, "rows");
       
-      // Use our enhanced parser that returns both flat and nested data
+      // Use our enhanced parser that returns structured data with flat, nested, and metadata
       const processedData = processMonthlyCSV(data, 'monthly-e');
-      console.log(`Processed monthly-e data with ${processedData.lineItems.length} line items and ${processedData.nested.length} top-level categories`);
+      
+      console.log(`Processed monthly-e data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
       
       // Add to upload history
       const newUploadHistory = [...state.uploadHistory, {
@@ -551,15 +552,7 @@ export const useStore = create<DataStore>((set, get) => ({
         ...state.monthlyData,
         [month]: {
           ...state.monthlyData[month],
-          e: {
-            raw: data,
-            flat: processedData.lineItems,
-            nested: processedData.nested,
-            meta: {
-              entityColumns: processedData.entityColumns,
-              summaryColumn: processedData.summaryColumn
-            }
-          }
+          e: processedData // Store the complete processed result
         }
       };
       
@@ -593,9 +586,10 @@ export const useStore = create<DataStore>((set, get) => ({
       // Process the monthly data with enhanced parser
       console.log(`Processing monthly-o data for ${month}`, data ? data.length : 0, "rows");
       
-      // Use our enhanced parser that returns both flat and nested data
+      // Use our enhanced parser that returns structured data with flat, nested, and metadata
       const processedData = processMonthlyCSV(data, 'monthly-o');
-      console.log(`Processed monthly-o data with ${processedData.lineItems.length} line items and ${processedData.nested.length} top-level categories`);
+      
+      console.log(`Processed monthly-o data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
       
       // Add to upload history
       const newUploadHistory = [...state.uploadHistory, {
@@ -610,15 +604,7 @@ export const useStore = create<DataStore>((set, get) => ({
         ...state.monthlyData,
         [month]: {
           ...state.monthlyData[month],
-          o: {
-            raw: data,
-            flat: processedData.lineItems,
-            nested: processedData.nested,
-            meta: {
-              entityColumns: processedData.entityColumns,
-              summaryColumn: processedData.summaryColumn
-            }
-          }
+          o: processedData // Store the complete processed result
         }
       };
       
