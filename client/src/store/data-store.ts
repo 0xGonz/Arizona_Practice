@@ -14,14 +14,14 @@ function extractTotalRevenue(data: any[]): number {
 
 function extractTotalExpenses(data: any[]): number {
   // Find the row that has "Operating Expenses" or similar in the Line Item
-  const expensesRow = data.find(row => 
+  const expenseRow = data.find(row => 
     row['Line Item'] && (
       row['Line Item'].includes('Total Expense') || 
       row['Line Item'].includes('Total Operating Expenses')
     )
   );
-  if (expensesRow && expensesRow['Total']) {
-    return parseFinancialValue(expensesRow['Total']);
+  if (expenseRow && expenseRow['Total']) {
+    return parseFinancialValue(expenseRow['Total']);
   }
   return 0;
 }
@@ -107,7 +107,7 @@ function generateTopPerformers(data: any[]): PerformerData[] {
     
     if (value > 0) {
       const initials = name.split(' ')
-        .map(word => word[0])
+        .map((word: string) => word[0])
         .join('')
         .toUpperCase();
       
@@ -251,26 +251,77 @@ interface DataStore {
   }[];
 }
 
-export const useStore = create<DataStore>((set) => ({
-  // Initial Upload Status
-  uploadStatus: {
-    annual: false,
-    monthly: {
-      january: { e: false, o: false },
-      february: { e: false, o: false },
-      march: { e: false, o: false },
-      april: { e: false, o: false },
-      may: { e: false, o: false },
-      june: { e: false, o: false },
-      july: { e: false, o: false },
-      august: { e: false, o: false },
-      september: { e: false, o: false },
-      october: { e: false, o: false },
-      november: { e: false, o: false },
-      december: { e: false, o: false }
-    }
-  },
+// Load initial data from localStorage if available
+const loadFromLocalStorage = () => {
+  if (typeof window === 'undefined') return null; // Skip on server-side
   
+  try {
+    // Load upload status
+    const savedUploadStatus = localStorage.getItem('uploadStatus');
+    const uploadStatus = savedUploadStatus ? JSON.parse(savedUploadStatus) : null;
+
+    // Load saved data
+    const savedAnnualData = localStorage.getItem('annualData');
+    const savedMonthlyData = localStorage.getItem('monthlyData');
+    const savedRevenueMix = localStorage.getItem('revenueMix');
+    const savedMarginTrend = localStorage.getItem('marginTrend');
+    const savedTopPerformers = localStorage.getItem('topPerformers');
+    const savedBottomPerformers = localStorage.getItem('bottomPerformers');
+    const savedAncillaryComparison = localStorage.getItem('ancillaryComparison');
+    const savedUploadHistory = localStorage.getItem('uploadHistory');
+
+    return {
+      uploadStatus: uploadStatus,
+      annualData: savedAnnualData ? JSON.parse(savedAnnualData) : null,
+      monthlyData: savedMonthlyData ? JSON.parse(savedMonthlyData) : {},
+      revenueMix: savedRevenueMix ? JSON.parse(savedRevenueMix) : [],
+      marginTrend: savedMarginTrend ? JSON.parse(savedMarginTrend) : [],
+      topPerformers: savedTopPerformers ? JSON.parse(savedTopPerformers) : [],
+      bottomPerformers: savedBottomPerformers ? JSON.parse(savedBottomPerformers) : [],
+      ancillaryComparison: savedAncillaryComparison ? JSON.parse(savedAncillaryComparison) : [],
+      uploadHistory: savedUploadHistory ? JSON.parse(savedUploadHistory) : []
+    };
+  } catch (error) {
+    console.error("Error loading data from localStorage:", error);
+    return null;
+  }
+};
+
+// Get initial state
+const initialState = typeof window !== 'undefined' ? loadFromLocalStorage() : null;
+
+// Default upload status
+const defaultUploadStatus = {
+  annual: false,
+  monthly: {
+    january: { e: false, o: false },
+    february: { e: false, o: false },
+    march: { e: false, o: false },
+    april: { e: false, o: false },
+    may: { e: false, o: false },
+    june: { e: false, o: false },
+    july: { e: false, o: false },
+    august: { e: false, o: false },
+    september: { e: false, o: false },
+    october: { e: false, o: false },
+    november: { e: false, o: false },
+    december: { e: false, o: false }
+  }
+};
+
+export const useStore = create<DataStore>((set, get) => ({
+  // Initial state
+  uploadStatus: initialState?.uploadStatus || defaultUploadStatus,
+  annualData: initialState?.annualData || null,
+  monthlyData: initialState?.monthlyData || {},
+  revenueMix: initialState?.revenueMix || [],
+  marginTrend: initialState?.marginTrend || [],
+  topPerformers: initialState?.topPerformers || [],
+  bottomPerformers: initialState?.bottomPerformers || [],
+  ancillaryComparison: initialState?.ancillaryComparison || [],
+  uploadHistory: initialState?.uploadHistory || [],
+  
+  // Helper function to save to localStorage
   setUploadStatus: (status) => set((state) => {
     // Handle annual status update
     let newStatus = { ...state.uploadStatus };
@@ -296,148 +347,139 @@ export const useStore = create<DataStore>((set) => ({
       });
     }
     
-    return { uploadStatus: newStatus };
+    const updatedState = { uploadStatus: newStatus };
+    
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
+      } catch (error) {
+        console.error('Error saving upload status to localStorage:', error);
+      }
+    }
+    
+    return updatedState;
   }),
   
-  // Raw Data Storage
-  annualData: null,
-  monthlyData: {},
-  
-  // Process CSV Data
   processCSVData: (type, data, month) => set((state) => {
     if (type === 'annual') {
       console.log("Processing annual data in store");
       
       try {
         // Generate data for visualizations
-        const generatedRevenueMix = data ? generateRevenueMix(data) : [];
-        const generatedMarginTrend = data ? generateMarginTrend(data) : [];
-        const generatedTopPerformers = data ? generateTopPerformers(data) : [];
-        const generatedBottomPerformers = data ? generateBottomPerformers(data) : [];
-        const generatedAncillaryComparison = data ? generateAncillaryComparison(data) : [];
+        const generatedRevenueMix = generateRevenueMix(data);
+        const generatedMarginTrend = generateMarginTrend(data);
+        const generatedTopPerformers = generateTopPerformers(data);
+        const generatedBottomPerformers = generateBottomPerformers(data);
+        const generatedAncillaryComparison = generateAncillaryComparison(data);
         
         // Add to upload history
-        const newHistory = [...state.uploadHistory, {
-          type: 'annual' as CSVType,
+        const newUploadHistory = [...state.uploadHistory, {
+          type: 'annual',
           date: new Date(),
           filename: 'annual_data.csv'
         }];
         
-        // Update upload status
-        const newStatus = { ...state.uploadStatus, annual: true };
-        
-        // Log the generated data
-        console.log("Generated revenue mix:", generatedRevenueMix);
-        console.log("Generated margin trend:", generatedMarginTrend);
-        console.log("Generated top performers:", generatedTopPerformers);
-        console.log("Generated bottom performers:", generatedBottomPerformers);
+        // Save to localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('annualData', JSON.stringify(data));
+            localStorage.setItem('revenueMix', JSON.stringify(generatedRevenueMix));
+            localStorage.setItem('marginTrend', JSON.stringify(generatedMarginTrend));
+            localStorage.setItem('topPerformers', JSON.stringify(generatedTopPerformers));
+            localStorage.setItem('bottomPerformers', JSON.stringify(generatedBottomPerformers));
+            localStorage.setItem('ancillaryComparison', JSON.stringify(generatedAncillaryComparison));
+            localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+          } catch (error) {
+            console.error('Error saving annual data to localStorage:', error);
+          }
+        }
         
         return { 
-          annualData: data, // Store original data
+          annualData: data,
           revenueMix: generatedRevenueMix,
           marginTrend: generatedMarginTrend,
           topPerformers: generatedTopPerformers,
           bottomPerformers: generatedBottomPerformers,
           ancillaryComparison: generatedAncillaryComparison,
-          uploadHistory: newHistory,
-          uploadStatus: newStatus
+          uploadHistory: newUploadHistory
         };
       } catch (error) {
         console.error("Error processing annual data:", error);
-        
-        // Still store the data and update upload status even if visualization fails
-        const newHistory = [...state.uploadHistory, {
-          type: 'annual' as CSVType,
-          date: new Date(),
-          filename: 'annual_data.csv'
-        }];
-        const newStatus = { ...state.uploadStatus, annual: true };
-        
-        return {
-          annualData: data,
-          uploadHistory: newHistory,
-          uploadStatus: newStatus
-        };
+        return { annualData: data };
       }
+      
     } else if (type === 'monthly-e' && month) {
       const processedData = processMonthlyCSV(data, type);
       
       // Add to upload history
-      const newHistory = [...state.uploadHistory, {
-        type: 'monthly-e' as CSVType,
+      const newUploadHistory = [...state.uploadHistory, {
+        type: 'monthly-e',
         date: new Date(),
         filename: `${month}_e_data.csv`,
         month
       }];
       
-      // Update upload status for this month's E file
-      const newStatus = { 
-        ...state.uploadStatus,
-        monthly: {
-          ...state.uploadStatus.monthly,
-          [month]: {
-            ...state.uploadStatus.monthly[month],
-            e: true
-          }
+      // Create or update monthlyData for this month
+      const updatedMonthlyData = {
+        ...state.monthlyData,
+        [month]: {
+          ...state.monthlyData[month],
+          e: data
         }
       };
       
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
+          localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+        } catch (error) {
+          console.error('Error saving monthly-e data to localStorage:', error);
+        }
+      }
+      
       return {
-        monthlyData: {
-          ...state.monthlyData,
-          [month]: {
-            ...state.monthlyData[month],
-            e: data // Store original data
-          }
-        },
-        uploadHistory: newHistory,
-        uploadStatus: newStatus
+        monthlyData: updatedMonthlyData,
+        uploadHistory: newUploadHistory
       };
+      
     } else if (type === 'monthly-o' && month) {
       const processedData = processMonthlyCSV(data, type);
       
       // Add to upload history
-      const newHistory = [...state.uploadHistory, {
-        type: 'monthly-o' as CSVType,
+      const newUploadHistory = [...state.uploadHistory, {
+        type: 'monthly-o',
         date: new Date(),
         filename: `${month}_o_data.csv`,
         month
       }];
       
-      // Update upload status for this month's O file
-      const newStatus = { 
-        ...state.uploadStatus,
-        monthly: {
-          ...state.uploadStatus.monthly,
-          [month]: {
-            ...state.uploadStatus.monthly[month],
-            o: true
-          }
+      // Create or update monthlyData for this month
+      const updatedMonthlyData = {
+        ...state.monthlyData,
+        [month]: {
+          ...state.monthlyData[month],
+          o: data
         }
       };
       
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
+          localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+        } catch (error) {
+          console.error('Error saving monthly-o data to localStorage:', error);
+        }
+      }
+      
       return {
-        monthlyData: {
-          ...state.monthlyData,
-          [month]: {
-            ...state.monthlyData[month],
-            o: data // Store original data
-          }
-        },
-        uploadHistory: newHistory,
-        uploadStatus: newStatus
+        monthlyData: updatedMonthlyData,
+        uploadHistory: newUploadHistory
       };
     }
     
     return state;
-  }),
-  
-  // Processed Data (derived from uploaded data)
-  revenueMix: [],
-  marginTrend: [],
-  topPerformers: [],
-  bottomPerformers: [],
-  ancillaryComparison: [],
-  
-  uploadHistory: []
+  })
 }));

@@ -2,8 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Initialize the app
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Allow large file uploads
 app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
@@ -37,6 +38,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database schema if we have a database connection
+  if (process.env.DATABASE_URL) {
+    try {
+      await pushSchema();
+      log("Database initialized successfully");
+    } catch (error) {
+      log(`Database initialization error: ${error}`);
+    }
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
