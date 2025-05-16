@@ -70,14 +70,16 @@ export default function MonthlyImproved() {
   const selectedData = viewType === 'e' ? monthData.eData : monthData.oData;
   const lineItems = selectedData?.lineItems || [];
   
-  // Extract column headers from entity data
+  // Extract column headers specific to the selected data type
   const columnHeaders = useMemo(() => {
-    const eEntityColumns = monthData.eData?.entityColumns || [];
-    const oEntityColumns = monthData.oData?.entityColumns || [];
-    
-    // Combine and deduplicate columns
-    return Array.from(new Set([...eEntityColumns, ...oEntityColumns]));
-  }, [monthData]);
+    if (viewType === 'e') {
+      // For employee view, only show employee columns
+      return monthData.eData?.entityColumns || [];
+    } else {
+      // For other business view, only show other business columns
+      return monthData.oData?.entityColumns || [];
+    }
+  }, [monthData, viewType]);
   
   // Calculate financial metrics from the selected data
   const financialMetrics = useMemo(() => {
