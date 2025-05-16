@@ -212,57 +212,60 @@ export default function Upload() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-base font-medium mb-2">Select Data to Process</h3>
-                    <div className="space-y-2">
-                      <Select
-                        className="w-full"
-                        placeholder="Select Data Type..."
-                        value={processedDataType}
-                        onChange={(e) => setProcessedDataType(e.target.value)}
-                        options={[
-                          { label: "Annual Data", value: "annual" },
-                          { label: "Monthly Employee (E) Data", value: "monthly-e" },
-                          { label: "Monthly Other (O) Data", value: "monthly-o" }
-                        ]}
-                      />
+                    <h3 className="text-base font-medium mb-3">Data Processing Options</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Data Type</label>
+                        <select 
+                          className="w-full p-2 border border-input rounded-md"
+                          value={processedDataType}
+                          onChange={(e) => setProcessedDataType(e.target.value)}
+                        >
+                          <option value="annual">Annual Data</option>
+                          <option value="monthly-e">Monthly Employee (E) Data</option>
+                          <option value="monthly-o">Monthly Other Business (O) Data</option>
+                        </select>
+                      </div>
                       
                       {(processedDataType === "monthly-e" || processedDataType === "monthly-o") && (
-                        <Select
-                          className="w-full"
-                          placeholder="Select Month..."
-                          value={processedDataType === "monthly-e" ? selectedEMonth : selectedOMonth}
-                          onChange={(e) => {
-                            if (processedDataType === "monthly-e") {
-                              setSelectedEMonth(e.target.value);
-                            } else {
-                              setSelectedOMonth(e.target.value);
-                            }
-                          }}
-                          options={[
-                            { label: "January", value: "january" },
-                            { label: "February", value: "february" },
-                            { label: "March", value: "march" },
-                            { label: "April", value: "april" },
-                            { label: "May", value: "may" },
-                            { label: "June", value: "june" },
-                            { label: "July", value: "july" },
-                            { label: "August", value: "august" },
-                            { label: "September", value: "september" },
-                            { label: "October", value: "october" },
-                            { label: "November", value: "november" },
-                            { label: "December", value: "december" }
-                          ]}
-                        />
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Month</label>
+                          <select
+                            className="w-full p-2 border border-input rounded-md"
+                            value={processedDataType === "monthly-e" ? selectedEMonth : selectedOMonth}
+                            onChange={(e) => {
+                              if (processedDataType === "monthly-e") {
+                                setSelectedEMonth(e.target.value);
+                              } else {
+                                setSelectedOMonth(e.target.value);
+                              }
+                            }}
+                          >
+                            <option value="january">January</option>
+                            <option value="february">February</option>
+                            <option value="march">March</option>
+                            <option value="april">April</option>
+                            <option value="may">May</option>
+                            <option value="june">June</option>
+                            <option value="july">July</option>
+                            <option value="august">August</option>
+                            <option value="september">September</option>
+                            <option value="october">October</option>
+                            <option value="november">November</option>
+                            <option value="december">December</option>
+                          </select>
+                        </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="col-span-2">
-                    <h3 className="text-base font-medium mb-2">Actions</h3>
-                    <div className="flex space-x-3">
-                      <Button 
+                  <div>
+                    <h3 className="text-base font-medium mb-3">Actions</h3>
+                    <div className="space-y-3">
+                      <button 
+                        className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50"
                         onClick={() => setShowProcessedData(true)}
                         disabled={
                           (processedDataType === "annual" && !uploadStatus.annual) ||
@@ -271,14 +274,14 @@ export default function Upload() {
                         }
                       >
                         Process and View Data
-                      </Button>
+                      </button>
                       
-                      <Button 
-                        variant="outline"
+                      <button 
+                        className="w-full border border-input bg-background hover:bg-accent px-4 py-2 rounded-md"
                         onClick={() => setShowProcessedData(false)}
                       >
                         Hide Data
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -296,7 +299,6 @@ export default function Upload() {
                               <tr className="bg-muted">
                                 <th className="border p-2 text-left">Line Item</th>
                                 <th className="border p-2 text-right">Total</th>
-                                {/* Add more columns as needed */}
                               </tr>
                             </thead>
                             <tbody>
@@ -305,7 +307,6 @@ export default function Upload() {
                                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                     <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
                                     <td className="border p-2 text-right">{row['2024 Total'] || 'N/A'}</td>
-                                    {/* Add more columns as needed */}
                                   </tr>
                                 ))
                               ) : (
@@ -329,7 +330,6 @@ export default function Upload() {
                               <tr className="bg-muted">
                                 <th className="border p-2 text-left">Line Item</th>
                                 <th className="border p-2 text-right">All Employees</th>
-                                {/* Add more columns as needed */}
                               </tr>
                             </thead>
                             <tbody>
@@ -338,7 +338,6 @@ export default function Upload() {
                                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                     <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
                                     <td className="border p-2 text-right">{row['All Employees'] || 'N/A'}</td>
-                                    {/* Add more columns as needed */}
                                   </tr>
                                 ))
                               ) : (
@@ -362,7 +361,6 @@ export default function Upload() {
                               <tr className="bg-muted">
                                 <th className="border p-2 text-left">Line Item</th>
                                 <th className="border p-2 text-right">All Entities</th>
-                                {/* Add more columns as needed */}
                               </tr>
                             </thead>
                             <tbody>
@@ -371,7 +369,6 @@ export default function Upload() {
                                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                     <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
                                     <td className="border p-2 text-right">{row['All Entities'] || 'N/A'}</td>
-                                    {/* Add more columns as needed */}
                                   </tr>
                                 ))
                               ) : (
