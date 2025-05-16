@@ -264,61 +264,100 @@ export default function Monthly() {
     // Log first few rows to understand data structure
     console.log("Sample monthly data rows:", monthData.eData.slice(0, 3));
     
-    // Create a structure for our line items - these are the categories we'll display
+    // Extract all unique line items to build a hierarchical display
+    // Instead of predefined categories, we'll build directly from your CSV data
+    
+    // Function to determine the indentation level (hierarchy depth) from a line item
+    const getLineItemDepth = (lineItem: string): number => {
+      if (!lineItem) return 0;
+      
+      // Count leading spaces to determine hierarchy level
+      let leadingSpaces = 0;
+      for (let i = 0; i < lineItem.length; i++) {
+        if (lineItem[i] === ' ') {
+          leadingSpaces++;
+        } else {
+          break;
+        }
+      }
+      
+      // Convert space count to hierarchy depth (roughly 2 spaces per level)
+      return Math.floor(leadingSpaces / 2);
+    };
+    
+    // First, get all line items with their depths
+    const allLineItems = monthData.eData
+      .filter(row => row['Line Item'] && row['Line Item'].trim() !== '')
+      .map(row => ({
+        name: row['Line Item'].trim(),
+        depth: getLineItemDepth(row['Line Item']),
+        original: row['Line Item'],
+        row: row
+      }));
+      
+    console.log("Extracted line items with depths:", allLineItems.slice(0, 10));
+    
+    // Build main categories based on the actual structure from your CSV
+    // We'll look for key categories like Revenue, Expenses, and Net Income
+    
     const mainCategories = [
       { 
         name: 'Revenue', 
         type: 'header', 
         key: 'revenue',
         searchTerms: ['revenue', 'income', 'gross'],
-        children: [
-          { 
-            name: 'Professional Fees', 
-            type: 'line', 
-            key: 'prof_fees',
-            searchTerms: ['professional', 'fees', 'service']
-          },
-          { 
-            name: 'Ancillary Revenue', 
-            type: 'line', 
-            key: 'ancillary',
-            searchTerms: ['ancillary', 'other', 'additional'] 
-          }
-        ]
+        children: []
       },
       { 
         name: 'Expenses', 
         type: 'header', 
         key: 'expenses',
-        searchTerms: ['expense', 'cost', 'expenditure'],
-        children: [
-          { 
-            name: 'Payroll', 
-            type: 'line', 
-            key: 'payroll',
-            searchTerms: ['payroll', 'salary', 'wage', 'compensation']
-          },
-          { 
-            name: 'Operating', 
-            type: 'line', 
-            key: 'operating',
-            searchTerms: ['operating', 'supplies', 'material']
-          },
-          { 
-            name: 'Admin', 
-            type: 'line', 
-            key: 'admin',
-            searchTerms: ['admin', 'administrative', 'office']
-          }
-        ]
+        searchTerms: ['operating expenses', 'expense', 'cost', 'expenditure'],
+        children: []
       },
       { 
         name: 'Net Income', 
         type: 'total', 
         key: 'net_income',
-        searchTerms: ['net income', 'profit', 'bottom line', 'net earnings']
+        searchTerms: ['net income', 'profit', 'bottom line', 'net earnings'],
+        children: []
       }
     ];
+    
+    // Populate the children arrays based on the actual line items
+    const findMatchingCategory = (lineItem: string) => {
+      const lowerLineItem = lineItem.toLowerCase();
+      
+      for (const category of mainCategories) {
+        if (category.searchTerms.some(term => lowerLineItem.includes(term))) {
+          return category;
+        }
+      }
+      
+      // Default to expenses for most subcategories if no direct match
+      if (lowerLineItem.includes('total')) {
+        return null; // Skip total rows as we calculate those
+      }
+      
+      // For items that don't clearly fit into a category, make an intelligent guess
+      if (lowerLineItem.includes('payroll') || 
+          lowerLineItem.includes('salary') || 
+          lowerLineItem.includes('wage') ||
+          lowerLineItem.includes('administrative') ||
+          lowerLineItem.includes('travel') ||
+          lowerLineItem.includes('rent') ||
+          lowerLineItem.includes('insurance')) {
+        return mainCategories[1]; // Expenses
+      }
+      
+      if (lowerLineItem.includes('fee') || 
+          lowerLineItem.includes('income') || 
+          lowerLineItem.includes('professional')) {
+        return mainCategories[0]; // Revenue
+      }
+      
+      return null; // Skip items we can't categorize
+    };
     
     // Function to find a row using any of the search terms
     const findRow = (rows, searchTerms) => {

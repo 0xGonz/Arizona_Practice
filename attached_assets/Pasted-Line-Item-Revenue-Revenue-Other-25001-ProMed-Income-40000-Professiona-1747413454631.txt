@@ -1,0 +1,171 @@
+Line Item
+  Revenue
+ 
+    Revenue - Other
+      25001 - ProMed Income
+      40000 - Professional Fees
+      40100 - Hospital On Call Revenue
+      40101 - Ancillary Income
+    Total Revenue - Other
+ 
+  Total Revenue
+ 
+  Gross Profit
+ 
+  Operating Expenses
+ 
+    General and Administrative Expenses
+ 
+      Business Licenses and Permits
+        70500 - License and Tax Exp
+      Total Business Licenses and Permits
+ 
+      Computer Processing Expenses
+        64101 - Computer Software Expense
+      Total Computer Processing Expenses
+ 
+      Due and Subscriptions
+        65500 - Dues & Subscriptions
+      Total Due and Subscriptions
+ 
+      Debt Service
+        62500 - Bank Charges
+      Total Debt Service
+ 
+      Education
+        64201 - Education
+      Total Education
+ 
+      Legal and Accounting
+        68200 - Legal and Accounting Expense
+      Total Legal and Accounting
+ 
+      Travel, Meals and Entertainment
+ 
+        Travel Expenses
+          78500 - Travel Expense
+        Total Travel Expenses
+ 
+        Meals and Entertainment
+          72000 - Meals and Ent.
+        Total Meals and Entertainment
+ 
+      Total Travel, Meals and Entertainment
+ 
+      Office Supplies
+        73500 - Office Supplies
+      Total Office Supplies
+ 
+    Total General and Administrative Expenses
+ 
+    Marketing and Advertising Expenses
+ 
+      Advertising and Promotion
+        60100 - Advertising Expense
+      Total Advertising and Promotion
+ 
+      Telecommunication
+        61000 - Answering Service Expense
+        78000 - Telephone Expense
+      Total Telecommunication
+ 
+    Total Marketing and Advertising Expenses
+ 
+    Payroll and Related Expenses
+ 
+      Benefits
+        65501 - Employee Benefit Programs Exp
+      Total Benefits
+ 
+      Compensations
+        77400 - Contract Compensation
+        95000 - Draw
+      Total Compensations
+ 
+      Payroll Expenses
+        68500 - Retirement Plan Contributions
+      Total Payroll Expenses
+ 
+      Payroll Taxes
+        74000 - Payroll Tax Exp
+      Total Payroll Taxes
+ 
+      Salary and Wages
+        77450 - Admin Salaries Expense
+        77500 - Wages Expense
+        77550 - Nurse Wages
+        77560 - MRI Wages
+        77570 - Imaging Wages
+        77580 - Billing Wages
+        77850 - Computer Admin Wages
+      Total Salary and Wages
+ 
+    Total Payroll and Related Expense
+ 
+    Utilities and Facilities
+ 
+      Equipment Rental
+        65503 - Equipment Rental/Lease
+      Total Equipment Rental
+ 
+      Rent
+        77100 - Rent or Lease Exp.
+      Total Rent
+ 
+      Repairs and Maintenance
+        70000 - Landscaping Exp
+      Total Repairs and Maintenance
+ 
+      Utilities
+        79500 - Utilities
+      Total Utilities
+ 
+    Total Utilities and Facilities
+ 
+    Operating and Maintenance Expenses
+ 
+      Intercompany Expense
+        67000 - Injectables
+        72500 - Medical Supplies
+      Total Intercompany Expense
+ 
+      Professional Services
+        10700 - ProMed
+        73700 - Outside Services
+      Total Professional Services
+ 
+      Shipping
+        65600 - Freight & Postage Expense
+      Total Shipping
+ 
+    Total Operating and Maintenance Expenses
+ 
+    Taxes and Insurance
+ 
+      Insurance
+        65700 - General Liability
+        68000 - Key Man Insurance
+        68300 - Malpractice Insurance
+        69500 - Workers Compensation
+      Total Insurance
+ 
+    Total Taxes and Insurance
+ 
+  Total Operating Expenses
+ 
+  Other Income (Expense)
+ 
+    Other Income
+ 
+      Other Income
+        92000 - On Call Pay
+      Total Other Income
+ 
+    Total Other Income
+ 
+  Total Other Income (Expense)
+ 
+ 
+  Net Income (Loss)
+   
+

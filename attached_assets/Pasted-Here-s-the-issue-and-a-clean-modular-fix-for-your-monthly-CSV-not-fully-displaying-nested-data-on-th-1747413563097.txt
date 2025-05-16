@@ -1,0 +1,127 @@
+Here’s the issue and a clean modular fix for your monthly CSV not fully displaying nested data on the frontend:
+
+🧠 Root Cause
+Your current data parser (processMonthlyCSV) does parse each line item with a depth level (indentation), but:
+
+Frontend components aren’t using that depth to render hierarchy
+
+You’ve parsed something like:
+
+ts
+Copy
+Edit
+{
+  name: "40101 - Ancillary Income",
+  depth: 3,
+  summaryValue: 54000,
+  entityValues: { Dr. A: 30000, Dr. B: 24000 }
+}
+…but the frontend likely flattens this, or only reads top-level rows.
+
+Hierarchy is not passed to a recursive rendering function
+
+You’ve implemented buildHierarchy() correctly — it constructs a nested tree from the depth-annotated flat list — but it’s not called or consumed anywhere in the rendering layer.
+
+✅ How to Fix (Step-by-Step Plan)
+🔁 Step 1: Update Your Zustand Store
+Ensure processMonthlyCSV returns and stores both the flat and nested versions:
+
+ts
+Copy
+Edit
+import { buildHierarchy } from "@/lib/csv-parser";
+
+processCSVData: (type, month, raw) => {
+  const parsed = processMonthlyCSV(raw, type);
+  const nested = buildHierarchy(parsed.lineItems);  // build the nested structure
+
+  const key = type === 'monthly-e' ? 'employeeMonthly' : 'otherMonthly';
+
+  set(state => ({
+    [key]: {
+      ...state[key],
+      [month?.toLowerCase() || "unknown"]: {
+        flat: parsed.lineItems,
+        nested: nested,
+        meta: {
+          summaryColumn: parsed.summaryColumn,
+          entityColumns: parsed.entityColumns
+        }
+      }
+    }
+  }));
+}
+Now your Zustand data structure becomes:
+
+ts
+Copy
+Edit
+employeeMonthly: {
+  january: {
+    flat: [...],
+    nested: [{ name: "Revenue", children: [...] }],
+    meta: { ... }
+  },
+  ...
+}
+🧱 Step 2: Build a Recursive Table Component
+Create a table component that recursively renders rows based on hierarchy depth:
+
+tsx
+Copy
+Edit
+function FinancialRow({ node, level = 0 }) {
+  return (
+    <>
+      <tr>
+        <td style={{ paddingLeft: `${level * 20}px` }}>{node.name}</td>
+        <td>{node.value ?? '-'}</td>
+      </tr>
+      {node.children?.map(child => (
+        <FinancialRow key={child.id} node={child} level={level + 1} />
+      ))}
+    </>
+  );
+}
+Use this in Monthly.tsx:
+
+tsx
+Copy
+Edit
+const nested = employeeMonthly[selectedMonth]?.nested || [];
+
+return (
+  <table>
+    <thead>
+      <tr><th>Line Item</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+      {nested.map(item => <FinancialRow key={item.id} node={item} />)}
+    </tbody>
+  </table>
+);
+🧪 Step 3: Validate Upload Works
+After uploading January, run this in dev tools:
+
+ts
+Copy
+Edit
+console.log(useStore.getState().employeeMonthly.january)
+You should see flat, nested, and meta.
+
+✅ Summary
+Fix Area	What You Need To Do
+Zustand Store	Store both flat + nested parsed data per month
+Data Hierarchy	Use buildHierarchy() after parsing monthly CSVs
+Frontend Render	Recursively render nested data using depth levels
+Table Component	Build reusable component that indents by hierarchy
+
+Want me to generate all 3 files with these fixes fully integrated (store, parser, table component)? 
+
+
+
+
+
+
+
+
