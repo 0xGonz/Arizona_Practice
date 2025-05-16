@@ -98,73 +98,8 @@ export default function DoctorPerformance() {
 
       {hasData && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Profitability Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Provider Profitability</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart 
-                  data={filteredData}
-                  margin={{ top: 10, right: 30, left: 20, bottom: 70 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45} 
-                    textAnchor="end" 
-                    height={70}
-                    interval={0}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis 
-                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
-                    width={80}
-                  />
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Legend wrapperStyle={{ paddingTop: 10 }}/>
-                  <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
-                  <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
-                  <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Expense Composition */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Composition</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart 
-                  layout="vertical" 
-                  data={expenseCategories}
-                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    type="number" 
-                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
-                    domain={[0, 'dataMax']}
-                  />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    width={100}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Bar dataKey="value" name="Amount" fill="#42A5F5" barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
           {/* Monthly Trend View */}
-          <Card className="lg:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle>Monthly Performance Trend</CardTitle>
             </CardHeader>
@@ -201,6 +136,71 @@ export default function DoctorPerformance() {
                   <p>No monthly trend data available. Please upload monthly data for more months.</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Expense Composition */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Expense Composition</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart 
+                  layout="vertical" 
+                  data={expenseCategories}
+                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    type="number" 
+                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
+                    domain={[0, 'dataMax']}
+                  />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={100}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                  <Bar dataKey="value" name="Amount" fill="#42A5F5" barSize={30} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Profitability Chart */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Provider Profitability</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart 
+                  data={filteredData}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 70 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={70}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
+                    width={80}
+                  />
+                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                  <Legend wrapperStyle={{ paddingTop: 10 }}/>
+                  <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
+                  <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
+                  <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
 
