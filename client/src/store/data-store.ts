@@ -549,10 +549,10 @@ export const useStore = create<DataStore>((set, get) => ({
           throw new Error("CSV must contain a 'Line Item' column");
         }
         
-        // Use our enhanced parser that returns structured data with flat, nested, and metadata
-        const processedData = processMonthlyCSV(data, 'monthly-e');
+        // Use our simplified parser that is more robust against errors
+        const processedData = parseMonthlyCSV(data, 'monthly-e');
         
-        console.log(`Processed monthly-e data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
+        console.log(`Processed monthly-e data with ${processedData.lineItems.length} line items and ${processedData.entityColumns.length} entity columns`);
         
         // Add to upload history
         const newUploadHistory = Array.isArray(state.uploadHistory) ? 
@@ -634,10 +634,10 @@ export const useStore = create<DataStore>((set, get) => ({
           throw new Error("CSV must contain a 'Line Item' column");
         }
         
-        // Use our enhanced parser that returns structured data with flat, nested, and metadata
-        const processedData = processMonthlyCSV(data, 'monthly-o');
+        // Use our simplified parser that is more robust against errors
+        const processedData = parseMonthlyCSV(data, 'monthly-o');
         
-        console.log(`Processed monthly-o data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
+        console.log(`Processed monthly-o data with ${processedData.lineItems.length} line items and ${processedData.entityColumns.length} entity columns`);
         
         // Add to upload history
         const newUploadHistory = Array.isArray(state.uploadHistory) ? 

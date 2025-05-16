@@ -88,17 +88,27 @@ export default function Monthly() {
     
     // Handle new structured format
     if (monthDataObj.e && typeof monthDataObj.e === 'object' && !Array.isArray(monthDataObj.e)) {
-      // New format with hierarchy
-      if (monthDataObj.e.flat) {
+      // Check for new simplified format with lineItems
+      if (monthDataObj.e.lineItems) {
+        eData = monthDataObj.e.lineItems;
+        eNestedData = monthDataObj.e.lineItems || [];
+        eMetadata = {
+          entityColumns: monthDataObj.e.entityColumns || [],
+          summaryColumn: monthDataObj.e.summaryColumn,
+          type: 'monthly-e'
+        };
+      } 
+      // Fall back to older format if needed
+      else if (monthDataObj.e.flat) {
         eData = monthDataObj.e.flat;
-      } else if (monthDataObj.e.raw) {
-        eData = monthDataObj.e.raw;
-      } else {
+        eNestedData = monthDataObj.e.nested || [];
+        eMetadata = monthDataObj.e.meta || {};
+      } 
+      else {
         eData = [];
+        eNestedData = [];
+        eMetadata = {}; 
       }
-      
-      eNestedData = monthDataObj.e.nested || [];
-      eMetadata = monthDataObj.e.meta || {};
       console.log("Found structured eData with:", eData.length, "flat items and", eNestedData.length, "nested categories");
     } else if (Array.isArray(monthDataObj.e)) {
       // Old format (flat array)
@@ -108,17 +118,27 @@ export default function Monthly() {
     
     // Same for o data
     if (monthDataObj.o && typeof monthDataObj.o === 'object' && !Array.isArray(monthDataObj.o)) {
-      // New format with hierarchy
-      if (monthDataObj.o.flat) {
+      // Check for new simplified format with lineItems
+      if (monthDataObj.o.lineItems) {
+        oData = monthDataObj.o.lineItems;
+        oNestedData = monthDataObj.o.lineItems || [];
+        oMetadata = {
+          entityColumns: monthDataObj.o.entityColumns || [],
+          summaryColumn: monthDataObj.o.summaryColumn,
+          type: 'monthly-o'
+        };
+      } 
+      // Fall back to older format if needed
+      else if (monthDataObj.o.flat) {
         oData = monthDataObj.o.flat;
-      } else if (monthDataObj.o.raw) {
-        oData = monthDataObj.o.raw;
-      } else {
+        oNestedData = monthDataObj.o.nested || [];
+        oMetadata = monthDataObj.o.meta || {};
+      } 
+      else {
         oData = [];
+        oNestedData = [];
+        oMetadata = {}; 
       }
-      
-      oNestedData = monthDataObj.o.nested || [];
-      oMetadata = monthDataObj.o.meta || {};
       console.log("Found structured oData with:", oData.length, "flat items and", oNestedData.length, "nested categories");
     } else if (Array.isArray(monthDataObj.o)) {
       // Old format (flat array)
