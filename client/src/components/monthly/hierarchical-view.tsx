@@ -131,7 +131,12 @@ export default function HierarchicalView({ data, columnHeaders, isNested = false
         root.push(item);
       } else {
         // Add as a child to the current parent
-        stack[stack.length - 1].children.push(item);
+        const parent = stack[stack.length - 1];
+        // Ensure the parent has a children array
+        if (!parent.children) {
+          parent.children = [];
+        }
+        parent.children.push(item);
       }
       
       // Add current item to the stack
