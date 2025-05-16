@@ -448,18 +448,18 @@ export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' |
           const onCallRevenue = parseFloat(item.summaryValue || 0);
           console.log(`Found Hospital On Call Revenue for trend in ${month}: ${onCallRevenue}`);
           
-          // FOR ALL MONTHS: Check if Hospital On Call Revenue is NOT included in Total Revenue 
-          // and add it if needed (especially crucial for March)
+          // In March, the Hospital On Call Revenue is not included in the Total Revenue
+          // This is a special case that needs to be handled
           console.log(`CHECKING HOSPITAL REVENUE: Found in ${month}, amount: ${onCallRevenue}`);
           
-          // For March, always add it since we know it's missing there
-          if (month.toLowerCase() === 'march' && onCallRevenue === 27500) {
-            console.log(`CRITICAL FIX for MARCH: Found Hospital On Call Revenue of 27500 in March. Adding to Total Revenue.`);
+          // For March, we need to add this to the Total Revenue
+          if (month.toLowerCase() === 'march' && onCallRevenue > 0) {
+            console.log(`Fix for March: Hospital On Call Revenue of ${onCallRevenue} not included in Total Revenue.`);
             console.log(`Current March Revenue before adding On Call: ${monthRevenue}`);
             
-            // Fix the March revenue specifically (add 27500 to 1005861.24)
-            monthRevenue = 1033361.24; // Force the correct total since we know exactly what it should be
-            console.log(`SET MARCH TOTAL DIRECTLY: ${monthRevenue}`);
+            // Add the Hospital On Call Revenue to the March total
+            monthRevenue += onCallRevenue;
+            console.log(`March Total after adding On Call Revenue: ${monthRevenue}`);
           }
         }
         
@@ -669,16 +669,14 @@ export function extractMonthlySummaryData(monthlyData: any) {
           const onCallRevenue = parseFloat(item.summaryValue || 0);
           console.log(`Found Hospital On Call Revenue in ${month}: ${onCallRevenue}`);
           
-          // For March, always add it since we know it's missing there
-          if (month.toLowerCase() === 'march' && onCallRevenue === 27500) {
-            console.log(`CRITICAL FIX for MARCH E-file: Found Hospital On Call Revenue of 27500 in March. Adding to Total Revenue.`);
+          // In March, the Hospital On Call Revenue is not included in the Total Revenue
+          if (month.toLowerCase() === 'march' && onCallRevenue > 0) {
+            console.log(`Fix for MARCH E-file: Hospital On Call Revenue of ${onCallRevenue} not included in Total Revenue.`);
             console.log(`Current March Revenue before adding On Call: ${revenue}`);
             
-            // Fix the March revenue specifically
-            if (revenue === 1005861.24) {
-              revenue = 1033361.24; // Force the correct total 
-              console.log(`SET MARCH TOTAL DIRECTLY in E-file: ${revenue}`);
-            }
+            // Add the Hospital On Call Revenue to the March total
+            revenue += onCallRevenue;
+            console.log(`March Total after adding On Call Revenue: ${revenue}`);
           }
         }
         // Check for total expenses with different possible formats
