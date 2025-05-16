@@ -105,12 +105,25 @@ export default function DoctorPerformance() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={filteredData}>
+                <BarChart 
+                  data={filteredData}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 70 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={70}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
+                    width={80}
+                  />
                   <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: 10 }}/>
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
                   <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
                   <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
@@ -129,12 +142,22 @@ export default function DoctorPerformance() {
                 <BarChart 
                   layout="vertical" 
                   data={expenseCategories}
+                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" tickFormatter={(value) => `$${value.toLocaleString()}`} />
-                  <YAxis dataKey="name" type="category" />
+                  <XAxis 
+                    type="number" 
+                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
+                    domain={[0, 'dataMax']}
+                  />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={100}
+                    tick={{ fontSize: 12 }}
+                  />
                   <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Bar dataKey="value" name="Amount" fill="#42A5F5" />
+                  <Bar dataKey="value" name="Amount" fill="#42A5F5" barSize={30} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -148,12 +171,26 @@ export default function DoctorPerformance() {
             <CardContent>
               {monthlyTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={monthlyTrend}>
+                  <BarChart 
+                    data={monthlyTrend}
+                    margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
-                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                    <Legend />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => `$${value.toLocaleString()}`}
+                      width={80}
+                    />
+                    <Tooltip 
+                      formatter={(value) => `$${value.toLocaleString()}`}
+                      wrapperStyle={{ fontSize: 12 }}
+                    />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: 15 }}
+                    />
                     <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
                     <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
                     <Bar dataKey="net" name="Net Income" fill="#66BB6A" />

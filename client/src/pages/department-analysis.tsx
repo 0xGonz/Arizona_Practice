@@ -105,12 +105,25 @@ export default function DepartmentAnalysis() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={filteredData}>
+                <BarChart 
+                  data={filteredData} 
+                  margin={{ top: 10, right: 30, left: 20, bottom: 70 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={70}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
+                    width={80}
+                  />
                   <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: 10 }}/>
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
                   <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
                   <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
@@ -127,23 +140,34 @@ export default function DepartmentAnalysis() {
             <CardContent>
               {departmentData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
+                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <Pie
                       data={departmentData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      outerRadius={130}
+                      labelLine={true}
+                      outerRadius={120}
+                      innerRadius={40}
                       fill="#8884d8"
                       dataKey="revenue"
                       nameKey="name"
-                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({name, percent}) => `${(percent * 100).toFixed(0)}%`}
+                      paddingAngle={2}
                     >
                       {departmentData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                    <Tooltip 
+                      formatter={(value) => `$${value.toLocaleString()}`} 
+                      contentStyle={{ fontSize: 12 }}
+                    />
+                    <Legend 
+                      layout="horizontal" 
+                      verticalAlign="bottom" 
+                      align="center"
+                      wrapperStyle={{ fontSize: 12, paddingTop: 10 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -162,12 +186,26 @@ export default function DepartmentAnalysis() {
             <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={ancillaryData}>
+                  <BarChart 
+                    data={ancillaryData}
+                    margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => `$${value.toLocaleString()}`}
+                      width={80}
+                    />
                     <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                    <Bar dataKey="value" name="Amount" fill="#42A5F5" />
+                    <Bar 
+                      dataKey="value" 
+                      name="Amount" 
+                      fill="#42A5F5"
+                      barSize={60}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
                 
