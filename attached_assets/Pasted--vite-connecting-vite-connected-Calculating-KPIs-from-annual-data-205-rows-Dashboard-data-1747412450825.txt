@@ -1,0 +1,82 @@
+[vite] connecting...
+[vite] connected.
+Calculating KPIs from annual data: 205 rows
+Dashboard data updated:
+- Revenue Mix: 4 items
+- Margin Trend: 12 points
+- Top Performers: 4 items
+- Bottom Performers: 5 items
+Loading monthly data for: january 
+Object {e: Array(205), o: Array(205)}
+Monthly data loaded: 
+Object {eData: 205, oData: 205}
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at Monthly (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/monthly.tsx?t=1747411865329:48:41)
+    at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:323:16)
+    at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx:21:34)
+    at Router
+    at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAF36TS6.js?v=560a4516:38:15)
+    at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=560a4516:56:5)
+    at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=560a4516:2805:3)
+    at App
+    at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:44:25)
+    at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:42:18)
+at Monthly (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/monthly.tsx?t=1747411865329:48:41)
+at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:323:16)
+at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:379:17)
+at main
+at div
+at div
+at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx:21:34)
+at Router
+at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAF36TS6.js?v=560a4516:38:15)
+at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=560a4516:56:5)
+at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=560a4516:2805:3)
+at App
+at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:44:25)
+at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:42:18)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Loading monthly data for: january 
+Object {e: Array(205), o: Array(205)}
+Monthly data loaded: 
+Object {eData: 205, oData: 205}
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at Monthly (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/monthly.tsx?t=1747411865329:48:41)
+    at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:323:16)
+    at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx:21:34)
+    at Router
+    at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAF36TS6.js?v=560a4516:38:15)
+    at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=560a4516:56:5)
+    at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=560a4516:2805:3)
+    at App
+    at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:44:25)
+    at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:42:18)
+at Monthly (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/monthly.tsx?t=1747411865329:48:41)
+at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:323:16)
+at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:379:17)
+at main
+at div
+at div
+at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx:21:34)
+at Router
+at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAF36TS6.js?v=560a4516:38:15)
+at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=560a4516:56:5)
+at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=560a4516:2805:3)
+at App
+at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:44:25)
+at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:42:18)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400

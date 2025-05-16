@@ -44,35 +44,122 @@ export default function Monthly() {
     return { eData, oData };
   }, [monthlyData, monthLower]);
 
-  // Calculate financial metrics from the montly data
+  // Calculate financial metrics from the monthly data
   const financialMetrics = useMemo(() => {
     if (!monthData) return null;
     
     const { eData } = monthData;
     
-    // Find revenue line item
-    const revenueRow = eData.find(row => 
-      row['Line Item'] && row['Line Item'].includes('Total Revenue')
-    );
+    // First try to find the "All Employees" column by exact match
+    let allEmployeesColumn = "All Employees";
     
-    // Find expense line item
-    const expenseRow = eData.find(row => 
-      row['Line Item'] && (
-        row['Line Item'].includes('Total Expense') || 
-        row['Line Item'].includes('Total Operating Expenses')
-      )
-    );
+    // If it doesn't exist, look for columns that might contain "total" or similar keywords
+    if (!eData[0] || typeof eData[0][allEmployeesColumn] === 'undefined') {
+      const possibleTotalColumns = Object.keys(eData[0] || {}).filter(key => 
+        key.toLowerCase().includes('total') ||
+        key.toLowerCase().includes('all')
+      );
+      
+      if (possibleTotalColumns.length > 0) {
+        allEmployeesColumn = possibleTotalColumns[0];
+        console.log("Using alternative total column:", allEmployeesColumn);
+      }
+    }
     
-    // Calculate totals from the "All Employees" column
-    const revenue = revenueRow && revenueRow['All Employees'] 
-      ? parseFinancialValue(revenueRow['All Employees']) 
-      : 0;
+    // Find revenue rows - look for multiple possible revenue indicators
+    const revenueRow = eData.find(row => {
+      if (!row['Line Item']) return false;
+      const lineItem = row['Line Item'].toLowerCase();
+      return (
+        lineItem.includes('total revenue') ||
+        lineItem.includes('gross revenue') ||
+        lineItem.includes('revenue total') ||
+        lineItem.includes('total income')
+      );
+    });
+    
+    // Find expense rows - look for multiple possible expense indicators
+    const expenseRow = eData.find(row => {
+      if (!row['Line Item']) return false;
+      const lineItem = row['Line Item'].toLowerCase();
+      return (
+        lineItem.includes('total expense') ||
+        lineItem.includes('total operating expense') ||
+        lineItem.includes('operating expenses') ||
+        lineItem.includes('expense total')
+      );
+    });
+    
+    console.log("Found revenue row:", revenueRow?.['Line Item']);
+    console.log("Found expense row:", expenseRow?.['Line Item']);
+    console.log("Using column for totals:", allEmployeesColumn);
+    
+    // Calculate totals
+    let revenue = 0;
+    if (revenueRow) {
+      const rawRevenue = revenueRow[allEmployeesColumn] || revenueRow["Total"] || "0";
+      try {
+        revenue = parseFinancialValue(rawRevenue.toString());
+      } catch (e) {
+        console.error("Error parsing revenue:", e);
+      }
+    } else {
+      // If we can't find revenue, try to add up all income or revenue rows
+      const incomeRows = eData.filter(row => {
+        if (!row['Line Item']) return false;
+        const lineItem = row['Line Item'].toLowerCase();
+        return (
+          (lineItem.includes('revenue') || lineItem.includes('income')) &&
+          !lineItem.includes('total') &&
+          !lineItem.includes('expense')
+        );
+      });
       
-    const expenses = expenseRow && expenseRow['All Employees'] 
-      ? parseFinancialValue(expenseRow['All Employees']) 
-      : 0;
+      for (const row of incomeRows) {
+        try {
+          const value = row[allEmployeesColumn] || row["Total"] || "0";
+          revenue += parseFinancialValue(value.toString());
+        } catch (e) {
+          // Skip rows that can't be parsed
+        }
+      }
+    }
+    
+    // Calculate expense the same way
+    let expenses = 0; 
+    if (expenseRow) {
+      const rawExpenses = expenseRow[allEmployeesColumn] || expenseRow["Total"] || "0";
+      try {
+        expenses = parseFinancialValue(rawExpenses.toString());
+      } catch (e) {
+        console.error("Error parsing expenses:", e);
+      }
+    } else {
+      // If we can't find expenses, try to add up all expense rows
+      const expenseRows = eData.filter(row => {
+        if (!row['Line Item']) return false;
+        const lineItem = row['Line Item'].toLowerCase();
+        return (
+          lineItem.includes('expense') &&
+          !lineItem.includes('total') &&
+          !lineItem.includes('revenue')
+        );
+      });
       
+      for (const row of expenseRows) {
+        try {
+          const value = row[allEmployeesColumn] || row["Total"] || "0";
+          expenses += parseFinancialValue(value.toString());
+        } catch (e) {
+          // Skip rows that can't be parsed
+        }
+      }
+    }
+    
+    // Calculate net income
     const netIncome = revenue - expenses;
+    
+    console.log("Calculated metrics:", { revenue, expenses, netIncome });
     
     return { revenue, expenses, netIncome };
   }, [monthData]);
@@ -81,104 +168,262 @@ export default function Monthly() {
   const columnHeaders = useMemo(() => {
     if (!monthData?.eData?.length) return [];
     
+    console.log("First row of monthly data:", monthData.eData[0]);
+    
     // Get all column headers except 'Line Item' and 'All Employees'
     const headers = Object.keys(monthData.eData[0] || {})
-      .filter(key => key !== 'Line Item' && key !== 'All Employees');
-      
+      .filter(key => 
+        key !== 'Line Item' && 
+        key !== 'All Employees' && 
+        key !== '' && // Filter out empty keys
+        key.trim() !== '' // Filter out keys that are just whitespace
+      );
+    
+    console.log("Extracted column headers:", headers);
+    
     return headers;
+  }, [monthData]);
+
+  // Find the "All Employees" column or similar total column
+  const totalsColumn = useMemo(() => {
+    if (!monthData?.eData?.length) return "All Employees";
+    
+    // First try to find the "All Employees" column by exact match
+    if (monthData.eData[0] && typeof monthData.eData[0]['All Employees'] !== 'undefined') {
+      return 'All Employees';
+    }
+    
+    // Then look for columns that might contain "total" or similar keywords
+    const possibleTotalColumns = Object.keys(monthData.eData[0] || {}).filter(key => 
+      key.toLowerCase().includes('total') ||
+      key.toLowerCase().includes('all')
+    );
+    
+    if (possibleTotalColumns.length > 0) {
+      console.log("Using alternative total column:", possibleTotalColumns[0]);
+      return possibleTotalColumns[0];
+    }
+    
+    return "All Employees"; // Default fallback
   }, [monthData]);
 
   // Extract main line items for the table
   const lineItems = useMemo(() => {
     if (!monthData?.eData?.length) return [];
     
-    const items = [
+    // Log first few rows to understand data structure
+    console.log("Sample monthly data rows:", monthData.eData.slice(0, 3));
+    
+    // Create a structure for our line items - these are the categories we'll display
+    const mainCategories = [
       { 
         name: 'Revenue', 
         type: 'header', 
         key: 'revenue',
+        searchTerms: ['revenue', 'income', 'gross'],
         children: [
-          { name: 'Professional Fees', type: 'line', key: 'prof_fees' },
-          { name: 'Ancillary Revenue', type: 'line', key: 'ancillary' }
+          { 
+            name: 'Professional Fees', 
+            type: 'line', 
+            key: 'prof_fees',
+            searchTerms: ['professional', 'fees', 'service']
+          },
+          { 
+            name: 'Ancillary Revenue', 
+            type: 'line', 
+            key: 'ancillary',
+            searchTerms: ['ancillary', 'other', 'additional'] 
+          }
         ]
       },
       { 
         name: 'Expenses', 
         type: 'header', 
         key: 'expenses',
+        searchTerms: ['expense', 'cost', 'expenditure'],
         children: [
-          { name: 'Payroll', type: 'line', key: 'payroll' },
-          { name: 'Operating', type: 'line', key: 'operating' },
-          { name: 'Admin', type: 'line', key: 'admin' }
+          { 
+            name: 'Payroll', 
+            type: 'line', 
+            key: 'payroll',
+            searchTerms: ['payroll', 'salary', 'wage', 'compensation']
+          },
+          { 
+            name: 'Operating', 
+            type: 'line', 
+            key: 'operating',
+            searchTerms: ['operating', 'supplies', 'material']
+          },
+          { 
+            name: 'Admin', 
+            type: 'line', 
+            key: 'admin',
+            searchTerms: ['admin', 'administrative', 'office']
+          }
         ]
       },
-      { name: 'Net Income', type: 'total', key: 'net_income' }
+      { 
+        name: 'Net Income', 
+        type: 'total', 
+        key: 'net_income',
+        searchTerms: ['net income', 'profit', 'bottom line', 'net earnings']
+      }
     ];
     
-    // Gather actual line items from the data
-    const dataItems = monthData.eData.filter(row => 
-      row['Line Item'] && (
-        row['Line Item'].includes('Revenue') ||
-        row['Line Item'].includes('Expense') ||
-        row['Line Item'].includes('Income') ||
-        row['Line Item'].includes('Payroll') ||
-        row['Line Item'].includes('Admin') ||
-        row['Line Item'].includes('Operating')
-      )
-    );
+    // Function to find a row using any of the search terms
+    const findRow = (rows, searchTerms) => {
+      return rows.find(row => {
+        if (!row['Line Item']) return false;
+        const lineItem = row['Line Item'].toLowerCase();
+        return searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+      });
+    };
     
-    // Map line items to their values
-    const mappedItems = items.map(item => {
-      // Find matching row for this header
-      const mainRow = dataItems.find(row => 
-        row['Line Item'] && row['Line Item'].includes(item.name)
-      );
+    // Function to safely extract a value from a row and column
+    const safeExtractValue = (row, columnName) => {
+      if (!row) return 0;
       
-      const values = {};
-      
-      // Get values for each column
-      if (mainRow) {
-        // Add values for each provider column
-        columnHeaders.forEach(header => {
-          values[header] = mainRow[header] ? parseFinancialValue(mainRow[header]) : 0;
-        });
-        
-        // Add the "All Employees" value
-        values['All Employees'] = mainRow['All Employees'] 
-          ? parseFinancialValue(mainRow['All Employees']) 
-          : 0;
+      // Try different approaches to get a value
+      if (typeof row[columnName] !== 'undefined') {
+        try {
+          const valueStr = row[columnName].toString().trim();
+          if (valueStr === '' || valueStr === '  ' || valueStr === '-') return 0;
+          return parseFinancialValue(valueStr);
+        } catch (e) {
+          console.error(`Error parsing value for ${columnName}:`, e);
+          return 0;
+        }
       }
       
-      // Process child items
-      if (item.children) {
-        const mappedChildren = item.children.map(child => {
-          const childRow = dataItems.find(row => 
-            row['Line Item'] && row['Line Item'].includes(child.name)
-          );
+      return 0;
+    };
+
+    // Process all the line items in the data
+    const processedItems = mainCategories.map(category => {
+      // For each category, calculate values for each column
+      const values = {};
+      
+      // For each doctor/provider column, calculate the total
+      columnHeaders.forEach(header => {
+        let total = 0;
+        
+        // If this is a main category (Revenue, Expenses, etc.)
+        if (category.type === 'header' || category.type === 'total') {
+          // Try to find a row with the total directly
+          const totalRow = findRow(monthData.eData, category.searchTerms);
           
+          if (totalRow) {
+            // Found a direct match for the total
+            total = safeExtractValue(totalRow, header);
+          } else if (category.type === 'header' && category.children) {
+            // Calculate total by adding up child rows
+            category.children.forEach(child => {
+              const childRows = monthData.eData.filter(row => {
+                if (!row['Line Item']) return false;
+                const lineItem = row['Line Item'].toLowerCase();
+                return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+              });
+              
+              childRows.forEach(row => {
+                total += safeExtractValue(row, header);
+              });
+            });
+          }
+        }
+        
+        values[header] = total;
+      });
+      
+      // Calculate the total for "All Employees" column
+      let totalAllEmployees = 0;
+      const totalRow = findRow(monthData.eData, category.searchTerms);
+      
+      if (totalRow) {
+        totalAllEmployees = safeExtractValue(totalRow, totalsColumn);
+      } else if (category.type === 'header' && category.children) {
+        // Calculate the total from child rows
+        category.children.forEach(child => {
+          const childRows = monthData.eData.filter(row => {
+            if (!row['Line Item']) return false;
+            const lineItem = row['Line Item'].toLowerCase();
+            return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+          });
+          
+          childRows.forEach(row => {
+            totalAllEmployees += safeExtractValue(row, totalsColumn);
+          });
+        });
+      }
+      
+      values['All Employees'] = totalAllEmployees;
+      
+      // If this is a main category with children, process the children
+      if (category.type === 'header' && category.children) {
+        const processedChildren = category.children.map(child => {
           const childValues = {};
           
-          if (childRow) {
-            columnHeaders.forEach(header => {
-              childValues[header] = childRow[header] ? parseFinancialValue(childRow[header]) : 0;
+          // Calculate values for each column
+          columnHeaders.forEach(header => {
+            let childTotal = 0;
+            
+            // Find all rows that match this child's search terms
+            const childRows = monthData.eData.filter(row => {
+              if (!row['Line Item']) return false;
+              const lineItem = row['Line Item'].toLowerCase();
+              return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
             });
             
-            childValues['All Employees'] = childRow['All Employees'] 
-              ? parseFinancialValue(childRow['All Employees']) 
-              : 0;
-          }
+            // Sum up all the values
+            childRows.forEach(row => {
+              childTotal += safeExtractValue(row, header);
+            });
+            
+            childValues[header] = childTotal;
+          });
+          
+          // Calculate the total for "All Employees" column
+          let childTotalAllEmployees = 0;
+          const childRows = monthData.eData.filter(row => {
+            if (!row['Line Item']) return false;
+            const lineItem = row['Line Item'].toLowerCase();
+            return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+          });
+          
+          childRows.forEach(row => {
+            childTotalAllEmployees += safeExtractValue(row, totalsColumn);
+          });
+          
+          childValues['All Employees'] = childTotalAllEmployees;
           
           return { ...child, values: childValues };
         });
         
-        return { ...item, values, children: mappedChildren };
+        return { ...category, values, children: processedChildren };
       }
       
-      return { ...item, values };
+      return { ...category, values };
     });
     
-    return mappedItems;
-  }, [monthData, columnHeaders]);
+    // Use the calculated financial metrics for the Net Income category
+    if (financialMetrics && processedItems.length > 2) {
+      // Override the total row with calculated financials
+      const netIncomeItem = processedItems[2];
+      
+      // For the All Employees column, use the calculated net income
+      netIncomeItem.values['All Employees'] = financialMetrics.netIncome;
+      
+      // For other columns, try to calculate by taking revenue - expenses for each column
+      columnHeaders.forEach(header => {
+        const columnRevenue = processedItems[0].values[header] || 0;
+        const columnExpenses = processedItems[1].values[header] || 0;
+        netIncomeItem.values[header] = columnRevenue - columnExpenses;
+      });
+    }
+    
+    console.log("Processed line items:", processedItems);
+    
+    return processedItems;
+  }, [monthData, columnHeaders, financialMetrics, totalsColumn]);
 
   return (
     <div className="p-6">
