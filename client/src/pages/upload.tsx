@@ -303,12 +303,18 @@ export default function Upload() {
                             </thead>
                             <tbody>
                               {annualData && Array.isArray(annualData) && annualData.length > 0 ? (
-                                annualData.slice(0, 20).map((row: any, index: number) => (
-                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                    <td className="border p-2 text-right">{row['2024 Total'] || 'N/A'}</td>
-                                  </tr>
-                                ))
+                                annualData.slice(0, 20).map((row: any, index: number) => {
+                                  console.log("Annual row data:", row); // Debug log
+                                  return (
+                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                      <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                      <td className="border p-2 text-right">
+                                        {Object.keys(row).find(k => k.includes('Total')) ? 
+                                          row[Object.keys(row).find(k => k.includes('Total')) || ''] : 'N/A'}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
                               ) : (
                                 <tr>
                                   <td colSpan={2} className="border p-2 text-center">No data available</td>
@@ -334,12 +340,18 @@ export default function Upload() {
                             </thead>
                             <tbody>
                               {monthlyData[selectedEMonth]?.e && Array.isArray(monthlyData[selectedEMonth]?.e) && monthlyData[selectedEMonth]?.e.length > 0 ? (
-                                monthlyData[selectedEMonth].e.slice(0, 20).map((row: any, index: number) => (
-                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                    <td className="border p-2 text-right">{row['All Employees'] || 'N/A'}</td>
-                                  </tr>
-                                ))
+                                monthlyData[selectedEMonth].e.slice(0, 20).map((row: any, index: number) => {
+                                  console.log("Monthly E row data:", row); // Debug log
+                                  return (
+                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                      <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                      <td className="border p-2 text-right">
+                                        {Object.keys(row).find(k => k.includes('All')) ? 
+                                          row[Object.keys(row).find(k => k.includes('All')) || ''] : 'N/A'}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
                               ) : (
                                 <tr>
                                   <td colSpan={2} className="border p-2 text-center">No data available</td>
@@ -365,12 +377,18 @@ export default function Upload() {
                             </thead>
                             <tbody>
                               {monthlyData[selectedOMonth]?.o && Array.isArray(monthlyData[selectedOMonth]?.o) && monthlyData[selectedOMonth]?.o.length > 0 ? (
-                                monthlyData[selectedOMonth].o.slice(0, 20).map((row: any, index: number) => (
-                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                    <td className="border p-2 text-right">{row['All Entities'] || 'N/A'}</td>
-                                  </tr>
-                                ))
+                                monthlyData[selectedOMonth].o.slice(0, 20).map((row: any, index: number) => {
+                                  console.log("Monthly O row data:", row); // Debug log
+                                  return (
+                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                      <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                      <td className="border p-2 text-right">
+                                        {Object.keys(row).find(k => k.includes('All')) ? 
+                                          row[Object.keys(row).find(k => k.includes('All')) || ''] : 'N/A'}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
                               ) : (
                                 <tr>
                                   <td colSpan={2} className="border p-2 text-center">No data available</td>
