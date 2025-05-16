@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UploadBanner from "@/components/upload/upload-banner";
 import { useStore } from "@/store/data-store";
 import { parseFinancialValue } from "@/lib/csv-parser";
+import HierarchicalView from "@/components/monthly/hierarchical-view";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
