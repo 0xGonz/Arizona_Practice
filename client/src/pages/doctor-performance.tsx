@@ -179,23 +179,29 @@ export default function DoctorPerformance() {
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart 
                   data={filteredData}
-                  margin={{ top: 10, right: 30, left: 20, bottom: 70 }}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 75 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="name" 
                     angle={-45} 
                     textAnchor="end" 
-                    height={70}
+                    height={90}
                     interval={0}
                     tick={{ fontSize: 12 }}
+                    tickMargin={25}
                   />
                   <YAxis 
                     tickFormatter={(value) => `$${value.toLocaleString()}`} 
                     width={80}
                   />
                   <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Legend wrapperStyle={{ paddingTop: 10 }}/>
+                  <Legend 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center"
+                    wrapperStyle={{ paddingTop: 30 }}
+                  />
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
                   <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
                   <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
