@@ -16,75 +16,136 @@ export function extractDoctorPerformanceData(monthlyData: any) {
     net: number;
   }[] = [];
   
-  // Find all available months
-  const months = Object.keys(monthlyData || {});
+  // Track all doctors across all months
+  const allDoctors: Set<string> = new Set();
   
-  // For each month, extract doctor performance data from 'e' (employee) type
-  months.forEach(month => {
+  // First, gather all the doctor names from all months
+  Object.keys(monthlyData || {}).forEach(month => {
     const monthData = monthlyData[month]?.e;
     
-    if (monthData?.lineItems && Array.isArray(monthData.lineItems)) {
-      // Get all entity columns which represent doctors/providers
-      const doctorColumns = monthData.entityColumns || [];
-      
-      // Skip if no entity columns found
-      if (doctorColumns.length === 0) return;
-      
-      // Find revenue, expense total, and calculate net income for each doctor
-      doctorColumns.forEach(doctor => {
-        // Skip if not a doctor name (like summary columns)
-        if (doctor.includes('All') || doctor.includes('Summary') || !doctor.trim()) return;
-        
-        // Find Revenue items
-        const revenueItems = monthData.lineItems.filter((item: any) => 
-          item.name.includes('Revenue') || 
-          item.name.includes('Income') ||
-          item.name.toLowerCase().includes('charges')
-        );
-        
-        // Find Expense items
-        const expenseItems = monthData.lineItems.filter((item: any) => 
-          item.name.includes('Expense') || 
-          item.name.includes('Cost') ||
-          (item.name.toLowerCase().includes('total') && item.name.toLowerCase().includes('expense'))
-        );
-        
-        // Calculate totals
-        let totalRevenue = 0;
-        let totalExpenses = 0;
-        
-        revenueItems.forEach((item: any) => {
-          if (item.entityValues && item.entityValues[doctor] !== undefined) {
-            totalRevenue += parseFloat(item.entityValues[doctor] || 0);
-          }
-        });
-        
-        expenseItems.forEach((item: any) => {
-          if (item.entityValues && item.entityValues[doctor] !== undefined) {
-            totalExpenses += parseFloat(item.entityValues[doctor] || 0);
-          }
-        });
-        
-        // Calculate net income
-        const netIncome = totalRevenue - totalExpenses;
-        
-        // Find existing doctor in result or create new entry
-        const existingDoctorIndex = result.findIndex(d => d.name === doctor);
-        
-        if (existingDoctorIndex >= 0) {
-          // Update existing doctor data
-          result[existingDoctorIndex].revenue += totalRevenue;
-          result[existingDoctorIndex].expenses += totalExpenses;
-          result[existingDoctorIndex].net += netIncome;
-        } else {
-          // Add new doctor
-          result.push({
-            name: doctor,
-            revenue: totalRevenue,
-            expenses: totalExpenses,
-            net: netIncome
-          });
+    if (monthData?.entityColumns && Array.isArray(monthData.entityColumns)) {
+      monthData.entityColumns.forEach((doctor: string) => {
+        // Skip summary columns
+        if (!doctor.includes('All') && !doctor.includes('Summary') && doctor.trim()) {
+          allDoctors.add(doctor);
         }
+      });
+    }
+  });
+  
+  // Now process each doctor across all months
+  allDoctors.forEach(doctor => {
+    let doctorRevenue = 0;
+    let doctorExpenses = 0;
+    let doctorNet = 0;
+    
+    // Process each month's data for this doctor
+    Object.keys(monthlyData || {}).forEach(month => {
+      const monthData = monthlyData[month]?.e;
+      
+      if (monthData?.lineItems && Array.isArray(monthData.lineItems) && 
+          monthData.entityColumns && monthData.entityColumns.includes(doctor)) {
+        
+        // Look for Net Income line first - most accurate
+        const netIncomeItem = monthData.lineItems.find((item: any) => 
+          (item.name.includes('Net Income') || 
+           item.name.includes('Net Profit') || 
+           item.name.includes('Net Loss')) && 
+          item.entityValues && 
+          item.entityValues[doctor] !== undefined
+        );
+        
+        // Also look for specific revenue and expense totals
+        const revenueTotalItem = monthData.lineItems.find((item: any) => 
+          (item.name.includes('Total Revenue') || 
+           item.name.includes('Revenue Total')) && 
+          item.entityValues && 
+          item.entityValues[doctor] !== undefined
+        );
+        
+        const expenseTotalItem = monthData.lineItems.find((item: any) => 
+          (item.name.includes('Total Expense') || 
+           item.name.includes('Expense Total')) && 
+          item.entityValues && 
+          item.entityValues[doctor] !== undefined
+        );
+        
+        // Use totals if found
+        if (revenueTotalItem) {
+          doctorRevenue += parseFloat(revenueTotalItem.entityValues[doctor] || 0);
+        }
+        
+        if (expenseTotalItem) {
+          doctorExpenses += parseFloat(expenseTotalItem.entityValues[doctor] || 0);
+        }
+        
+        // Calculate net from totals if both found
+        if (revenueTotalItem && expenseTotalItem) {
+          const monthNetIncome = parseFloat(revenueTotalItem.entityValues[doctor] || 0) - 
+                                 parseFloat(expenseTotalItem.entityValues[doctor] || 0);
+          doctorNet += monthNetIncome;
+        } 
+        // If we found a specific net income line, use that
+        else if (netIncomeItem) {
+          doctorNet += parseFloat(netIncomeItem.entityValues[doctor] || 0);
+          
+          // If we only have net and one of revenue/expense, derive the other
+          if (revenueTotalItem && !expenseTotalItem) {
+            doctorExpenses += parseFloat(revenueTotalItem.entityValues[doctor] || 0) - 
+                              parseFloat(netIncomeItem.entityValues[doctor] || 0);
+          } else if (!revenueTotalItem && expenseTotalItem) {
+            doctorRevenue += parseFloat(expenseTotalItem.entityValues[doctor] || 0) + 
+                             parseFloat(netIncomeItem.entityValues[doctor] || 0);
+          }
+        } 
+        // If we didn't find any totals, sum individual items
+        else if (!revenueTotalItem && !expenseTotalItem && !netIncomeItem) {
+          // Find Revenue items
+          const revenueItems = monthData.lineItems.filter((item: any) => 
+            (item.name.includes('Revenue') || 
+             item.name.includes('Income') ||
+             item.name.toLowerCase().includes('charges')) &&
+            !item.name.includes('Total') &&
+            !item.name.includes('Net') &&
+            item.entityValues && 
+            item.entityValues[doctor] !== undefined
+          );
+          
+          // Find Expense items
+          const expenseItems = monthData.lineItems.filter((item: any) => 
+            (item.name.includes('Expense') || 
+             item.name.includes('Cost')) &&
+            !item.name.includes('Total') &&
+            item.entityValues && 
+            item.entityValues[doctor] !== undefined
+          );
+          
+          // Sum up individual items
+          let monthRevenue = 0;
+          let monthExpenses = 0;
+          
+          revenueItems.forEach((item: any) => {
+            monthRevenue += parseFloat(item.entityValues[doctor] || 0);
+          });
+          
+          expenseItems.forEach((item: any) => {
+            monthExpenses += parseFloat(item.entityValues[doctor] || 0);
+          });
+          
+          doctorRevenue += monthRevenue;
+          doctorExpenses += monthExpenses;
+          doctorNet += (monthRevenue - monthExpenses);
+        }
+      }
+    });
+    
+    // Only add doctor if they have financial data
+    if (doctorRevenue !== 0 || doctorExpenses !== 0 || doctorNet !== 0) {
+      result.push({
+        name: doctor,
+        revenue: doctorRevenue,
+        expenses: doctorExpenses,
+        net: doctorNet
       });
     }
   });
