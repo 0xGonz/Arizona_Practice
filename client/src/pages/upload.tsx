@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CSVUpload from "@/components/upload/csv-upload";
@@ -9,6 +9,26 @@ import { useStore } from "@/store/data-store";
 export default function Upload() {
   const { uploadStatus, uploadHistory } = useStore();
   const [activeTab, setActiveTab] = useState<string>("upload");
+  const [selectedEMonth, setSelectedEMonth] = useState<string>("january");
+  const [selectedOMonth, setSelectedOMonth] = useState<string>("january");
+  
+  // Check if we're coming from a specific upload redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type');
+    const month = params.get('month');
+    
+    if (type && month) {
+      setActiveTab("upload");
+      if (type === 'monthly-e') {
+        setSelectedMonth(month);
+        setSelectedEMonth(month);
+      } else if (type === 'monthly-o') {
+        setSelectedMonth(month);
+        setSelectedOMonth(month);
+      }
+    }
+  }, []);
 
   return (
     <div className="p-6">
@@ -52,6 +72,8 @@ export default function Upload() {
                   <Select
                     className="w-full"
                     placeholder="Select Month..."
+                    value={selectedEMonth}
+                    onChange={(e) => setSelectedEMonth(e.target.value)}
                     options={[
                       { label: "January", value: "january" },
                       { label: "February", value: "february" },
@@ -70,9 +92,9 @@ export default function Upload() {
                   
                   <CSVUpload
                     type="monthly-e"
-                    month="january"
+                    month={selectedEMonth}
                     onUploadComplete={() => {}}
-                    isUploaded={uploadStatus.monthly.january?.e || false}
+                    isUploaded={uploadStatus.monthly[selectedEMonth]?.e || false}
                   />
                 </div>
               </CardContent>
@@ -89,6 +111,8 @@ export default function Upload() {
                   <Select
                     className="w-full"
                     placeholder="Select Month..."
+                    value={selectedOMonth}
+                    onChange={(e) => setSelectedOMonth(e.target.value)}
                     options={[
                       { label: "January", value: "january" },
                       { label: "February", value: "february" },
@@ -107,9 +131,9 @@ export default function Upload() {
                   
                   <CSVUpload
                     type="monthly-o"
-                    month="january"
+                    month={selectedOMonth}
                     onUploadComplete={() => {}}
-                    isUploaded={uploadStatus.monthly.january?.o || false}
+                    isUploaded={uploadStatus.monthly[selectedOMonth]?.o || false}
                   />
                 </div>
               </CardContent>
@@ -228,11 +252,27 @@ export default function Upload() {
   );
 }
 
-function Select({ className, placeholder, options }: { className?: string, placeholder: string, options: { label: string, value: string }[] }) {
+function Select({ 
+  className, 
+  placeholder, 
+  options, 
+  value, 
+  onChange 
+}: { 
+  className?: string, 
+  placeholder: string, 
+  options: { label: string, value: string }[],
+  value?: string,
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void 
+}) {
   return (
     <div className={className}>
-      <select className="w-full p-2 border border-input rounded-md bg-white">
-        <option value="" disabled selected>{placeholder}</option>
+      <select 
+        className="w-full p-2 border border-input rounded-md bg-white"
+        value={value || ""}
+        onChange={onChange}
+      >
+        <option value="" disabled>{placeholder}</option>
         {options.map(option => (
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}

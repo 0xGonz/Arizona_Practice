@@ -30,28 +30,25 @@ export default function UploadBanner({
   const { setUploadStatus } = useStore();
 
   const handleUploadClick = () => {
-    setIsUploadModalOpen(true);
-    // In a real implementation, this would trigger a modal or redirect to upload page
-    
-    // For demo purposes, we'll just simulate a successful upload by updating the upload status
-    if (uploadType === 'annual') {
-      setUploadStatus({ annual: true });
-    } else if (uploadType === 'monthly-e' && month) {
-      setUploadStatus({ monthly: { [month]: { e: true } } });
-    } else if (uploadType === 'monthly-o' && month) {
-      setUploadStatus({ monthly: { [month]: { o: true } } });
-    }
+    // Redirect to upload page
+    window.location.href = '/upload';
   };
 
   const handleEFileUpload = () => {
+    // Redirect to upload page with pre-selected tab and month
     if (month) {
-      setUploadStatus({ monthly: { [month]: { e: true } } });
+      window.location.href = `/upload?type=monthly-e&month=${month}`;
+    } else {
+      window.location.href = '/upload';
     }
   };
 
   const handleOFileUpload = () => {
+    // Redirect to upload page with pre-selected tab and month
     if (month) {
-      setUploadStatus({ monthly: { [month]: { o: true } } });
+      window.location.href = `/upload?type=monthly-o&month=${month}`;
+    } else {
+      window.location.href = '/upload';
     }
   };
 
