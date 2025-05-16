@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { CSVType, UploadStatus, MarginTrendPoint, RevenueMixItem, PerformerData, ComparisonData } from '@/types';
-import { processAnnualCSV, processMonthlyCSV, parseFinancialValue } from '@/lib/csv-parser';
+import { processAnnualCSV, parseFinancialValue } from '@/lib/csv-parser';
+import { parseMonthlyCSV } from '@/lib/simplified-monthly-parser';
 
 // Helper functions to extract data from the CSV for dashboard displays
 function extractTotalRevenue(data: any[]): number {
