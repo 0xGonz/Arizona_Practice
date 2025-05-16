@@ -1,34 +1,44 @@
-import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { 
+  LayoutDashboard, 
+  CalendarDays, 
+  User, 
+  Building, 
+  Upload, 
+  History, 
+  FileText, 
+  LineChart, 
+  Stethoscope 
+} from "lucide-react";
 
 interface NavItem {
   name: string;
   path: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 const navigationItems: { section: string; items: NavItem[] }[] = [
   {
     section: "Overview",
     items: [
-      { name: "Dashboard", path: "/", icon: "dashboard" },
-      { name: "Month by Month", path: "/monthly", icon: "calendar_month" },
-      { name: "Doctor Performance", path: "/doctor-performance", icon: "person" },
-      { name: "Department Analysis", path: "/department-analysis", icon: "business" }
+      { name: "Dashboard", path: "/", icon: <LayoutDashboard className="w-5 h-5" /> },
+      { name: "Month by Month", path: "/monthly", icon: <CalendarDays className="w-5 h-5" /> },
+      { name: "Doctor Performance", path: "/doctor-performance", icon: <User className="w-5 h-5" /> },
+      { name: "Department Analysis", path: "/department-analysis", icon: <Building className="w-5 h-5" /> }
     ]
   },
   {
     section: "Data Management",
     items: [
-      { name: "Upload Data", path: "/upload", icon: "upload_file" },
-      { name: "Upload History", path: "/upload?tab=history", icon: "history" }
+      { name: "Upload Data", path: "/upload", icon: <Upload className="w-5 h-5" /> },
+      { name: "Upload History", path: "/upload?tab=history", icon: <History className="w-5 h-5" /> }
     ]
   },
   {
     section: "Reports",
     items: [
-      { name: "Generate Reports", path: "/reports", icon: "summarize" },
-      { name: "Financial Insights", path: "/insights", icon: "insights" }
+      { name: "Generate Reports", path: "/reports", icon: <FileText className="w-5 h-5" /> },
+      { name: "Financial Insights", path: "/insights", icon: <LineChart className="w-5 h-5" /> }
     ]
   }
 ];
@@ -40,7 +50,7 @@ export default function Sidebar() {
     <aside className="bg-white w-64 border-r border-neutral-border h-full flex-shrink-0 hidden md:block">
       <div className="p-4 border-b border-neutral-border">
         <h1 className="text-xl font-semibold text-primary flex items-center">
-          <span className="material-icons mr-2">medical_services</span>
+          <Stethoscope className="w-6 h-6 mr-2 text-primary" />
           Clinic Analytics
         </h1>
       </div>
@@ -64,7 +74,7 @@ export default function Sidebar() {
                       : "text-neutral-dark hover:bg-blue-50"
                   }`}
                 >
-                  <span className="material-icons mr-2">{item.icon}</span>
+                  <span className="mr-2">{item.icon}</span>
                   {item.name}
                 </Link>
               );
