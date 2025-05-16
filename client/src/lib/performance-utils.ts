@@ -112,18 +112,19 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
   // Find all available months
   const months = Object.keys(monthlyData || {});
   
-  // Process department data from 'o' (other business) type
+  // Process department data from 'o' (other business) type ONLY
+  // This is important for consistency with what's shown in the "Other Business" (O) monthly files
   months.forEach(month => {
     const monthData = monthlyData[month]?.o;
     
     if (monthData?.lineItems && Array.isArray(monthData.lineItems)) {
-      // Find all departments by looking for department-level line items
-      // These are often at depth 1 or 2 and represent expense/revenue centers
+      // Find department headers or section items - typically at depth 1 or 2
       const departmentItems = monthData.lineItems.filter((item: any) => 
         (item.depth === 1 || item.depth === 2) &&
         !item.name.includes('Total') &&
         !item.name.includes('Revenue') &&
         !item.name.includes('Expense') &&
+        !item.name.includes('Income') &&
         item.name.trim() !== ''
       );
       
@@ -131,44 +132,73 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
       departmentItems.forEach((dept: any) => {
         const deptName = dept.name.trim();
         
-        // Skip if we already processed this department or if it's not a valid name
-        if (processedDepartments.has(deptName) || deptName.length < 3) return;
+        // Skip if we already processed this department, it's not a valid name, or a summary item
+        if (processedDepartments.has(deptName) || 
+            deptName.length < 3 || 
+            deptName.toLowerCase().includes('summary') || 
+            deptName.toLowerCase().includes('total')) return;
         
         // Mark as processed
         processedDepartments.add(deptName);
         
-        // Find all line items that might be part of this department
-        // Look for items with name containing the department name or with similar structure
-        const deptLineItems = monthData.lineItems.filter((item: any) => 
-          (item.name.includes(deptName) || 
-           (item.depth > dept.depth && item.id.startsWith(dept.id.split('-')[0])))
+        // Find department revenue and expense totals
+        // First try to find specific totals for this department
+        const revenueTotalItem = monthData.lineItems.find((item: any) => 
+          item.name.includes(`${deptName} Revenue`) || 
+          item.name.includes(`${deptName} Income`) ||
+          (item.name.includes('Revenue') && item.name.includes(deptName))
         );
         
-        // Calculate department metrics from summary column
+        const expenseTotalItem = monthData.lineItems.find((item: any) => 
+          item.name.includes(`${deptName} Expense`) || 
+          item.name.includes(`${deptName} Cost`) ||
+          (item.name.includes('Expense') && item.name.includes(deptName))
+        );
+        
+        // Initialize totals
         let totalRevenue = 0;
         let totalExpenses = 0;
         
-        deptLineItems.forEach((item: any) => {
-          // Check if this is a revenue or expense item
-          const isRevenue = 
-            item.name.includes('Revenue') || 
-            item.name.includes('Income') ||
-            item.name.toLowerCase().includes('charges');
+        // If we found specific totals, use them
+        if (revenueTotalItem && revenueTotalItem.summaryValue !== undefined) {
+          totalRevenue = parseFloat(revenueTotalItem.summaryValue || 0);
+        }
+        
+        if (expenseTotalItem && expenseTotalItem.summaryValue !== undefined) {
+          totalExpenses = parseFloat(expenseTotalItem.summaryValue || 0);
+        }
+        
+        // If no direct totals, find all line items within this department
+        if (totalRevenue === 0 && totalExpenses === 0) {
+          // Find all line items that might be part of this department
+          // Look for items with name containing the department name or with similar structure
+          const deptLineItems = monthData.lineItems.filter((item: any) => 
+            (item.name.includes(deptName) || 
+             (item.depth > dept.depth && item.id.startsWith(dept.id.split('-')[0])))
+          );
+          
+          deptLineItems.forEach((item: any) => {
+            // Check if this is a revenue or expense item
+            const isRevenue = 
+              item.name.includes('Revenue') || 
+              item.name.includes('Income') ||
+              item.name.toLowerCase().includes('charges');
+              
+            const isExpense = 
+              item.name.includes('Expense') || 
+              item.name.includes('Cost') ||
+              item.name.toLowerCase().includes('salary');
             
-          const isExpense = 
-            item.name.includes('Expense') || 
-            item.name.includes('Cost') ||
-            item.name.toLowerCase().includes('salary');
-          
-          // Get value from summary column
-          const value = parseFloat(item.summaryValue || 0);
-          
-          if (isRevenue) {
-            totalRevenue += value;
-          } else if (isExpense) {
-            totalExpenses += value;
-          }
-        });
+            // Get value from summary column
+            const value = parseFloat(item.summaryValue || 0);
+            
+            if (isRevenue) {
+              totalRevenue += value;
+            } else if (isExpense) {
+              totalExpenses += value;
+            }
+          });
+        }
         
         // Only add departments with actual data
         if (totalRevenue > 0 || totalExpenses > 0) {
@@ -348,46 +378,88 @@ export function extractAncillaryMetrics(monthlyData: any) {
   // Find all available months
   const months = Object.keys(monthlyData || {});
   
-  // Process ancillary data from 'o' (other business) type
+  // Process ancillary data from 'o' (other business) type ONLY for consistency
   months.forEach(month => {
     const monthData = monthlyData[month]?.o;
     
     if (monthData?.lineItems && Array.isArray(monthData.lineItems)) {
-      // Look for ancillary services
-      // These typically include imaging, lab, therapy, etc.
-      const ancillaryKeywords = [
-        'lab', 'imaging', 'mri', 'ultrasound', 'x-ray', 'therapy', 
-        'physical therapy', 'ancillary', 'diagnostic'
-      ];
-      
-      // Find all line items that might be ancillary services
-      const ancillaryItems = monthData.lineItems.filter((item: any) => 
-        ancillaryKeywords.some(keyword => 
-          item.name.toLowerCase().includes(keyword.toLowerCase())
+      // Search for defined ancillary departments/sections first
+      const ancillaryDeptItems = monthData.lineItems.filter((item: any) => 
+        (item.depth === 1 || item.depth === 2) &&
+        (
+          item.name.toLowerCase().includes('ancillary') ||
+          item.name.toLowerCase().includes('diagnostic') ||
+          item.name.toLowerCase().includes('lab') ||
+          item.name.toLowerCase().includes('imaging')
         )
       );
       
-      // Calculate ancillary metrics from these items
-      ancillaryItems.forEach((item: any) => {
-        const isRevenue = 
-          item.name.includes('Revenue') || 
-          item.name.includes('Income') ||
-          (item.name.toLowerCase().includes('charge') && !item.name.toLowerCase().includes('expense'));
+      // If we found specific ancillary departments, use their summaries if available
+      if (ancillaryDeptItems.length > 0) {
+        ancillaryDeptItems.forEach(dept => {
+          const deptName = dept.name.trim();
           
-        const isExpense = 
-          item.name.includes('Expense') || 
-          item.name.includes('Cost') ||
-          item.name.toLowerCase().includes('salary');
+          // Try to find revenue and expense totals for this department
+          const revItem = monthData.lineItems.find((item: any) => 
+            (item.name.includes(`${deptName} Revenue`) || 
+             item.name.includes(`${deptName} Income`)) &&
+            item.summaryValue !== undefined
+          );
+          
+          const expItem = monthData.lineItems.find((item: any) => 
+            (item.name.includes(`${deptName} Expense`) || 
+             item.name.includes(`${deptName} Cost`)) &&
+            item.summaryValue !== undefined
+          );
+          
+          if (revItem) {
+            totalRevenue += parseFloat(revItem.summaryValue || 0);
+          }
+          
+          if (expItem) {
+            totalExpenses += parseFloat(expItem.summaryValue || 0);
+          }
+        });
+      }
+      
+      // If we didn't find specific departments or their totals, 
+      // search for all ancillary line items
+      if (totalRevenue === 0 && totalExpenses === 0) {
+        // Define keywords for ancillary services
+        const ancillaryKeywords = [
+          'lab', 'imaging', 'mri', 'ultrasound', 'x-ray', 'therapy', 
+          'physical therapy', 'ancillary', 'diagnostic', 'radiology'
+        ];
         
-        // Get value from summary column
-        const value = parseFloat(item.summaryValue || 0);
+        // Find all line items that might be ancillary services
+        const ancillaryItems = monthData.lineItems.filter((item: any) => 
+          ancillaryKeywords.some(keyword => 
+            item.name.toLowerCase().includes(keyword.toLowerCase())
+          )
+        );
         
-        if (isRevenue) {
-          totalRevenue += value;
-        } else if (isExpense) {
-          totalExpenses += value;
-        }
-      });
+        // Calculate ancillary metrics from these items
+        ancillaryItems.forEach((item: any) => {
+          const isRevenue = 
+            item.name.includes('Revenue') || 
+            item.name.includes('Income') ||
+            (item.name.toLowerCase().includes('charge') && !item.name.toLowerCase().includes('expense'));
+            
+          const isExpense = 
+            item.name.includes('Expense') || 
+            item.name.includes('Cost') ||
+            item.name.toLowerCase().includes('salary');
+          
+          // Get value from summary column
+          const value = parseFloat(item.summaryValue || 0);
+          
+          if (isRevenue) {
+            totalRevenue += value;
+          } else if (isExpense) {
+            totalExpenses += value;
+          }
+        });
+      }
     }
   });
   
