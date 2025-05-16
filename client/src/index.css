@@ -95,3 +95,11 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.text-positive {
+  color: hsl(var(--positive));
+}
+
+.text-negative {
+  color: hsl(var(--negative));
+}
