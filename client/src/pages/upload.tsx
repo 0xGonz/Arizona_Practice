@@ -7,10 +7,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useStore } from "@/store/data-store";
 
 export default function Upload() {
-  const { uploadStatus, uploadHistory } = useStore();
+  const { uploadStatus, uploadHistory, annualData, monthlyData } = useStore();
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [selectedEMonth, setSelectedEMonth] = useState<string>("january");
   const [selectedOMonth, setSelectedOMonth] = useState<string>("january");
+  const [showProcessedData, setShowProcessedData] = useState(false);
+  const [processedDataType, setProcessedDataType] = useState<string>("annual");
   
   // Check if we're coming from a specific upload redirect
   useEffect(() => {
@@ -39,6 +41,7 @@ export default function Upload() {
         <TabsList className="w-full bg-muted mb-6">
           <TabsTrigger value="upload" className="flex-1">Upload Data</TabsTrigger>
           <TabsTrigger value="history" className="flex-1">Upload History</TabsTrigger>
+          <TabsTrigger value="process" className="flex-1">Process & Validate</TabsTrigger>
           <TabsTrigger value="help" className="flex-1">Help & Guidelines</TabsTrigger>
         </TabsList>
         
@@ -193,6 +196,200 @@ export default function Upload() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <p>No uploads yet. Start by uploading your financial data files.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="process">
+          <Card>
+            <CardHeader>
+              <CardTitle>Process & Validate Uploaded Data</CardTitle>
+              <CardDescription>Verify data is processed correctly before viewing on dashboard</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <h3 className="text-base font-medium mb-2">Select Data to Process</h3>
+                    <div className="space-y-2">
+                      <Select
+                        className="w-full"
+                        placeholder="Select Data Type..."
+                        value={processedDataType}
+                        onChange={(e) => setProcessedDataType(e.target.value)}
+                        options={[
+                          { label: "Annual Data", value: "annual" },
+                          { label: "Monthly Employee (E) Data", value: "monthly-e" },
+                          { label: "Monthly Other (O) Data", value: "monthly-o" }
+                        ]}
+                      />
+                      
+                      {(processedDataType === "monthly-e" || processedDataType === "monthly-o") && (
+                        <Select
+                          className="w-full"
+                          placeholder="Select Month..."
+                          value={processedDataType === "monthly-e" ? selectedEMonth : selectedOMonth}
+                          onChange={(e) => {
+                            if (processedDataType === "monthly-e") {
+                              setSelectedEMonth(e.target.value);
+                            } else {
+                              setSelectedOMonth(e.target.value);
+                            }
+                          }}
+                          options={[
+                            { label: "January", value: "january" },
+                            { label: "February", value: "february" },
+                            { label: "March", value: "march" },
+                            { label: "April", value: "april" },
+                            { label: "May", value: "may" },
+                            { label: "June", value: "june" },
+                            { label: "July", value: "july" },
+                            { label: "August", value: "august" },
+                            { label: "September", value: "september" },
+                            { label: "October", value: "october" },
+                            { label: "November", value: "november" },
+                            { label: "December", value: "december" }
+                          ]}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-2">
+                    <h3 className="text-base font-medium mb-2">Actions</h3>
+                    <div className="flex space-x-3">
+                      <Button 
+                        onClick={() => setShowProcessedData(true)}
+                        disabled={
+                          (processedDataType === "annual" && !uploadStatus.annual) ||
+                          (processedDataType === "monthly-e" && !uploadStatus.monthly[selectedEMonth]?.e) ||
+                          (processedDataType === "monthly-o" && !uploadStatus.monthly[selectedOMonth]?.o)
+                        }
+                      >
+                        Process and View Data
+                      </Button>
+                      
+                      <Button 
+                        variant="outline"
+                        onClick={() => setShowProcessedData(false)}
+                      >
+                        Hide Data
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {showProcessedData && (
+                  <div className="mt-6 border rounded-md p-4">
+                    <h3 className="text-lg font-medium mb-4">Processed Data Preview</h3>
+                    
+                    {processedDataType === "annual" && uploadStatus.annual ? (
+                      <div className="space-y-4">
+                        <h4 className="font-medium">Annual Data</h4>
+                        <div className="overflow-auto max-h-96">
+                          <table className="min-w-full border-collapse">
+                            <thead>
+                              <tr className="bg-muted">
+                                <th className="border p-2 text-left">Line Item</th>
+                                <th className="border p-2 text-right">Total</th>
+                                {/* Add more columns as needed */}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {annualData && Array.isArray(annualData) && annualData.length > 0 ? (
+                                annualData.slice(0, 20).map((row: any, index: number) => (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                    <td className="border p-2 text-right">{row['2024 Total'] || 'N/A'}</td>
+                                    {/* Add more columns as needed */}
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={2} className="border p-2 text-center">No data available</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                          {annualData && Array.isArray(annualData) && annualData.length > 20 && (
+                            <p className="text-sm text-muted-foreground mt-2">Showing first 20 rows of {annualData.length} total</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : processedDataType === "monthly-e" && uploadStatus.monthly[selectedEMonth]?.e ? (
+                      <div className="space-y-4">
+                        <h4 className="font-medium">Monthly Employee Data ({selectedEMonth.charAt(0).toUpperCase() + selectedEMonth.slice(1)})</h4>
+                        <div className="overflow-auto max-h-96">
+                          <table className="min-w-full border-collapse">
+                            <thead>
+                              <tr className="bg-muted">
+                                <th className="border p-2 text-left">Line Item</th>
+                                <th className="border p-2 text-right">All Employees</th>
+                                {/* Add more columns as needed */}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {monthlyData[selectedEMonth]?.e && Array.isArray(monthlyData[selectedEMonth]?.e) && monthlyData[selectedEMonth]?.e.length > 0 ? (
+                                monthlyData[selectedEMonth].e.slice(0, 20).map((row: any, index: number) => (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                    <td className="border p-2 text-right">{row['All Employees'] || 'N/A'}</td>
+                                    {/* Add more columns as needed */}
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={2} className="border p-2 text-center">No data available</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                          {monthlyData[selectedEMonth]?.e && Array.isArray(monthlyData[selectedEMonth]?.e) && monthlyData[selectedEMonth]?.e.length > 20 && (
+                            <p className="text-sm text-muted-foreground mt-2">Showing first 20 rows of {monthlyData[selectedEMonth].e.length} total</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : processedDataType === "monthly-o" && uploadStatus.monthly[selectedOMonth]?.o ? (
+                      <div className="space-y-4">
+                        <h4 className="font-medium">Monthly Other Business Data ({selectedOMonth.charAt(0).toUpperCase() + selectedOMonth.slice(1)})</h4>
+                        <div className="overflow-auto max-h-96">
+                          <table className="min-w-full border-collapse">
+                            <thead>
+                              <tr className="bg-muted">
+                                <th className="border p-2 text-left">Line Item</th>
+                                <th className="border p-2 text-right">All Entities</th>
+                                {/* Add more columns as needed */}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {monthlyData[selectedOMonth]?.o && Array.isArray(monthlyData[selectedOMonth]?.o) && monthlyData[selectedOMonth]?.o.length > 0 ? (
+                                monthlyData[selectedOMonth].o.slice(0, 20).map((row: any, index: number) => (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                    <td className="border p-2 text-right">{row['All Entities'] || 'N/A'}</td>
+                                    {/* Add more columns as needed */}
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={2} className="border p-2 text-center">No data available</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                          {monthlyData[selectedOMonth]?.o && Array.isArray(monthlyData[selectedOMonth]?.o) && monthlyData[selectedOMonth]?.o.length > 20 && (
+                            <p className="text-sm text-muted-foreground mt-2">Showing first 20 rows of {monthlyData[selectedOMonth].o.length} total</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">No data uploaded for the selected type. Please upload data first.</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
