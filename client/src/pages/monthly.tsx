@@ -25,6 +25,7 @@ const formatCurrency = (value: number): string => {
 export default function Monthly() {
   const { uploadStatus, monthlyData } = useStore();
   const [activeMonth, setActiveMonth] = useState("January");
+  const [selectedView, setSelectedView] = useState("employees"); // 'employees' or 'other'
   const monthLower = activeMonth.toLowerCase();
 
   // Extract data for the active month with enhanced logging and error handling
@@ -50,7 +51,7 @@ export default function Monthly() {
       
       // Check for new structured format first
       if (monthData.e && typeof monthData.e === 'object' && !Array.isArray(monthData.e)) {
-        return !!monthData.e.flat || !!monthData.e.raw;
+        return true;
       }
       
       // Check for old format as fallback
@@ -62,25 +63,40 @@ export default function Monthly() {
     
     if (!matchingMonthKey) {
       console.log(`No monthly data found for: ${monthLower} (or alternative spellings)`);
-      return null;
+      return {
+        eData: [],
+        oData: [],
+        eNestedData: [],
+        oNestedData: [],
+        eMetadata: {},
+        oMetadata: {},
+        columnHeaders: []
+      };
     }
     
     console.log(`Found monthly data using key: ${matchingMonthKey}`, monthlyData[matchingMonthKey]);
     
     // Extract data with support for both new and old formats
-    let eData = [];
-    let oData = [];
-    let eNestedData = [];
-    let oNestedData = [];
-    let eMetadata = {};
-    let oMetadata = {};
+    let eData: any[] = [];
+    let oData: any[] = [];
+    let eNestedData: any[] = [];
+    let oNestedData: any[] = [];
+    let eMetadata: any = {};
+    let oMetadata: any = {};
     
     const monthDataObj = monthlyData[matchingMonthKey];
     
     // Handle new structured format
     if (monthDataObj.e && typeof monthDataObj.e === 'object' && !Array.isArray(monthDataObj.e)) {
       // New format with hierarchy
-      eData = monthDataObj.e.flat || monthDataObj.e.raw || [];
+      if (monthDataObj.e.flat) {
+        eData = monthDataObj.e.flat;
+      } else if (monthDataObj.e.raw) {
+        eData = monthDataObj.e.raw;
+      } else {
+        eData = [];
+      }
+      
       eNestedData = monthDataObj.e.nested || [];
       eMetadata = monthDataObj.e.meta || {};
       console.log("Found structured eData with:", eData.length, "flat items and", eNestedData.length, "nested categories");
@@ -93,7 +109,14 @@ export default function Monthly() {
     // Same for o data
     if (monthDataObj.o && typeof monthDataObj.o === 'object' && !Array.isArray(monthDataObj.o)) {
       // New format with hierarchy
-      oData = monthDataObj.o.flat || monthDataObj.o.raw || [];
+      if (monthDataObj.o.flat) {
+        oData = monthDataObj.o.flat;
+      } else if (monthDataObj.o.raw) {
+        oData = monthDataObj.o.raw;
+      } else {
+        oData = [];
+      }
+      
       oNestedData = monthDataObj.o.nested || [];
       oMetadata = monthDataObj.o.meta || {};
       console.log("Found structured oData with:", oData.length, "flat items and", oNestedData.length, "nested categories");
@@ -103,300 +126,103 @@ export default function Monthly() {
       console.log("Found legacy oData with:", oData.length, "items");
     }
     
-    // Log the data to help with debugging
-    console.log(`Monthly data loaded:`, { 
-      eData: eData?.length || 0,
-      oData: oData?.length || 0,
-      eNestedData: eNestedData?.length || 0,
-      oNestedData: oNestedData?.length || 0
-    });
+    // Extract column headers from the data (prefer metadata if available)
+    const columnHeaders = (() => {
+      // Try to get from new format metadata first
+      if (eMetadata && eMetadata.entityColumns && eMetadata.entityColumns.length) {
+        return eMetadata.entityColumns;
+      }
+      
+      if (oMetadata && oMetadata.entityColumns && oMetadata.entityColumns.length) {
+        return oMetadata.entityColumns;
+      }
+      
+      // Try to extract from flat data
+      if (eData && eData.length > 0) {
+        const headers = Object.keys(eData[0] || {}).filter(
+          header => header !== 'Line Item' && header !== '' && 
+          !header.toLowerCase().includes('all') && 
+          !header.toLowerCase().includes('total')
+        );
+        if (headers.length > 0) return headers;
+      }
+      
+      if (oData && oData.length > 0) {
+        const headers = Object.keys(oData[0] || {}).filter(
+          header => header !== 'Line Item' && header !== '' && 
+          !header.toLowerCase().includes('all') && 
+          !header.toLowerCase().includes('total')
+        );
+        if (headers.length > 0) return headers;
+      }
+      
+      return [];
+    })();
     
-    // Log first few rows to understand structure
-    if (eData.length > 0) {
-      console.log("First row of monthly data:", eData[0]);
-    }
+    console.log("Extracted column headers:", columnHeaders);
     
-    return { 
-      eData, 
+    return {
+      eData,
       oData,
       eNestedData,
       oNestedData,
       eMetadata,
-      oMetadata
+      oMetadata,
+      columnHeaders
     };
-  }, [monthlyData, monthLower, activeMonth]);
-
-  // Calculate financial metrics from the monthly data
-  const financialMetrics = useMemo(() => {
-    if (!monthData) return null;
-    
-    const { eData } = monthData;
-    
-    // First try to find the "All Employees" column by exact match
-    let allEmployeesColumn = "All Employees";
-    
-    // If it doesn't exist, look for columns that might contain "total" or similar keywords
-    if (!eData[0] || typeof eData[0][allEmployeesColumn] === 'undefined') {
-      const possibleTotalColumns = Object.keys(eData[0] || {}).filter(key => 
-        key.toLowerCase().includes('total') ||
-        key.toLowerCase().includes('all')
-      );
-      
-      if (possibleTotalColumns.length > 0) {
-        allEmployeesColumn = possibleTotalColumns[0];
-        console.log("Using alternative total column:", allEmployeesColumn);
-      }
-    }
-    
-    // Find revenue rows - look for multiple possible revenue indicators
-    const revenueRow = eData.find(row => {
-      if (!row['Line Item']) return false;
-      const lineItem = row['Line Item'].toLowerCase();
-      return (
-        lineItem.includes('total revenue') ||
-        lineItem.includes('gross revenue') ||
-        lineItem.includes('revenue total') ||
-        lineItem.includes('total income')
-      );
-    });
-    
-    // Find expense rows - look for multiple possible expense indicators
-    const expenseRow = eData.find(row => {
-      if (!row['Line Item']) return false;
-      const lineItem = row['Line Item'].toLowerCase();
-      return (
-        lineItem.includes('total expense') ||
-        lineItem.includes('total operating expense') ||
-        lineItem.includes('operating expenses') ||
-        lineItem.includes('expense total')
-      );
-    });
-    
-    console.log("Found revenue row:", revenueRow?.['Line Item']);
-    console.log("Found expense row:", expenseRow?.['Line Item']);
-    console.log("Using column for totals:", allEmployeesColumn);
-    
-    // Calculate totals
-    let revenue = 0;
-    if (revenueRow) {
-      const rawRevenue = revenueRow[allEmployeesColumn] || revenueRow["Total"] || "0";
-      try {
-        revenue = parseFinancialValue(rawRevenue.toString());
-      } catch (e) {
-        console.error("Error parsing revenue:", e);
-      }
-    } else {
-      // If we can't find revenue, try to add up all income or revenue rows
-      const incomeRows = eData.filter(row => {
-        if (!row['Line Item']) return false;
-        const lineItem = row['Line Item'].toLowerCase();
-        return (
-          (lineItem.includes('revenue') || lineItem.includes('income')) &&
-          !lineItem.includes('total') &&
-          !lineItem.includes('expense')
-        );
-      });
-      
-      for (const row of incomeRows) {
-        try {
-          const value = row[allEmployeesColumn] || row["Total"] || "0";
-          revenue += parseFinancialValue(value.toString());
-        } catch (e) {
-          // Skip rows that can't be parsed
-        }
-      }
-    }
-    
-    // Calculate expense the same way
-    let expenses = 0; 
-    if (expenseRow) {
-      const rawExpenses = expenseRow[allEmployeesColumn] || expenseRow["Total"] || "0";
-      try {
-        expenses = parseFinancialValue(rawExpenses.toString());
-      } catch (e) {
-        console.error("Error parsing expenses:", e);
-      }
-    } else {
-      // If we can't find expenses, try to add up all expense rows
-      const expenseRows = eData.filter(row => {
-        if (!row['Line Item']) return false;
-        const lineItem = row['Line Item'].toLowerCase();
-        return (
-          lineItem.includes('expense') &&
-          !lineItem.includes('total') &&
-          !lineItem.includes('revenue')
-        );
-      });
-      
-      for (const row of expenseRows) {
-        try {
-          const value = row[allEmployeesColumn] || row["Total"] || "0";
-          expenses += parseFinancialValue(value.toString());
-        } catch (e) {
-          // Skip rows that can't be parsed
-        }
-      }
-    }
-    
-    // Calculate net income
-    const netIncome = revenue - expenses;
-    
-    console.log("Calculated metrics:", { revenue, expenses, netIncome });
-    
-    return { revenue, expenses, netIncome };
-  }, [monthData]);
-
-  // Extract column headers (doctor/provider names) from the data
-  const columnHeaders = useMemo(() => {
-    if (!monthData?.eData?.length) return [];
-    
-    console.log("First row of monthly data:", monthData.eData[0]);
-    
-    // Get all column headers except 'Line Item' and 'All Employees'
-    const headers = Object.keys(monthData.eData[0] || {})
-      .filter(key => 
-        key !== 'Line Item' && 
-        key !== 'All Employees' && 
-        key !== '' && // Filter out empty keys
-        key.trim() !== '' // Filter out keys that are just whitespace
-      );
-    
-    console.log("Extracted column headers:", headers);
-    
-    return headers;
-  }, [monthData]);
-
-  // Find the "All Employees" column or similar total column
-  const totalsColumn = useMemo(() => {
-    if (!monthData?.eData?.length) return "All Employees";
-    
-    // First try to find common total column names in the actual data
-    const commonTotalNames = [
-      'All Employees', 
-      'Total', 
-      'Grand Total',
-      'Sum',
-      'Total Amount'
-    ];
-    
-    // Check if any of these columns exist directly
-    for (const colName of commonTotalNames) {
-      if (monthData.eData[0] && typeof monthData.eData[0][colName] !== 'undefined') {
-        console.log(`Found direct match for totals column: ${colName}`);
-        return colName;
-      }
-    }
-    
-    // If no direct match, look for columns containing keywords
-    const possibleTotalColumns = Object.keys(monthData.eData[0] || {}).filter(key => 
-      key && typeof key === 'string' && (
-        key.toLowerCase().includes('total') ||
-        key.toLowerCase().includes('all') ||
-        key.toLowerCase().includes('sum') ||
-        key.toLowerCase().includes('employees')
-      )
+  }, [activeMonth, monthlyData, monthLower]);
+  
+  // If no data is available, show an upload banner
+  if (!monthData || 
+      (!monthData.eData.length && !monthData.oData.length && 
+       !monthData.eNestedData.length && !monthData.oNestedData.length)) {
+    return (
+      <div className="space-y-8">
+        <h1 className="text-2xl font-bold">Monthly Financial Analysis</h1>
+        
+        <UploadBanner
+          title="No monthly data available"
+          description="Upload your monthly CSV files to see detailed financial analysis."
+          uploadType="monthly"
+          month={activeMonth}
+        />
+      </div>
     );
-    
-    if (possibleTotalColumns.length > 0) {
-      console.log("Using alternative total column:", possibleTotalColumns[0]);
-      return possibleTotalColumns[0];
-    }
-    
-    // Finally, look for any empty column name that might be a total column
-    const emptyColName = Object.keys(monthData.eData[0] || {}).find(key => key === '');
-    if (emptyColName !== undefined) {
-      console.log("Using empty column name as potential total column");
-      return emptyColName;
-    }
-    
-    // If no total column is found, we'll calculate it by summing all individual values
-    console.log("No total column found, will sum individual values from doctor columns");
-    return "__calculated_total__"; // Special marker for calculated totals
-  }, [monthData]);
-
-  // Extract main line items for the table
-  const lineItems = useMemo(() => {
-    if (!monthData?.eData?.length) return [];
-    
-    // Log first few rows to understand data structure
-    console.log("Sample monthly data rows:", monthData.eData.slice(0, 3));
-    
-    // Extract all unique line items to build a hierarchical display
-    // Instead of predefined categories, we'll build directly from your CSV data
-    
-    // Function to determine the indentation level (hierarchy depth) from a line item
-    const getLineItemDepth = (lineItem: string): number => {
-      if (!lineItem) return 0;
-      
-      // Count leading spaces to determine hierarchy level
-      let leadingSpaces = 0;
-      for (let i = 0; i < lineItem.length; i++) {
-        if (lineItem[i] === ' ') {
-          leadingSpaces++;
-        } else {
-          break;
-        }
-      }
-      
-      // Convert space count to hierarchy depth (roughly 2 spaces per level)
-      return Math.floor(leadingSpaces / 2);
+  }
+  
+  // Calculate financial metrics for display
+  const financialMetrics = useMemo(() => {
+    // Default empty metrics
+    const defaultMetrics = {
+      revenue: 0,
+      expenses: 0,
+      netIncome: 0
     };
     
-    // First, get all line items with their depths
-    const allLineItems = monthData.eData
-      .filter(row => row['Line Item'] && row['Line Item'].trim() !== '')
-      .map(row => ({
-        name: row['Line Item'].trim(),
-        depth: getLineItemDepth(row['Line Item']),
-        original: row['Line Item'],
-        row: row
-      }));
-      
-    console.log("Extracted line items with depths:", allLineItems.slice(0, 10));
+    // Use the selected view's data
+    const data = selectedView === 'employees' ? monthData.eData : monthData.oData;
     
-    // Build main categories based on the actual structure from your CSV
-    // We'll look for key categories like Revenue, Expenses, and Net Income
+    if (!data || data.length === 0) {
+      return defaultMetrics;
+    }
     
-    const mainCategories = [
-      { 
-        name: 'Revenue', 
-        type: 'header', 
-        key: 'revenue',
-        searchTerms: ['revenue', 'income', 'gross'],
-        children: []
-      },
-      { 
-        name: 'Expenses', 
-        type: 'header', 
-        key: 'expenses',
-        searchTerms: ['operating expenses', 'expense', 'cost', 'expenditure'],
-        children: []
-      },
-      { 
-        name: 'Net Income', 
-        type: 'total', 
-        key: 'net_income',
-        searchTerms: ['net income', 'profit', 'bottom line', 'net earnings'],
-        children: []
-      }
-    ];
+    // Define some commonly used category names
+    const mainCategories = ['Revenue', 'Expenses', 'Operating Expenses', 'Net Income'];
     
-    // Populate the children arrays based on the actual line items
-    const findMatchingCategory = (lineItem: string) => {
+    // Helper function to categorize line items
+    const categorizeLineItem = (lineItem: string) => {
       const lowerLineItem = lineItem.toLowerCase();
       
-      for (const category of mainCategories) {
-        if (category.searchTerms.some(term => lowerLineItem.includes(term))) {
-          return category;
-        }
+      // Check for revenue categories
+      if (lowerLineItem.includes('revenue') || 
+          lowerLineItem.includes('income') || 
+          lowerLineItem.includes('service') ||
+          lowerLineItem.includes('practice') ||
+          lowerLineItem.includes('professional')) {
+        return mainCategories[0]; // Revenue
       }
       
-      // Default to expenses for most subcategories if no direct match
-      if (lowerLineItem.includes('total')) {
-        return null; // Skip total rows as we calculate those
-      }
-      
-      // For items that don't clearly fit into a category, make an intelligent guess
+      // Check for expense categories
       if (lowerLineItem.includes('payroll') || 
           lowerLineItem.includes('salary') || 
           lowerLineItem.includes('wage') ||
@@ -417,7 +243,7 @@ export default function Monthly() {
     };
     
     // Function to find a row using any of the search terms
-    const findRow = (rows, searchTerms) => {
+    const findRow = (rows: any[], searchTerms: any[]) => {
       return rows.find(row => {
         if (!row['Line Item']) return false;
         const lineItem = row['Line Item'].toLowerCase();
@@ -426,7 +252,7 @@ export default function Monthly() {
     };
     
     // Function to safely extract a value from a row and column
-    const safeExtractValue = (row, columnName) => {
+    const safeExtractValue = (row: any, columnName: any) => {
       if (!row) return 0;
       
       // Try different approaches to get a value
@@ -443,375 +269,350 @@ export default function Monthly() {
       
       return 0;
     };
-
+    
     // Process all the line items in the data
     const processedItems = mainCategories.map(category => {
       // For each category, calculate values for each column
       const values = {};
       
-      // For each doctor/provider column, calculate the total
-      columnHeaders.forEach(header => {
-        let total = 0;
-        
-        // If this is a main category (Revenue, Expenses, etc.)
-        if (category.type === 'header' || category.type === 'total') {
-          // Try to find a row with the total directly
-          const totalRow = findRow(monthData.eData, category.searchTerms);
-          
-          if (totalRow) {
-            // Found a direct match for the total
-            total = safeExtractValue(totalRow, header);
-          } else if (category.type === 'header' && category.children) {
-            // Calculate total by adding up child rows
-            category.children.forEach(child => {
-              const childRows = monthData.eData.filter(row => {
-                if (!row['Line Item']) return false;
-                const lineItem = row['Line Item'].toLowerCase();
-                return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
-              });
-              
-              childRows.forEach(row => {
-                total += safeExtractValue(row, header);
-              });
-            });
-          }
-        }
-        
-        values[header] = total;
+      // Find relevant rows for this category
+      let searchTerms = category === 'Revenue' 
+        ? ['revenue', 'income', 'fee'] 
+        : category === 'Expenses' || category === 'Operating Expenses'
+          ? ['expense', 'operating expense', 'cost', 'payroll', 'salary']
+          : ['net income', 'profit', 'operating income'];
+      
+      // For net income, we'll calculate it ourselves
+      if (category === 'Net Income') {
+        return {
+          key: 'net_income',
+          name: 'Net Income',
+          values: {},
+          children: []
+        };
+      }
+      
+      // Extract matching rows
+      const matchingRows = data.filter(row => {
+        if (!row['Line Item']) return false;
+        const lineItem = row['Line Item'].toLowerCase();
+        return searchTerms.some(term => lineItem.includes(term.toLowerCase()));
       });
       
-      // Calculate the total for "All Employees" column
-      let totalAllEmployees = 0;
-      const totalRow = findRow(monthData.eData, category.searchTerms);
-      
-      if (totalRow && totalsColumn !== "__calculated_total__") {
-        // Use the existing total column if available
-        totalAllEmployees = safeExtractValue(totalRow, totalsColumn);
-      } else {
-        // Calculate totals by summing all columns or using child rows
-        if (category.type === 'header' && category.children) {
-          // Sum from child categories
-          category.children.forEach(child => {
-            const childRows = monthData.eData.filter(row => {
-              if (!row['Line Item']) return false;
-              const lineItem = row['Line Item'].toLowerCase();
-              return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
-            });
-            
-            childRows.forEach(row => {
-              if (totalsColumn !== "__calculated_total__") {
-                // Use the specified totals column
-                totalAllEmployees += safeExtractValue(row, totalsColumn);
-              } else {
-                // Calculate by summing all provider columns
-                columnHeaders.forEach(header => {
-                  totalAllEmployees += safeExtractValue(row, header);
-                });
-              }
-            });
-          });
-        } else if (totalsColumn === "__calculated_total__") {
-          // Sum the column totals we already calculated
-          totalAllEmployees = Object.values(values).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
-        }
+      if (matchingRows.length === 0) {
+        return {
+          key: category.toLowerCase().replace(/\s+/g, '_'),
+          name: category,
+          values: {},
+          children: []
+        };
       }
       
-      // If this is Net Income and we have financial metrics, use that instead
-      if (category.key === 'net_income' && financialMetrics) {
-        totalAllEmployees = financialMetrics.netIncome;
-      }
+      // Calculate values for each provider column
+      const columnValues = {};
+      const allEmployeeValues = {};
       
-      values['All Employees'] = totalAllEmployees;
-      
-      // If this is a main category with children, process the children
-      if (category.type === 'header' && category.children) {
-        const processedChildren = category.children.map(child => {
-          const childValues = {};
-          
-          // Calculate values for each column
-          columnHeaders.forEach(header => {
-            let childTotal = 0;
-            
-            // Find all rows that match this child's search terms
-            const childRows = monthData.eData.filter(row => {
-              if (!row['Line Item']) return false;
-              const lineItem = row['Line Item'].toLowerCase();
-              return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
-            });
-            
-            // Sum up all the values
-            childRows.forEach(row => {
-              childTotal += safeExtractValue(row, header);
-            });
-            
-            childValues[header] = childTotal;
-          });
-          
-          // Calculate the total for "All Employees" column
-          let childTotalAllEmployees = 0;
-          const childRows = monthData.eData.filter(row => {
-            if (!row['Line Item']) return false;
-            const lineItem = row['Line Item'].toLowerCase();
-            return child.searchTerms.some(term => lineItem.includes(term.toLowerCase()));
-          });
-          
-          childRows.forEach(row => {
-            childTotalAllEmployees += safeExtractValue(row, totalsColumn);
-          });
-          
-          childValues['All Employees'] = childTotalAllEmployees;
-          
-          return { ...child, values: childValues };
+      monthData.columnHeaders.forEach(header => {
+        let totalValue = 0;
+        
+        matchingRows.forEach(row => {
+          totalValue += safeExtractValue(row, header);
         });
         
-        return { ...category, values, children: processedChildren };
+        columnValues[header] = totalValue;
+      });
+      
+      // If we have an "All Employees" column, use that for summary
+      if (data[0] && data[0]['All Employees'] !== undefined) {
+        let totalValue = 0;
+        
+        matchingRows.forEach(row => {
+          totalValue += safeExtractValue(row, 'All Employees');
+        });
+        
+        allEmployeeValues['All Employees'] = totalValue;
       }
       
-      return { ...category, values };
+      // Create category item with calculated values
+      return {
+        key: category.toLowerCase().replace(/\s+/g, '_'),
+        name: category,
+        values: {
+          ...columnValues,
+          ...allEmployeeValues
+        },
+        children: []
+      };
     });
     
-    // Calculate Net Income row
-    if (processedItems.length > 2) {
-      // Get the Net Income row
-      const netIncomeItem = processedItems[2];
+    // Calculate totals
+    const revenue = processedItems.find(item => item.key === 'revenue');
+    const expenses = processedItems.find(item => item.key === 'expenses' || item.key === 'operating_expenses');
+    
+    // Calculate net income
+    const netIncome = processedItems.find(item => item.key === 'net_income');
+    
+    if (revenue && expenses && netIncome) {
+      // For each column, calculate the net income
+      monthData.columnHeaders.forEach(header => {
+        const revValue = revenue.values[header] || 0;
+        const expValue = expenses.values[header] || 0;
+        netIncome.values[header] = revValue - expValue;
+      });
       
-      // Calculate total net income for 'All Employees' column
-      if (financialMetrics && financialMetrics.netIncome !== 0) {
-        // If we have calculated metrics from the actual data, use them
-        netIncomeItem.values['All Employees'] = financialMetrics.netIncome;
-      } else {
-        // Otherwise calculate from our revenue and expense items
-        const totalRevenue = processedItems[0].values['All Employees'] || 0;
-        const totalExpenses = processedItems[1].values['All Employees'] || 0;
-        netIncomeItem.values['All Employees'] = totalRevenue - totalExpenses;
+      // Calculate total net income
+      if (revenue.values['All Employees'] !== undefined && expenses.values['All Employees'] !== undefined) {
+        netIncome.values['All Employees'] = revenue.values['All Employees'] - expenses.values['All Employees'];
       }
-      
-      // Calculate net income for each individual provider column
-      columnHeaders.forEach(header => {
-        const columnRevenue = processedItems[0].values[header] || 0;
-        const columnExpenses = processedItems[1].values[header] || 0;
-        netIncomeItem.values[header] = columnRevenue - columnExpenses;
-      });
-      
-      // Log the final net income calculations
-      console.log("Net Income calculations:", {
-        total: netIncomeItem.values['All Employees'],
-        byProvider: columnHeaders.reduce((acc, header) => {
-          acc[header] = netIncomeItem.values[header];
-          return acc;
-        }, {})
-      });
     }
     
-    console.log("Processed line items:", processedItems);
+    // Extract summary values for KPI cards
+    const revenueValue = revenue?.values['All Employees'] ?? 
+      (revenue ? Object.values(revenue.values).reduce((sum: any, val: any) => sum + val, 0) : 0);
     
-    return processedItems;
-  }, [monthData, columnHeaders, financialMetrics, totalsColumn]);
-
+    const expensesValue = expenses?.values['All Employees'] ?? 
+      (expenses ? Object.values(expenses.values).reduce((sum: any, val: any) => sum + val, 0) : 0);
+    
+    const netIncomeValue = netIncome?.values['All Employees'] ?? 
+      (revenueValue - expensesValue);
+    
+    return {
+      revenue: revenueValue,
+      expenses: expensesValue,
+      netIncome: netIncomeValue,
+      lineItems: processedItems
+    };
+  }, [monthData, selectedView]);
+  
+  const lineItems = financialMetrics.lineItems || [];
+  const { columnHeaders } = monthData;
+  
+  // Add view toggle for Employee vs Other Monthly data
+  const toggleView = (view: string) => {
+    setSelectedView(view);
+  };
+  
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-dark mb-1">Month-by-Month Analysis</h1>
-        <p className="text-neutral-text">Detailed monthly financial breakdowns</p>
-      </div>
-
-      <Card className="overflow-hidden">
-        <Tabs value={activeMonth} onValueChange={setActiveMonth} className="w-full">
-          <TabsList className="flex overflow-x-auto scrollbar-hide border-b border-neutral-border rounded-none bg-white h-auto">
+    <div className="space-y-8">
+      <h1 className="text-2xl font-bold">Monthly Financial Analysis</h1>
+      
+      <Tabs defaultValue={activeMonth.toLowerCase()} onValueChange={(value) => setActiveMonth(value)}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+          <TabsList className="mb-4 sm:mb-0">
             {months.map((month) => {
-              const monthlyStatus = uploadStatus.monthly[month.toLowerCase()];
-              const isActive = activeMonth === month;
-              const isDisabled = !monthlyStatus?.e && !monthlyStatus?.o;
+              const lowerMonth = month.toLowerCase();
+              const hasData = Object.keys(monthlyData).some(key => 
+                key.toLowerCase() === lowerMonth && (
+                  (monthlyData[key].e && 
+                   (Array.isArray(monthlyData[key].e) ? 
+                    monthlyData[key].e.length > 0 : 
+                    true)) || 
+                  (monthlyData[key].o && 
+                   (Array.isArray(monthlyData[key].o) ? 
+                    monthlyData[key].o.length > 0 : 
+                    true))
+                )
+              );
               
               return (
                 <TabsTrigger
                   key={month}
                   value={month}
-                  disabled={isDisabled}
-                  className={`flex-none px-6 py-4 ${
-                    isActive 
-                      ? "text-primary border-b-2 border-primary font-medium" 
-                      : "text-neutral-text hover:text-neutral-dark"
-                  } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={!hasData}
+                  className={hasData ? "relative" : "opacity-50"}
                 >
                   {month}
+                  {hasData && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full" />
+                  )}
                 </TabsTrigger>
               );
             })}
           </TabsList>
           
-          {months.map((month) => {
-            const monthLower = month.toLowerCase();
-            const monthlyStatus = uploadStatus.monthly[monthLower];
-            const eUploaded = !!monthlyStatus?.e;
-            const oUploaded = !!monthlyStatus?.o;
-            const allUploaded = eUploaded && oUploaded;
-            
-            return (
-              <TabsContent key={month} value={month} className="p-6">
-                {!allUploaded && (
-                  <UploadBanner
-                    title={`${month} Data Upload Required`}
-                    message={`Please upload both the Employee (E) and Other Businesses (O) CSV files for ${month} to view detailed performance metrics.`}
-                    buttonText=""
-                    uploadType="monthly"
-                    month={monthLower}
-                    showEOButtons={true}
-                    eUploaded={eUploaded}
-                    oUploaded={oUploaded}
-                  />
-                )}
+          <div className="flex space-x-2">
+            <button
+              onClick={() => toggleView('employees')}
+              className={`px-3 py-1 text-sm rounded ${
+                selectedView === 'employees' ? 'bg-primary text-white' : 'bg-muted'
+              }`}
+            >
+              Employee Data
+            </button>
+            <button
+              onClick={() => toggleView('other')}
+              className={`px-3 py-1 text-sm rounded ${
+                selectedView === 'other' ? 'bg-primary text-white' : 'bg-muted'
+              }`}
+            >
+              Other Business
+            </button>
+          </div>
+        </div>
+        
+        {months.map((month) => (
+          <TabsContent key={month} value={month} className="mt-0">
+            <div className="space-y-6">
+              {/* Monthly Financial Snapshot */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(financialMetrics.revenue)}
+                    </div>
+                  </CardContent>
+                </Card>
                 
-                {allUploaded && financialMetrics && (
-                  <div className="space-y-6">
-                    {/* Monthly Financial Snapshot */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-neutral-text text-sm font-medium">Revenue</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold numeric">
-                            {formatCurrency(financialMetrics.revenue)}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-neutral-text text-sm font-medium">Expenses</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold numeric">
-                            {formatCurrency(financialMetrics.expenses)}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-neutral-text text-sm font-medium">Net Income</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className={`text-2xl font-bold numeric ${
-                            financialMetrics.netIncome >= 0 ? 'text-positive' : 'text-negative'
-                          }`}>
-                            {formatCurrency(financialMetrics.netIncome)}
-                          </div>
-                        </CardContent>
-                      </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(financialMetrics.expenses)}
                     </div>
-                    
-                    {/* Line Item Breakdown Table */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Line Item Breakdown</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="overflow-x-auto">
-                          {columnHeaders.length > 0 ? (
-                            <table className="w-full border-collapse">
-                              <thead>
-                                <tr className="border-b border-neutral-border">
-                                  <th className="text-left py-3 px-4 font-medium">Line Item</th>
-                                  {columnHeaders.map(header => (
-                                    <th key={header} className="text-right py-3 px-4 font-medium">
-                                      {header}
-                                    </th>
-                                  ))}
-                                  <th className="text-right py-3 px-4 font-medium">All Employees</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {lineItems.map((item, index) => (
-                                  <React.Fragment key={`item-${item.key}-${index}`}>
-                                    <tr className="border-b border-neutral-border">
-                                      <td className="py-3 px-4 font-semibold">{item.name}</td>
-                                      {columnHeaders.map(header => (
-                                        <td key={`${item.key}-${header}`} className="text-right py-3 px-4 numeric">
-                                          {item.values && typeof item.values[header] !== 'undefined'
-                                            ? formatCurrency(item.values[header]) 
-                                            : '$0'}
-                                        </td>
-                                      ))}
-                                      <td className="text-right py-3 px-4 font-medium numeric">
-                                        {item.values && typeof item.values['All Employees'] !== 'undefined'
-                                          ? formatCurrency(item.values['All Employees']) 
-                                          : '$0'}
-                                      </td>
-                                    </tr>
-                                    {item.children && item.children.map((child, childIndex) => (
-                                      <tr key={`${child.key}-${childIndex}`} className="border-b border-neutral-border bg-neutral-bg">
-                                        <td className="py-3 px-4 pl-8">{child.name}</td>
-                                        {columnHeaders.map(header => (
-                                          <td key={`${child.key}-${header}`} className="text-right py-3 px-4 numeric">
-                                            {child.values && typeof child.values[header] !== 'undefined'
-                                              ? formatCurrency(child.values[header]) 
-                                              : '$0'}
-                                          </td>
-                                        ))}
-                                        <td className="text-right py-3 px-4 numeric">
-                                          {child.values && typeof child.values['All Employees'] !== 'undefined'
-                                            ? formatCurrency(child.values['All Employees']) 
-                                            : '$0'}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </React.Fragment>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`text-2xl font-bold ${
+                      financialMetrics.netIncome >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {formatCurrency(financialMetrics.netIncome)}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Line Item Breakdown Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Line Item Breakdown (Hierarchical View)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedView === 'employees' && monthData.eNestedData.length > 0 ? (
+                    <HierarchicalView 
+                      data={monthData.eNestedData} 
+                      columnHeaders={columnHeaders} 
+                      isNested={true}
+                    />
+                  ) : selectedView === 'other' && monthData.oNestedData.length > 0 ? (
+                    <HierarchicalView 
+                      data={monthData.oNestedData} 
+                      columnHeaders={columnHeaders}
+                      isNested={true}
+                    />
+                  ) : columnHeaders.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-neutral-border">
+                            <th className="text-left py-3 px-4 font-medium">Line Item</th>
+                            {columnHeaders.map(header => (
+                              <th key={header} className="text-right py-3 px-4 font-medium">
+                                {header}
+                              </th>
+                            ))}
+                            <th className="text-right py-3 px-4 font-medium">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lineItems.map((item, index) => (
+                            <React.Fragment key={`item-${item.key || index}`}>
+                              <tr className="border-b border-neutral-border">
+                                <td className="py-3 px-4 font-semibold">{item.name}</td>
+                                {columnHeaders.map(header => (
+                                  <td key={`${item.key || index}-${header}`} className="text-right py-3 px-4">
+                                    {item.values && typeof item.values[header] !== 'undefined'
+                                      ? formatCurrency(item.values[header]) 
+                                      : '$0'}
+                                  </td>
                                 ))}
-                              </tbody>
-                            </table>
-                          ) : (
-                            <div className="py-8 text-center text-neutral-text">
-                              <p>No detailed line item data available for this month.</p>
-                              <p className="mt-2">Try uploading more detailed CSV data.</p>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Entity-Level Performance */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Doctor Performance</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-[300px] flex flex-col items-center justify-center">
-                            <p className="text-neutral-text">Provider performance data is available.</p>
-                            <p className="mt-2">
-                              <a href="/doctor-performance" className="text-primary hover:underline">
-                                View detailed provider analysis
-                              </a>
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Department Performance</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-[300px] flex flex-col items-center justify-center">
-                            <p className="text-neutral-text">Department performance data is available.</p>
-                            <p className="mt-2">
-                              <a href="/department-analysis" className="text-primary hover:underline">
-                                View detailed department analysis
-                              </a>
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
+                                <td className="text-right py-3 px-4 font-medium">
+                                  {item.values && typeof item.values['All Employees'] !== 'undefined'
+                                    ? formatCurrency(item.values['All Employees']) 
+                                    : item.values && typeof item.values['Total'] !== 'undefined'
+                                      ? formatCurrency(item.values['Total'])
+                                      : '$0'}
+                                </td>
+                              </tr>
+                              {item.children && item.children.map((child, childIndex) => (
+                                <tr key={`${child.key || childIndex}`} className="border-b border-neutral-border bg-gray-50">
+                                  <td className="py-3 px-4 pl-8">{child.name}</td>
+                                  {columnHeaders.map(header => (
+                                    <td key={`${child.key || childIndex}-${header}`} className="text-right py-3 px-4">
+                                      {child.values && typeof child.values[header] !== 'undefined'
+                                        ? formatCurrency(child.values[header]) 
+                                        : '$0'}
+                                    </td>
+                                  ))}
+                                  <td className="text-right py-3 px-4">
+                                    {child.values && typeof child.values['All Employees'] !== 'undefined'
+                                      ? formatCurrency(child.values['All Employees']) 
+                                      : child.values && typeof child.values['Total'] !== 'undefined'
+                                        ? formatCurrency(child.values['Total'])
+                                        : '$0'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </React.Fragment>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  </div>
-                )}
-              </TabsContent>
-            );
-          })}
-        </Tabs>
-      </Card>
+                  ) : (
+                    <div className="text-center p-4 text-muted-foreground">
+                      No data available for this month.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Entity-Level Performance */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Doctor Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] flex flex-col items-center justify-center">
+                      <p className="text-muted-foreground">Provider performance data is available.</p>
+                      <p className="mt-2">
+                        <a href="/doctor-performance" className="text-primary hover:underline">
+                          View detailed provider analysis
+                        </a>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Department Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] flex flex-col items-center justify-center">
+                      <p className="text-muted-foreground">Department data is available.</p>
+                      <p className="mt-2">
+                        <a href="/department-analysis" className="text-primary hover:underline">
+                          View department breakdown
+                        </a>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }
