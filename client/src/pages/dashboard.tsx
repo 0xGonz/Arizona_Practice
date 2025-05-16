@@ -77,9 +77,55 @@ export default function Dashboard() {
           }
         }
         
-        // Calculate net income
-        newKpiData.netIncome.value = newKpiData.totalRevenue.value - newKpiData.totalExpenses.value;
-        newKpiData.netIncome.change = 7.5; // Sample change value
+        // Find the net income row directly from the data
+        const incomeRow = annualData.find(row => 
+          row['Line Item'] && (
+            row['Line Item'].includes('Net Income') || 
+            row['Line Item'].includes('Net Profit')
+          )
+        );
+        
+        // If we have a specific net income row, use that value
+        if (incomeRow && incomeRow['Total']) {
+          try {
+            const netIncome = parseFinancialValue(incomeRow['Total']);
+            newKpiData.netIncome.value = netIncome;
+          } catch (e) {
+            console.error("Error parsing net income value:", e);
+            // Fall back to calculating from revenue and expenses
+            newKpiData.netIncome.value = newKpiData.totalRevenue.value - newKpiData.totalExpenses.value;
+          }
+        } else {
+          // Calculate net income from revenue and expenses if no specific row exists
+          newKpiData.netIncome.value = newKpiData.totalRevenue.value - newKpiData.totalExpenses.value;
+        }
+        
+        // Calculate actual percentage change if we have historical data
+        if (incomeRow) {
+          const priorYearCol = Object.keys(incomeRow).find(key => 
+            key.toLowerCase().includes('prior') || 
+            key.toLowerCase().includes('previous') ||
+            key.includes('PY')
+          );
+          
+          if (priorYearCol && incomeRow[priorYearCol]) {
+            try {
+              const priorNetIncome = parseFinancialValue(incomeRow[priorYearCol]);
+              if (priorNetIncome !== 0) {
+                newKpiData.netIncome.change = ((newKpiData.netIncome.value - priorNetIncome) / Math.abs(priorNetIncome)) * 100;
+              } else {
+                newKpiData.netIncome.change = newKpiData.netIncome.value > 0 ? 100 : -100;
+              }
+            } catch (e) {
+              console.error("Error calculating net income change:", e);
+              newKpiData.netIncome.change = 0;
+            }
+          } else {
+            newKpiData.netIncome.change = 0;
+          }
+        } else {
+          newKpiData.netIncome.change = 0;
+        }
         
         setKpiData(newKpiData);
       } catch (error) {
