@@ -59,11 +59,16 @@ export default function MonthlyImproved() {
     const availableMonths = Object.keys(monthlyData || {});
     console.log(`Available months in data store:`, availableMonths);
     
-    // Find the matching month key (accounting for case differences)
-    const matchingKey = availableMonths.find(key => 
-      key.toLowerCase() === monthLower || 
-      key === activeMonth
-    );
+    // Find the matching month key (accounting for case differences and variations)
+    // This approach makes our app fully dynamic for any month format
+    const matchingKey = availableMonths.find(key => {
+      const keyLower = key.toLowerCase();
+      // Try multiple matching approaches to ensure we find the right month
+      return keyLower === monthLower || 
+             key === activeMonth ||
+             (Object.keys(monthMap).includes(keyLower) && 
+              monthMap[keyLower as keyof typeof monthMap].toLowerCase() === monthLower);
+    });
     
     if (!matchingKey) {
       console.log(`No data found for month: ${activeMonth}`);
