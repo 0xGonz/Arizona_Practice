@@ -176,7 +176,7 @@ export default function DoctorPerformance() {
               <CardTitle>Provider Profitability</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={320}>
                 <BarChart 
                   data={filteredData}
                   margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
