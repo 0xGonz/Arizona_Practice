@@ -213,17 +213,30 @@ export default function Monthly() {
   const totalsColumn = useMemo(() => {
     if (!monthData?.eData?.length) return "All Employees";
     
-    // First try to find the "All Employees" column by exact match
-    if (monthData.eData[0] && typeof monthData.eData[0]['All Employees'] !== 'undefined') {
-      return 'All Employees';
+    // First try to find common total column names in the actual data
+    const commonTotalNames = [
+      'All Employees', 
+      'Total', 
+      'Grand Total',
+      'Sum',
+      'Total Amount'
+    ];
+    
+    // Check if any of these columns exist directly
+    for (const colName of commonTotalNames) {
+      if (monthData.eData[0] && typeof monthData.eData[0][colName] !== 'undefined') {
+        console.log(`Found direct match for totals column: ${colName}`);
+        return colName;
+      }
     }
     
-    // Then look for columns that might contain "total" or similar keywords
+    // If no direct match, look for columns containing keywords
     const possibleTotalColumns = Object.keys(monthData.eData[0] || {}).filter(key => 
       key && typeof key === 'string' && (
         key.toLowerCase().includes('total') ||
         key.toLowerCase().includes('all') ||
-        key.toLowerCase().includes('sum')
+        key.toLowerCase().includes('sum') ||
+        key.toLowerCase().includes('employees')
       )
     );
     
@@ -232,8 +245,15 @@ export default function Monthly() {
       return possibleTotalColumns[0];
     }
     
+    // Finally, look for any empty column name that might be a total column
+    const emptyColName = Object.keys(monthData.eData[0] || {}).find(key => key === '');
+    if (emptyColName !== undefined) {
+      console.log("Using empty column name as potential total column");
+      return emptyColName;
+    }
+    
     // If no total column is found, we'll calculate it by summing all individual values
-    console.log("No total column found, will sum individual values instead");
+    console.log("No total column found, will sum individual values from doctor columns");
     return "__calculated_total__"; // Special marker for calculated totals
   }, [monthData]);
 
