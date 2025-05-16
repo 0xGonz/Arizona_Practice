@@ -107,7 +107,7 @@ export default function DepartmentAnalysis() {
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart 
                   data={filteredData} 
-                  margin={{ top: 10, right: 30, left: 20, bottom: 100 }}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 75 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
@@ -128,7 +128,7 @@ export default function DepartmentAnalysis() {
                     layout="horizontal" 
                     verticalAlign="bottom" 
                     align="center"
-                    wrapperStyle={{ paddingTop: 30 }}
+                    wrapperStyle={{ paddingTop: 10 }}
                   />
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
                   <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />

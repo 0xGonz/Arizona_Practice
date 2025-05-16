@@ -200,7 +200,7 @@ export default function DoctorPerformance() {
                     layout="horizontal" 
                     verticalAlign="bottom" 
                     align="center"
-                    wrapperStyle={{ paddingTop: 30 }}
+                    wrapperStyle={{ paddingTop: 10 }}
                   />
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
                   <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
