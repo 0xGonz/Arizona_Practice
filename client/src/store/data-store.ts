@@ -235,6 +235,9 @@ interface DataStore {
   // Data Processing
   processCSVData: (type: CSVType, data: any[], month?: string) => void;
   
+  // Data Management
+  clearUploadedData: (type: CSVType | 'all', month?: string) => void;
+  
   // Processed Data
   revenueMix: RevenueMixItem[];
   marginTrend: MarginTrendPoint[];
@@ -320,6 +323,124 @@ export const useStore = create<DataStore>((set, get) => ({
   bottomPerformers: initialState?.bottomPerformers || [],
   ancillaryComparison: initialState?.ancillaryComparison || [],
   uploadHistory: initialState?.uploadHistory || [],
+
+  // Clear uploaded data
+  clearUploadedData: (type, month) => set((state) => {
+    console.log(`Clearing data type: ${type}, month: ${month || 'N/A'}`);
+    let newUploadStatus = { ...state.uploadStatus };
+    let newMonthlyData = { ...state.monthlyData };
+    let newUploadHistory = [...state.uploadHistory];
+    
+    // Handle clearing all data
+    if (type === 'all') {
+      // Clear everything and reset to defaults
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('annualData');
+          localStorage.removeItem('monthlyData');
+          localStorage.removeItem('revenueMix');
+          localStorage.removeItem('marginTrend');
+          localStorage.removeItem('topPerformers');
+          localStorage.removeItem('bottomPerformers');
+          localStorage.removeItem('ancillaryComparison');
+          localStorage.removeItem('uploadHistory');
+          localStorage.setItem('uploadStatus', JSON.stringify(defaultUploadStatus));
+        } catch (error) {
+          console.error('Error clearing all data from localStorage:', error);
+        }
+      }
+      
+      return {
+        uploadStatus: defaultUploadStatus,
+        annualData: null,
+        monthlyData: {},
+        revenueMix: [],
+        marginTrend: [],
+        topPerformers: [],
+        bottomPerformers: [],
+        ancillaryComparison: [],
+        uploadHistory: []
+      };
+    }
+    
+    // Handle annual data
+    if (type === 'annual') {
+      newUploadStatus.annual = false;
+      newUploadHistory = newUploadHistory.filter(item => item.type !== 'annual');
+      
+      // Clear annual data in localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('annualData');
+          localStorage.removeItem('revenueMix');
+          localStorage.removeItem('marginTrend');
+          localStorage.removeItem('topPerformers');
+          localStorage.removeItem('bottomPerformers');
+          localStorage.removeItem('ancillaryComparison');
+          localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+          localStorage.setItem('uploadStatus', JSON.stringify(newUploadStatus));
+        } catch (error) {
+          console.error('Error clearing annual data from localStorage:', error);
+        }
+      }
+      
+      return {
+        uploadStatus: newUploadStatus,
+        annualData: null,
+        revenueMix: [],
+        marginTrend: [],
+        topPerformers: [],
+        bottomPerformers: [],
+        ancillaryComparison: [],
+        uploadHistory: newUploadHistory
+      };
+    }
+    
+    // Handle monthly data
+    if ((type === 'monthly-e' || type === 'monthly-o') && month) {
+      // Update upload status
+      if (type === 'monthly-e') {
+        newUploadStatus.monthly[month].e = false;
+      } else {
+        newUploadStatus.monthly[month].o = false;
+      }
+      
+      // Update upload history
+      newUploadHistory = newUploadHistory.filter(item => 
+        !(item.type === type && item.month === month)
+      );
+      
+      // Remove the specific data type from the monthly data
+      if (newMonthlyData[month]) {
+        const newMonthData = { ...newMonthlyData[month] };
+        if (type === 'monthly-e') {
+          delete newMonthData.e;
+        } else {
+          delete newMonthData.o;
+        }
+        newMonthlyData[month] = newMonthData;
+      }
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('monthlyData', JSON.stringify(newMonthlyData));
+          localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+          localStorage.setItem('uploadStatus', JSON.stringify(newUploadStatus));
+        } catch (error) {
+          console.error('Error clearing monthly data from localStorage:', error);
+        }
+      }
+      
+      return {
+        monthlyData: newMonthlyData,
+        uploadStatus: newUploadStatus,
+        uploadHistory: newUploadHistory
+      };
+    }
+    
+    return state;
+  }),
   
   // Helper function to save to localStorage
   setUploadStatus: (status) => set((state) => {

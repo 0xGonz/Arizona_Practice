@@ -9,6 +9,7 @@ import Monthly from "@/pages/monthly";
 import DoctorPerformance from "@/pages/doctor-performance";
 import DepartmentAnalysis from "@/pages/department-analysis";
 import Upload from "@/pages/upload";
+import UploadHistory from "@/pages/upload-history";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
         <Route path="/doctor-performance" component={DoctorPerformance} />
         <Route path="/department-analysis" component={DepartmentAnalysis} />
         <Route path="/upload" component={Upload} />
+        <Route path="/upload-history" component={UploadHistory} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
