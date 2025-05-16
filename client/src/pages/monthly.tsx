@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UploadBanner from "@/components/upload/upload-banner";
@@ -27,10 +27,19 @@ export default function Monthly() {
 
   // Extract data for the active month
   const monthData = useMemo(() => {
+    // Debug the monthly data when a month is selected
+    console.log(`Loading monthly data for: ${monthLower}`, monthlyData[monthLower]);
+    
     if (!monthlyData[monthLower]) return null;
     
     const eData = monthlyData[monthLower]?.e || [];
     const oData = monthlyData[monthLower]?.o || [];
+    
+    // Log the data to help with debugging
+    console.log(`Monthly data loaded:`, { 
+      eData: eData?.length || 0,
+      oData: oData?.length || 0
+    });
     
     return { eData, oData };
   }, [monthlyData, monthLower]);
@@ -287,40 +296,40 @@ export default function Monthly() {
                               </thead>
                               <tbody>
                                 {lineItems.map((item, index) => (
-                                  <>
-                                    <tr key={item.key} className="border-b border-neutral-border">
+                                  <React.Fragment key={`item-${item.key}-${index}`}>
+                                    <tr className="border-b border-neutral-border">
                                       <td className="py-3 px-4 font-semibold">{item.name}</td>
                                       {columnHeaders.map(header => (
                                         <td key={`${item.key}-${header}`} className="text-right py-3 px-4 numeric">
-                                          {item.values && item.values[header] 
+                                          {item.values && typeof item.values[header] !== 'undefined'
                                             ? formatCurrency(item.values[header]) 
                                             : '$0'}
                                         </td>
                                       ))}
                                       <td className="text-right py-3 px-4 font-medium numeric">
-                                        {item.values && item.values['All Employees'] 
+                                        {item.values && typeof item.values['All Employees'] !== 'undefined'
                                           ? formatCurrency(item.values['All Employees']) 
                                           : '$0'}
                                       </td>
                                     </tr>
-                                    {item.children && item.children.map(child => (
-                                      <tr key={child.key} className="border-b border-neutral-border bg-neutral-bg">
+                                    {item.children && item.children.map((child, childIndex) => (
+                                      <tr key={`${child.key}-${childIndex}`} className="border-b border-neutral-border bg-neutral-bg">
                                         <td className="py-3 px-4 pl-8">{child.name}</td>
                                         {columnHeaders.map(header => (
                                           <td key={`${child.key}-${header}`} className="text-right py-3 px-4 numeric">
-                                            {child.values && child.values[header] 
+                                            {child.values && typeof child.values[header] !== 'undefined'
                                               ? formatCurrency(child.values[header]) 
                                               : '$0'}
                                           </td>
                                         ))}
                                         <td className="text-right py-3 px-4 numeric">
-                                          {child.values && child.values['All Employees'] 
+                                          {child.values && typeof child.values['All Employees'] !== 'undefined'
                                             ? formatCurrency(child.values['All Employees']) 
                                             : '$0'}
                                         </td>
                                       </tr>
                                     ))}
-                                  </>
+                                  </React.Fragment>
                                 ))}
                               </tbody>
                             </table>

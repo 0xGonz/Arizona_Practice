@@ -410,7 +410,8 @@ export const useStore = create<DataStore>((set, get) => ({
       }
       
     } else if (type === 'monthly-e' && month) {
-      const processedData = processMonthlyCSV(data, type);
+      // Process the monthly data and log it for debugging
+      console.log(`Processing monthly-e data for ${month}`, data ? data.length : 0, "rows");
       
       // Add to upload history
       const newUploadHistory = [...state.uploadHistory, {
@@ -429,11 +430,21 @@ export const useStore = create<DataStore>((set, get) => ({
         }
       };
       
+      // Update the upload status
+      let newStatus = { ...state.uploadStatus };
+      if (!newStatus.monthly[month]) {
+        newStatus.monthly[month] = { e: true, o: false };
+      } else {
+        newStatus.monthly[month].e = true;
+      }
+      
       // Save to localStorage
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
           localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+          localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
+          console.log(`Monthly-e data saved to localStorage for ${month}`);
         } catch (error) {
           console.error('Error saving monthly-e data to localStorage:', error);
         }
@@ -441,11 +452,13 @@ export const useStore = create<DataStore>((set, get) => ({
       
       return {
         monthlyData: updatedMonthlyData,
-        uploadHistory: newUploadHistory
+        uploadHistory: newUploadHistory,
+        uploadStatus: newStatus
       };
       
     } else if (type === 'monthly-o' && month) {
-      const processedData = processMonthlyCSV(data, type);
+      // Process the monthly data and log it for debugging
+      console.log(`Processing monthly-o data for ${month}`, data ? data.length : 0, "rows");
       
       // Add to upload history
       const newUploadHistory = [...state.uploadHistory, {
@@ -464,11 +477,21 @@ export const useStore = create<DataStore>((set, get) => ({
         }
       };
       
+      // Update the upload status
+      let newStatus = { ...state.uploadStatus };
+      if (!newStatus.monthly[month]) {
+        newStatus.monthly[month] = { e: false, o: true };
+      } else {
+        newStatus.monthly[month].o = true;
+      }
+      
       // Save to localStorage
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
           localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+          localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
+          console.log(`Monthly-o data saved to localStorage for ${month}`);
         } catch (error) {
           console.error('Error saving monthly-o data to localStorage:', error);
         }
@@ -476,7 +499,8 @@ export const useStore = create<DataStore>((set, get) => ({
       
       return {
         monthlyData: updatedMonthlyData,
-        uploadHistory: newUploadHistory
+        uploadHistory: newUploadHistory,
+        uploadStatus: newStatus
       };
     }
     
