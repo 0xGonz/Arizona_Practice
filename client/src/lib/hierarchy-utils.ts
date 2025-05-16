@@ -7,39 +7,77 @@
  * Builds a hierarchical tree structure from flat line items with depth information
  */
 export function buildHierarchy(lineItems: any[]) {
-  if (!lineItems || lineItems.length === 0) return [];
-  
-  // Create a deep copy to avoid mutating the original array
-  const itemsCopy = JSON.parse(JSON.stringify(lineItems));
-  
-  // Root array to hold the top-level items
-  const root: any[] = [];
-  
-  // Stack to keep track of the current parent at each depth level
-  const stack: any[] = [];
-  
-  // Process each line item to build the hierarchy
-  itemsCopy.forEach(item => {
-    // Pop items from the stack until we find the right parent
-    while (stack.length > 0 && stack[stack.length - 1].depth >= item.depth) {
-      stack.pop();
+  try {
+    if (!lineItems || !Array.isArray(lineItems) || lineItems.length === 0) {
+      console.log("No items to build hierarchy from");
+      return [];
     }
     
-    if (stack.length === 0) {
-      // This is a top-level item
-      root.push(item);
-    } else {
-      // Add current item as a child of the current parent
-      const parent = stack[stack.length - 1];
-      if (!parent.children) parent.children = [];
-      parent.children.push(item);
+    // Create a deep copy to avoid mutating the original array
+    let itemsCopy;
+    try {
+      itemsCopy = JSON.parse(JSON.stringify(lineItems));
+    } catch (error) {
+      console.error("Error cloning line items:", error);
+      itemsCopy = [...lineItems]; // Fallback to shallow copy
     }
     
-    // Add current item to the stack as potential parent
-    stack.push(item);
-  });
-  
-  return root;
+    // Filter out invalid items
+    itemsCopy = itemsCopy.filter(item => 
+      item && typeof item === 'object' && 
+      'depth' in item && typeof item.depth === 'number'
+    );
+    
+    if (itemsCopy.length === 0) {
+      console.warn("No valid items to build hierarchy from after filtering");
+      return [];
+    }
+    
+    // Root array to hold the top-level items
+    const root: any[] = [];
+    
+    // Stack to keep track of the current parent at each depth level
+    const stack: any[] = [];
+    
+    // Process each line item to build the hierarchy
+    itemsCopy.forEach(item => {
+      try {
+        // Skip invalid items
+        if (item === null || typeof item !== 'object' || !('depth' in item)) {
+          return;
+        }
+        
+        // Ensure depth is a number
+        const depth = Number(item.depth) || 0;
+        item.depth = depth; // Normalize depth
+        
+        // Pop items from the stack until we find the right parent
+        while (stack.length > 0 && stack[stack.length - 1].depth >= depth) {
+          stack.pop();
+        }
+        
+        if (stack.length === 0) {
+          // This is a top-level item
+          root.push(item);
+        } else {
+          // Add current item as a child of the current parent
+          const parent = stack[stack.length - 1];
+          if (!parent.children) parent.children = [];
+          parent.children.push(item);
+        }
+        
+        // Add current item to the stack as potential parent
+        stack.push(item);
+      } catch (itemError) {
+        console.error("Error processing item in hierarchy building:", itemError, item);
+      }
+    });
+    
+    return root;
+  } catch (error) {
+    console.error("Error building hierarchy:", error);
+    return [];
+  }
 }
 
 /**

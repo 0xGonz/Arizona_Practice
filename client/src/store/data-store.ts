@@ -531,108 +531,160 @@ export const useStore = create<DataStore>((set, get) => ({
       }
       
     } else if (type === 'monthly-e' && month) {
-      // Process the monthly data with enhanced parser
-      console.log(`Processing monthly-e data for ${month}`, data ? data.length : 0, "rows");
-      
-      // Use our enhanced parser that returns structured data with flat, nested, and metadata
-      const processedData = processMonthlyCSV(data, 'monthly-e');
-      
-      console.log(`Processed monthly-e data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
-      
-      // Add to upload history
-      const newUploadHistory = [...state.uploadHistory, {
-        type: 'monthly-e',
-        date: new Date(),
-        filename: `${month}_e_data.csv`,
-        month
-      }];
-      
-      // Create or update monthlyData for this month with structured data
-      const updatedMonthlyData = {
-        ...state.monthlyData,
-        [month]: {
-          ...state.monthlyData[month],
-          e: processedData // Store the complete processed result
+      try {
+        // Process the monthly data with enhanced parser
+        console.log(`Processing monthly-e data for ${month}`, data ? data.length : 0, "rows");
+        
+        // Validate data structure before processing
+        if (!data || !Array.isArray(data) || data.length === 0) {
+          console.error("Invalid data structure for monthly-e processing");
+          throw new Error("Invalid data structure. CSV data must contain at least one row.");
         }
-      };
-      
-      // Update the upload status
-      let newStatus = { ...state.uploadStatus };
-      if (!newStatus.monthly[month]) {
-        newStatus.monthly[month] = { e: true, o: false };
-      } else {
-        newStatus.monthly[month].e = true;
-      }
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
-          localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
-          localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
-          console.log(`Enhanced monthly-e data saved to localStorage for ${month}`);
-        } catch (error) {
-          console.error('Error saving monthly-e data to localStorage:', error);
+        
+        // Ensure we have 'Line Item' column
+        const firstRow = data[0];
+        if (!firstRow || !('Line Item' in firstRow)) {
+          console.error("CSV is missing the 'Line Item' column", firstRow);
+          throw new Error("CSV must contain a 'Line Item' column");
         }
+        
+        // Use our enhanced parser that returns structured data with flat, nested, and metadata
+        const processedData = processMonthlyCSV(data, 'monthly-e');
+        
+        console.log(`Processed monthly-e data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
+        
+        // Add to upload history
+        const newUploadHistory = [...state.uploadHistory, {
+          type: 'monthly-e' as CSVType,
+          date: new Date(),
+          filename: `${month}_e_data.csv`,
+          month
+        }];
+        
+        // Create or update monthlyData for this month with structured data
+        let existingMonthData = {};
+        if (state.monthlyData && state.monthlyData[month]) {
+          existingMonthData = state.monthlyData[month];
+        }
+        
+        const updatedMonthlyData = {
+          ...state.monthlyData,
+          [month]: {
+            ...existingMonthData,
+            e: processedData // Store the complete processed result
+          }
+        };
+        
+        // Update the upload status
+        let newStatus = { ...state.uploadStatus };
+        if (!newStatus.monthly) {
+          newStatus.monthly = {};
+        }
+        if (!newStatus.monthly[month]) {
+          newStatus.monthly[month] = { e: true, o: false };
+        } else {
+          newStatus.monthly[month].e = true;
+        }
+        
+        // Save to localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
+            localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+            localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
+            console.log(`Enhanced monthly-e data saved to localStorage for ${month}`);
+          } catch (error) {
+            console.error('Error saving monthly-e data to localStorage:', error);
+          }
+        }
+        
+        return {
+          monthlyData: updatedMonthlyData,
+          uploadHistory: newUploadHistory,
+          uploadStatus: newStatus
+        };
+      } catch (error) {
+        console.error(`Error processing monthly-e data for ${month}:`, error);
+        throw error; // Re-throw for the component to handle
       }
-      
-      return {
-        monthlyData: updatedMonthlyData,
-        uploadHistory: newUploadHistory,
-        uploadStatus: newStatus
-      };
       
     } else if (type === 'monthly-o' && month) {
-      // Process the monthly data with enhanced parser
-      console.log(`Processing monthly-o data for ${month}`, data ? data.length : 0, "rows");
-      
-      // Use our enhanced parser that returns structured data with flat, nested, and metadata
-      const processedData = processMonthlyCSV(data, 'monthly-o');
-      
-      console.log(`Processed monthly-o data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
-      
-      // Add to upload history
-      const newUploadHistory = [...state.uploadHistory, {
-        type: 'monthly-o',
-        date: new Date(),
-        filename: `${month}_o_data.csv`,
-        month
-      }];
-      
-      // Create or update monthlyData for this month with structured data
-      const updatedMonthlyData = {
-        ...state.monthlyData,
-        [month]: {
-          ...state.monthlyData[month],
-          o: processedData // Store the complete processed result
+      try {
+        // Process the monthly data with enhanced parser
+        console.log(`Processing monthly-o data for ${month}`, data ? data.length : 0, "rows");
+        
+        // Validate data structure before processing
+        if (!data || !Array.isArray(data) || data.length === 0) {
+          console.error("Invalid data structure for monthly-o processing");
+          throw new Error("Invalid data structure. CSV data must contain at least one row.");
         }
-      };
-      
-      // Update the upload status
-      let newStatus = { ...state.uploadStatus };
-      if (!newStatus.monthly[month]) {
-        newStatus.monthly[month] = { e: false, o: true };
-      } else {
-        newStatus.monthly[month].o = true;
-      }
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
-          localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
-          localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
-          console.log(`Enhanced monthly-o data saved to localStorage for ${month}`);
-        } catch (error) {
-          console.error('Error saving monthly-o data to localStorage:', error);
+        
+        // Ensure we have 'Line Item' column
+        const firstRow = data[0];
+        if (!firstRow || !('Line Item' in firstRow)) {
+          console.error("CSV is missing the 'Line Item' column", firstRow);
+          throw new Error("CSV must contain a 'Line Item' column");
         }
+        
+        // Use our enhanced parser that returns structured data with flat, nested, and metadata
+        const processedData = processMonthlyCSV(data, 'monthly-o');
+        
+        console.log(`Processed monthly-o data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
+        
+        // Add to upload history
+        const newUploadHistory = [...state.uploadHistory, {
+          type: 'monthly-o' as CSVType,
+          date: new Date(),
+          filename: `${month}_o_data.csv`,
+          month
+        }];
+        
+        // Create or update monthlyData for this month with structured data
+        let existingMonthData = {};
+        if (state.monthlyData && state.monthlyData[month]) {
+          existingMonthData = state.monthlyData[month];
+        }
+        
+        const updatedMonthlyData = {
+          ...state.monthlyData,
+          [month]: {
+            ...existingMonthData,
+            o: processedData // Store the complete processed result
+          }
+        };
+        
+        // Update the upload status
+        let newStatus = { ...state.uploadStatus };
+        if (!newStatus.monthly) {
+          newStatus.monthly = {};
+        }
+        if (!newStatus.monthly[month]) {
+          newStatus.monthly[month] = { e: false, o: true };
+        } else {
+          newStatus.monthly[month].o = true;
+        }
+        
+        // Save to localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
+            localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
+            localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
+            console.log(`Enhanced monthly-o data saved to localStorage for ${month}`);
+          } catch (error) {
+            console.error('Error saving monthly-o data to localStorage:', error);
+          }
+        }
+        
+        return {
+          monthlyData: updatedMonthlyData,
+          uploadHistory: newUploadHistory,
+          uploadStatus: newStatus
+        };
+      } catch (error) {
+        console.error(`Error processing monthly-o data for ${month}:`, error);
+        throw error; // Re-throw for the component to handle
       }
-      
-      return {
-        monthlyData: updatedMonthlyData,
-        uploadHistory: newUploadHistory,
-        uploadStatus: newStatus
-      };
     }
     
     return state;
