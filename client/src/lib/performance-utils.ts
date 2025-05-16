@@ -419,58 +419,90 @@ export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' |
     
     // Process data if it exists for this month
     if (monthData?.lineItems && Array.isArray(monthData.lineItems)) {
-      // Look for specific line items that represent overall totals
-      const revenueTotal = monthData.lineItems.find((item: any) => 
-        item.name.includes('Total Revenue') ||
-        item.name.includes('Revenue Total') ||
-        item.name === 'Revenue'
-      );
+      // Log all line items with indices for debugging
+      console.log(`Extracting monthly performance trend for ${month} (${fileType})...`);
+      console.log("Available line items:", monthData.lineItems.map((item: any, index: number) => `${index + 1}: ${item.name}`));
       
-      const expenseTotal = monthData.lineItems.find((item: any) => 
-        item.name.includes('Total Expense') ||
-        item.name.includes('Expense Total') ||
-        item.name === 'Expenses'
-      );
-      
-      // If we found totals, use them directly
-      if (revenueTotal && revenueTotal.summaryValue !== undefined) {
-        monthRevenue = parseFloat(revenueTotal.summaryValue || 0);
-      } else {
-        // Otherwise sum individual revenue items
-        const revItems = monthData.lineItems.filter((item: any) => 
-          (item.name.includes('Revenue') || 
-           item.name.includes('Income') ||
-           item.name.toLowerCase().includes('charges')) &&
-          !item.name.includes('Total') &&
-          item.summaryValue !== undefined
-        );
+      // First try to get values by specific line numbers as specified by user
+      for (let i = 0; i < monthData.lineItems.length; i++) {
+        const item = monthData.lineItems[i];
+        const lineNumber = i + 1; // Adding 1 because array is 0-indexed but CSV lines are 1-indexed
         
-        revItems.forEach((item: any) => {
-          const value = parseFloat(item.summaryValue || 0);
-          if (!isNaN(value)) {
-            monthRevenue += value;
-          }
-        });
+        // For debugging
+        if (item.name.includes("Revenue") || item.name.includes("Expense") || item.name.includes("Income")) {
+          console.log(`Found item (line ${lineNumber}): ${item.name} = ${item.summaryValue}`);
+        }
+        
+        // Line 17 in CSV file is Total Revenue (as specified by user)
+        if (lineNumber === 17) {
+          monthRevenue = parseFloat(item.summaryValue || 0);
+          console.log(`Found Total Revenue (line 17): ${monthRevenue}`);
+        }
+        // Line 161 in CSV file is Total Operating Expenses (as specified by user)
+        else if (lineNumber === 161) {
+          monthExpenses = parseFloat(item.summaryValue || 0);
+          console.log(`Found Total Operating Expenses (line 161): ${monthExpenses}`);
+        }
       }
       
-      if (expenseTotal && expenseTotal.summaryValue !== undefined) {
-        monthExpenses = parseFloat(expenseTotal.summaryValue || 0);
-      } else {
-        // Otherwise sum individual expense items
-        const expItems = monthData.lineItems.filter((item: any) => 
-          (item.name.includes('Expense') || 
-           item.name.includes('Cost') ||
-           item.name.toLowerCase().includes('salary')) &&
-          !item.name.includes('Total') &&
-          item.summaryValue !== undefined
+      // If we couldn't get values by line number, use name-based approach as fallback
+      if (monthRevenue === 0) {
+        const revenueTotal = monthData.lineItems.find((item: any) => 
+          item.name === 'Total Revenue' ||
+          item.name === 'Revenue Total' ||
+          item.name === 'TOTAL REVENUE'
         );
         
-        expItems.forEach((item: any) => {
-          const value = parseFloat(item.summaryValue || 0);
-          if (!isNaN(value)) {
-            monthExpenses += value;
-          }
-        });
+        if (revenueTotal && revenueTotal.summaryValue !== undefined) {
+          monthRevenue = parseFloat(revenueTotal.summaryValue || 0);
+          console.log(`Found Total Revenue by name: ${monthRevenue}`);
+        } else {
+          // Otherwise sum individual revenue items
+          const revItems = monthData.lineItems.filter((item: any) => 
+            (item.name.includes('Revenue') || 
+             item.name.includes('Income') ||
+             item.name.toLowerCase().includes('charges')) &&
+            !item.name.includes('Total') &&
+            item.summaryValue !== undefined
+          );
+          
+          revItems.forEach((item: any) => {
+            const value = parseFloat(item.summaryValue || 0);
+            if (!isNaN(value)) {
+              monthRevenue += value;
+            }
+          });
+        }
+      }
+      
+      if (monthExpenses === 0) {
+        const expenseTotal = monthData.lineItems.find((item: any) => 
+          item.name === 'Total Operating Expenses' ||
+          item.name === 'Total Expenses' ||
+          item.name === 'TOTAL OPERATING EXPENSES' ||
+          item.name === 'Operating Expenses Total'
+        );
+        
+        if (expenseTotal && expenseTotal.summaryValue !== undefined) {
+          monthExpenses = parseFloat(expenseTotal.summaryValue || 0);
+          console.log(`Found Total Operating Expenses by name: ${monthExpenses}`);
+        } else {
+          // Otherwise sum individual expense items
+          const expItems = monthData.lineItems.filter((item: any) => 
+            (item.name.includes('Expense') || 
+             item.name.includes('Cost') ||
+             item.name.toLowerCase().includes('salary')) &&
+            !item.name.includes('Total') &&
+            item.summaryValue !== undefined
+          );
+          
+          expItems.forEach((item: any) => {
+            const value = parseFloat(item.summaryValue || 0);
+            if (!isNaN(value)) {
+              monthExpenses += value;
+            }
+          });
+        }
       }
       
       // Find Net Income line item if it exists (most accurate)
