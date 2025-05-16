@@ -25,15 +25,35 @@ export default function Monthly() {
   const [activeMonth, setActiveMonth] = useState("January");
   const monthLower = activeMonth.toLowerCase();
 
-  // Extract data for the active month
+  // Extract data for the active month with enhanced logging and error handling
   const monthData = useMemo(() => {
-    // Debug the monthly data when a month is selected
-    console.log(`Loading monthly data for: ${monthLower}`, monthlyData[monthLower]);
+    // Debug all available monthly data
+    const availableMonths = Object.keys(monthlyData);
+    console.log(`Available months in data store:`, availableMonths);
+    console.log(`Looking for monthly data with key: ${monthLower}`);
     
-    if (!monthlyData[monthLower]) return null;
+    // Try both direct match and alternative case versions
+    const possibleMonthKeys = [
+      monthLower,
+      monthLower.toLowerCase(),
+      activeMonth.toLowerCase(),
+      activeMonth
+    ];
     
-    const eData = monthlyData[monthLower]?.e || [];
-    const oData = monthlyData[monthLower]?.o || [];
+    // Find the first matching month key that exists in monthlyData
+    const matchingMonthKey = possibleMonthKeys.find(key => 
+      monthlyData[key] && (monthlyData[key]?.e?.length > 0 || monthlyData[key]?.o?.length > 0)
+    );
+    
+    if (!matchingMonthKey) {
+      console.log(`No monthly data found for: ${monthLower} (or alternative spellings)`);
+      return null;
+    }
+    
+    console.log(`Found monthly data using key: ${matchingMonthKey}`, monthlyData[matchingMonthKey]);
+    
+    const eData = monthlyData[matchingMonthKey]?.e || [];
+    const oData = monthlyData[matchingMonthKey]?.o || [];
     
     // Log the data to help with debugging
     console.log(`Monthly data loaded:`, { 
@@ -41,8 +61,13 @@ export default function Monthly() {
       oData: oData?.length || 0
     });
     
+    // Log first few rows to understand structure
+    if (eData.length > 0) {
+      console.log("First row of monthly data:", eData[0]);
+    }
+    
     return { eData, oData };
-  }, [monthlyData, monthLower]);
+  }, [monthlyData, monthLower, activeMonth]);
 
   // Calculate financial metrics from the monthly data
   const financialMetrics = useMemo(() => {

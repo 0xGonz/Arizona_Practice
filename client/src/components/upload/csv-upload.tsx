@@ -20,7 +20,7 @@ export default function CSVUpload({
   isUploaded = false
 }: CSVUploadProps) {
   const { toast } = useToast();
-  const { processCSVData, setUploadStatus } = useStore();
+  const { processCSVData, setUploadStatus, uploadStatus } = useStore();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,16 +58,34 @@ export default function CSVUpload({
             return;
           }
 
-          // Process the CSV data
-          processCSVData(type, data, month);
+          // Ensure month is standardized to lowercase
+          const monthKey = month ? month.toLowerCase().trim() : '';
           
-          // Update upload status
+          // Process the CSV data with standardized month key
+          processCSVData(type, data, monthKey);
+          
+          // Log for debugging
+          console.log(`CSV Upload processed for ${type}${monthKey ? ` (${monthKey})` : ''}`);
+          
+          // Update upload status with standardized month key
           if (type === 'annual') {
             setUploadStatus({ annual: true });
-          } else if (type === 'monthly-e' && month) {
-            setUploadStatus({ monthly: { [month]: { e: true } } });
-          } else if (type === 'monthly-o' && month) {
-            setUploadStatus({ monthly: { [month]: { o: true } } });
+          } else if (type === 'monthly-e' && monthKey) {
+            // For monthly-e, ensure both e and o properties exist
+            const updatedMonthStatus = { 
+              e: true,
+              // Preserve existing 'o' value or set to false
+              o: (uploadStatus.monthly[monthKey]?.o || false) 
+            };
+            setUploadStatus({ monthly: { [monthKey]: updatedMonthStatus } });
+          } else if (type === 'monthly-o' && monthKey) {
+            // For monthly-o, ensure both e and o properties exist
+            const updatedMonthStatus = { 
+              // Preserve existing 'e' value or set to false
+              e: (uploadStatus.monthly[monthKey]?.e || false),
+              o: true 
+            };
+            setUploadStatus({ monthly: { [monthKey]: updatedMonthStatus } });
           }
 
           // Success notification
