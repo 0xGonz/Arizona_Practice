@@ -77,7 +77,9 @@ export default function MonthlyImproved() {
       return monthData.eData?.entityColumns || [];
     } else {
       // For other business view, only show other business columns
-      return monthData.oData?.entityColumns || [];
+      // Filter out any employee-related columns like "All Employees"
+      const oColumns = monthData.oData?.entityColumns || [];
+      return oColumns.filter(col => col !== 'All Employees');
     }
   }, [monthData, viewType]);
   
