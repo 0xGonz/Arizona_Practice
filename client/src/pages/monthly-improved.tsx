@@ -7,10 +7,27 @@ import RecursiveLineItemTable from "@/components/monthly/recursive-line-item-tab
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+// Month names for display (capitalized)
 const months = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
+
+// Mapping for month display and lookup
+const monthMap = {
+  january: "January",
+  february: "February",
+  march: "March",
+  april: "April",
+  may: "May",
+  june: "June",
+  july: "July",
+  august: "August",
+  september: "September",
+  october: "October",
+  november: "November",
+  december: "December"
+};
 
 // Helper function to format currency values
 const formatCurrency = (value: number): string => {

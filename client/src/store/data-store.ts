@@ -294,23 +294,10 @@ const loadFromLocalStorage = () => {
 // Get initial state
 const initialState = typeof window !== 'undefined' ? loadFromLocalStorage() : null;
 
-// Default upload status
+// Default upload status - fully dynamic with no hardcoded months
 const defaultUploadStatus = {
   annual: false,
-  monthly: {
-    january: { e: false, o: false },
-    february: { e: false, o: false },
-    march: { e: false, o: false },
-    april: { e: false, o: false },
-    may: { e: false, o: false },
-    june: { e: false, o: false },
-    july: { e: false, o: false },
-    august: { e: false, o: false },
-    september: { e: false, o: false },
-    october: { e: false, o: false },
-    november: { e: false, o: false },
-    december: { e: false, o: false }
-  }
+  monthly: {}
 };
 
 export const useStore = create<DataStore>((set, get) => ({
@@ -531,14 +518,15 @@ export const useStore = create<DataStore>((set, get) => ({
         return { annualData: data };
       }
       
-    } else if (type === 'monthly-e' && month) {
+    } else if ((type === 'monthly-e' || type === 'monthly-o') && month) {
       try {
-        // Process the monthly data with enhanced parser
-        console.log(`Processing monthly-e data for ${month}`, data ? data.length : 0, "rows");
+        // Process the monthly data with enhanced parser - works for any month and type
+        const fileType = type === 'monthly-e' ? 'e' : 'o';
+        console.log(`Processing ${type} data for ${month}`, data ? data.length : 0, "rows");
         
         // Validate data structure before processing
         if (!data || !Array.isArray(data) || data.length === 0) {
-          console.error("Invalid data structure for monthly-e processing");
+          console.error(`Invalid data structure for ${type} processing`);
           throw new Error("Invalid data structure. CSV data must contain at least one row.");
         }
         
@@ -550,26 +538,26 @@ export const useStore = create<DataStore>((set, get) => ({
         }
         
         // Use our simplified parser that is more robust against errors
-        const processedData = parseMonthlyCSV(data, 'monthly-e');
+        const processedData = parseMonthlyCSV(data, type);
         
-        console.log(`Processed monthly-e data with ${processedData.lineItems.length} line items and ${processedData.entityColumns.length} entity columns`);
+        console.log(`Processed ${type} data with ${processedData.lineItems.length} line items and ${processedData.entityColumns.length} entity columns`);
         
         // Add to upload history
         const newUploadHistory = Array.isArray(state.uploadHistory) ? 
           [...state.uploadHistory, {
-            type: 'monthly-e' as CSVType,
+            type: type as CSVType,
             date: new Date(),
-            filename: `${month}_e_data.csv`,
+            filename: `${month}_${fileType}_data.csv`,
             month
           }] : 
           [{
-            type: 'monthly-e' as CSVType,
+            type: type as CSVType,
             date: new Date(),
-            filename: `${month}_e_data.csv`,
+            filename: `${month}_${fileType}_data.csv`,
             month
           }];
         
-        // Create or update monthlyData for this month with structured data
+        // Create or update monthlyData for any month with structured data
         let existingMonthData = {};
         if (state.monthlyData && state.monthlyData[month]) {
           existingMonthData = state.monthlyData[month];
@@ -579,19 +567,20 @@ export const useStore = create<DataStore>((set, get) => ({
           ...state.monthlyData,
           [month]: {
             ...existingMonthData,
-            e: processedData // Store the complete processed result
+            [fileType]: processedData // Store the complete processed result
           }
         };
         
-        // Update the upload status
+        // Update the upload status - dynamic with no hardcoded months
         let newStatus = { ...state.uploadStatus };
         if (!newStatus.monthly) {
           newStatus.monthly = {};
         }
         if (!newStatus.monthly[month]) {
-          newStatus.monthly[month] = { e: true, o: false };
+          newStatus.monthly[month] = { e: false, o: false };
+          newStatus.monthly[month][fileType] = true;
         } else {
-          newStatus.monthly[month].e = true;
+          newStatus.monthly[month][fileType] = true;
         }
         
         // Save to localStorage
@@ -600,9 +589,9 @@ export const useStore = create<DataStore>((set, get) => ({
             localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
             localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
             localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
-            console.log(`Enhanced monthly-e data saved to localStorage for ${month}`);
+            console.log(`Enhanced ${type} data saved to localStorage for ${month}`);
           } catch (error) {
-            console.error('Error saving monthly-e data to localStorage:', error);
+            console.error(`Error saving ${type} data to localStorage:`, error);
           }
         }
         
@@ -612,92 +601,7 @@ export const useStore = create<DataStore>((set, get) => ({
           uploadStatus: newStatus
         };
       } catch (error) {
-        console.error(`Error processing monthly-e data for ${month}:`, error);
-        throw error; // Re-throw for the component to handle
-      }
-      
-    } else if (type === 'monthly-o' && month) {
-      try {
-        // Process the monthly data with enhanced parser
-        console.log(`Processing monthly-o data for ${month}`, data ? data.length : 0, "rows");
-        
-        // Validate data structure before processing
-        if (!data || !Array.isArray(data) || data.length === 0) {
-          console.error("Invalid data structure for monthly-o processing");
-          throw new Error("Invalid data structure. CSV data must contain at least one row.");
-        }
-        
-        // Ensure we have 'Line Item' column
-        const firstRow = data[0];
-        if (!firstRow || !('Line Item' in firstRow)) {
-          console.error("CSV is missing the 'Line Item' column", firstRow);
-          throw new Error("CSV must contain a 'Line Item' column");
-        }
-        
-        // Use our simplified parser that is more robust against errors
-        const processedData = parseMonthlyCSV(data, 'monthly-o');
-        
-        console.log(`Processed monthly-o data with ${processedData.lineItems.length} line items and ${processedData.entityColumns.length} entity columns`);
-        
-        // Add to upload history
-        const newUploadHistory = Array.isArray(state.uploadHistory) ? 
-          [...state.uploadHistory, {
-            type: 'monthly-o' as CSVType,
-            date: new Date(),
-            filename: `${month}_o_data.csv`,
-            month
-          }] : 
-          [{
-            type: 'monthly-o' as CSVType,
-            date: new Date(),
-            filename: `${month}_o_data.csv`,
-            month
-          }];
-        
-        // Create or update monthlyData for this month with structured data
-        let existingMonthData = {};
-        if (state.monthlyData && state.monthlyData[month]) {
-          existingMonthData = state.monthlyData[month];
-        }
-        
-        const updatedMonthlyData = {
-          ...state.monthlyData,
-          [month]: {
-            ...existingMonthData,
-            o: processedData // Store the complete processed result
-          }
-        };
-        
-        // Update the upload status
-        let newStatus = { ...state.uploadStatus };
-        if (!newStatus.monthly) {
-          newStatus.monthly = {};
-        }
-        if (!newStatus.monthly[month]) {
-          newStatus.monthly[month] = { e: false, o: true };
-        } else {
-          newStatus.monthly[month].o = true;
-        }
-        
-        // Save to localStorage
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
-            localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
-            localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
-            console.log(`Enhanced monthly-o data saved to localStorage for ${month}`);
-          } catch (error) {
-            console.error('Error saving monthly-o data to localStorage:', error);
-          }
-        }
-        
-        return {
-          monthlyData: updatedMonthlyData,
-          uploadHistory: newUploadHistory,
-          uploadStatus: newStatus
-        };
-      } catch (error) {
-        console.error(`Error processing monthly-o data for ${month}:`, error);
+        console.error(`Error processing ${type} data for ${month}:`, error);
         throw error; // Re-throw for the component to handle
       }
     }
