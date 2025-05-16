@@ -241,55 +241,69 @@ export function extractMonthlyPerformanceTrend(monthlyData: any) {
   
   months.forEach(month => {
     const eData = monthlyData[month]?.e;
-    const oData = monthlyData[month]?.o;
     
     let monthRevenue = 0;
     let monthExpenses = 0;
     
-    // Process employee data
+    // Process employee data ONLY for consistency with individual month views
     if (eData?.lineItems && Array.isArray(eData.lineItems)) {
-      // Find Revenue and Expense items using summary column
-      const revItems = eData.lineItems.filter((item: any) => 
-        (item.name.includes('Revenue') || item.name.includes('Income')) &&
-        item.summaryValue !== undefined
+      // Look for specific line items that represent overall totals
+      const revenueTotal = eData.lineItems.find((item: any) => 
+        item.name.includes('Total Revenue') ||
+        item.name.includes('Revenue Total')
       );
       
-      const expItems = eData.lineItems.filter((item: any) => 
-        (item.name.includes('Expense') || item.name.includes('Cost')) &&
-        item.summaryValue !== undefined
+      const expenseTotal = eData.lineItems.find((item: any) => 
+        item.name.includes('Total Expense') ||
+        item.name.includes('Expense Total')
       );
       
-      // Sum up revenue and expenses
-      revItems.forEach((item: any) => {
-        monthRevenue += parseFloat(item.summaryValue || 0);
-      });
+      // If we found totals, use them directly
+      if (revenueTotal && revenueTotal.summaryValue !== undefined) {
+        monthRevenue = parseFloat(revenueTotal.summaryValue || 0);
+      } else {
+        // Otherwise sum individual revenue items
+        const revItems = eData.lineItems.filter((item: any) => 
+          (item.name.includes('Revenue') || item.name.includes('Income')) &&
+          !item.name.includes('Total') &&
+          item.summaryValue !== undefined
+        );
+        
+        revItems.forEach((item: any) => {
+          monthRevenue += parseFloat(item.summaryValue || 0);
+        });
+      }
       
-      expItems.forEach((item: any) => {
-        monthExpenses += parseFloat(item.summaryValue || 0);
-      });
-    }
-    
-    // Process other business data
-    if (oData?.lineItems && Array.isArray(oData.lineItems)) {
-      // Find Revenue and Expense items using summary column
-      const revItems = oData.lineItems.filter((item: any) => 
-        (item.name.includes('Revenue') || item.name.includes('Income')) &&
-        item.summaryValue !== undefined
+      if (expenseTotal && expenseTotal.summaryValue !== undefined) {
+        monthExpenses = parseFloat(expenseTotal.summaryValue || 0);
+      } else {
+        // Otherwise sum individual expense items
+        const expItems = eData.lineItems.filter((item: any) => 
+          (item.name.includes('Expense') || item.name.includes('Cost')) &&
+          !item.name.includes('Total') &&
+          item.summaryValue !== undefined
+        );
+        
+        expItems.forEach((item: any) => {
+          monthExpenses += parseFloat(item.summaryValue || 0);
+        });
+      }
+      
+      // Find Net Income line item if it exists (most accurate)
+      const netIncomeItem = eData.lineItems.find((item: any) => 
+        item.name.includes('Net Income') ||
+        item.name.includes('Net Profit') ||
+        item.name.includes('Net Loss')
       );
       
-      const expItems = oData.lineItems.filter((item: any) => 
-        (item.name.includes('Expense') || item.name.includes('Cost')) &&
-        item.summaryValue !== undefined
-      );
-      
-      // Sum up revenue and expenses
-      revItems.forEach((item: any) => {
-        monthRevenue += parseFloat(item.summaryValue || 0);
-      });
-      
-      expItems.forEach((item: any) => {
-        monthExpenses += parseFloat(item.summaryValue || 0);
-      });
+      // If we found a net income item and it has a summary value, use it to validate
+      if (netIncomeItem && netIncomeItem.summaryValue !== undefined) {
+        const directNetIncome = parseFloat(netIncomeItem.summaryValue || 0);
+        // If the calculated net is significantly different, use the direct value
+        if (Math.abs((monthRevenue - monthExpenses) - directNetIncome) > 1000) {
+          monthRevenue = directNetIncome + monthExpenses;
+        }
+      }
     }
     
     // Calculate net income
