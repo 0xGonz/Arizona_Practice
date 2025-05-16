@@ -157,10 +157,10 @@ export default function Dashboard() {
             <AncillaryRoiCard 
               comparisonData={comparisonData}
               ancillaryMetrics={{
-                revenue: 968210,
-                expenses: 425180,
-                profitMargin: 56.1,
-                roi: 128
+                revenue: 0,
+                expenses: 0,
+                profitMargin: 0,
+                roi: 0
               }}
             />
           </div>

@@ -112,7 +112,7 @@ export const useStore = create<DataStore>((set) => ({
       
       // Add to upload history
       const newHistory = [...state.uploadHistory, {
-        type: 'monthly-e',
+        type: 'monthly-e' as CSVType,
         date: new Date(),
         filename: `${month}_e_data.csv`,
         month
@@ -146,7 +146,7 @@ export const useStore = create<DataStore>((set) => ({
       
       // Add to upload history
       const newHistory = [...state.uploadHistory, {
-        type: 'monthly-o',
+        type: 'monthly-o' as CSVType,
         date: new Date(),
         filename: `${month}_o_data.csv`,
         month
