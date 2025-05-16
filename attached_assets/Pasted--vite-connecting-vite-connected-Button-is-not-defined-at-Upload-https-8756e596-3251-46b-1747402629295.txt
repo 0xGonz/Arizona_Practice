@@ -1,0 +1,54 @@
+[vite] connecting...
+[vite] connected.
+Button is not defined
+at Upload (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/upload.tsx?t=1747402579911:545:19)
+at renderWithHooks (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:11548:26)
+at mountIndeterminateComponent (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:14926:21)
+at beginWork (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:15914:22)
+at HTMLUnknownElement.callCallback2 (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:3674:22)
+at Object.invokeGuardedCallbackDev (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:3699:24)
+at invokeGuardedCallback (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:3733:39)
+at beginWork$1 (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19765:15)
+at performUnitOfWork (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19198:20)
+at workLoopSync (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19137:13)
+Button is not defined
+at Upload (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/upload.tsx?t=1747402579911:545:19)
+at renderWithHooks (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:11548:26)
+at mountIndeterminateComponent (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:14926:21)
+at beginWork (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:15914:22)
+at HTMLUnknownElement.callCallback2 (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:3674:22)
+at Object.invokeGuardedCallbackDev (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:3699:24)
+at invokeGuardedCallback (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:3733:39)
+at beginWork$1 (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19765:15)
+at performUnitOfWork (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19198:20)
+at workLoopSync (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19137:13)
+The above error occurred in the <Upload> component:
+
+    at Upload (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/upload.tsx?t=1747402579911:27:68)
+    at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:323:16)
+    at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=560a4516:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx:21:34)
+    at Router
+    at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAF36TS6.js?v=560a4516:38:15)
+    at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=560a4516:56:5)
+    at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=560a4516:2805:3)
+    at App
+    at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:44:25)
+    at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=560a4516:42:18)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Button is not defined
+at Upload (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/upload.tsx?t=1747402579911:545:19)
+at renderWithHooks (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:11548:26)
+at mountIndeterminateComponent (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:14926:21)
+at beginWork (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:15914:22)
+at beginWork$1 (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19753:22)
+at performUnitOfWork (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19198:20)
+at workLoopSync (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19137:13)
+at renderRootSync (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:19116:15)
+at recoverFromConcurrentError (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:18736:28)
+at performConcurrentWorkOnRoot (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WERSD76P.js?v=560a4516:18684:30)
