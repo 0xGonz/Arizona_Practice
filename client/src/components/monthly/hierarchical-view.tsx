@@ -12,22 +12,26 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+// Interface definitions for hierarchical line items
 interface LineItem {
   id: string;
   name: string;
   depth: number;
-  originalLineItem: string;
-  isTotal: boolean;
-  values: Record<string, number>;
-  children: LineItem[];
+  originalLineItem?: string;
+  isTotal?: boolean;
+  values?: Record<string, number>;
+  entityValues?: Record<string, number>;
+  summaryValue?: number;
+  children?: LineItem[];
 }
 
 interface HierarchicalViewProps {
-  data: any[];
+  data: LineItem[] | any[];
   columnHeaders: string[];
+  isNested?: boolean;
 }
 
-export default function HierarchicalView({ data, columnHeaders }: HierarchicalViewProps) {
+export default function HierarchicalView({ data, columnHeaders, isNested = false }: HierarchicalViewProps) {
   if (!data || data.length === 0) {
     return (
       <div className="text-center p-4">
@@ -54,53 +58,66 @@ export default function HierarchicalView({ data, columnHeaders }: HierarchicalVi
     return Math.floor(leadingSpaces / 2);
   };
 
-  // Process all rows to create a list of LineItems with their depth
-  const processedItems = data
-    .filter(row => row['Line Item'] !== undefined)
-    .map(row => {
-      // Keep the original line item string exactly as it appears in CSV
-      const originalLineItem = row['Line Item'];
-      
-      // Calculate depth based on leading spaces
-      const depth = getLineItemDepth(originalLineItem);
-      
-      // For display, we'll trim the name but preserve the full structure
-      const name = originalLineItem.trim();
-      const isTotal = name.toLowerCase().includes('total');
-      
-      // Calculate values for each provider column directly from row data
-      const values: Record<string, number> = {};
-      columnHeaders.forEach(header => {
-        // Only parse if the cell has a value
-        if (row[header] !== undefined && row[header] !== '') {
-          values[header] = parseFinancialValue(row[header]);
+  // Process items based on whether they're already in nested format or need processing
+  let processedItems: LineItem[] = [];
+  
+  if (isNested) {
+    // Data is already in the proper nested format
+    processedItems = data as LineItem[];
+  } else {
+    // Process raw data to create LineItems with depth info
+    processedItems = (data as any[])
+      .filter(row => row['Line Item'] !== undefined)
+      .map(row => {
+        // Keep the original line item string exactly as it appears in CSV
+        const originalLineItem = row['Line Item'];
+        
+        // Calculate depth based on leading spaces
+        const depth = getLineItemDepth(originalLineItem);
+        
+        // For display, we'll trim the name but preserve the full structure
+        const name = originalLineItem.trim();
+        const isTotal = name.toLowerCase().includes('total');
+        
+        // Calculate values for each provider column directly from row data
+        const values: Record<string, number> = {};
+        columnHeaders.forEach(header => {
+          // Only parse if the cell has a value
+          if (row[header] !== undefined && row[header] !== '') {
+            values[header] = parseFinancialValue(row[header]);
+          } else {
+            values[header] = 0;
+          }
+        });
+        
+        // Check for a total column (either named or empty column)
+        if (row[''] !== undefined) {
+          values['Total'] = parseFinancialValue(row['']);
         } else {
-          values[header] = 0;
+          // Sum the values if no total column exists
+          values['Total'] = columnHeaders.reduce((sum, header) => sum + (values[header] || 0), 0);
         }
+        
+        return {
+          id: `${name}-${depth}-${Math.random().toString(36).substring(2, 9)}`,
+          name,
+          depth,
+          originalLineItem,
+          isTotal,
+          values,
+          children: []
+        };
       });
-      
-      // Check for a total column (either named or empty column)
-      if (row[''] !== undefined) {
-        values['Total'] = parseFinancialValue(row['']);
-      } else {
-        // Sum the values if no total column exists
-        values['Total'] = columnHeaders.reduce((sum, header) => sum + values[header], 0);
-      }
-      
-      return {
-        id: `${name}-${depth}-${Math.random().toString(36).substring(2, 9)}`,
-        name,
-        depth,
-        originalLineItem,
-        isTotal,
-        values,
-        children: []
-      };
-    });
+  }
 
   // Build a tree structure from the flat list
   const buildTree = (items: LineItem[]): LineItem[] => {
     const root: LineItem[] = [];
+    
+    // If this is already nested data with children property, return as is
+    if (isNested && items.length > 0 && items[0].children) {
+      return items;
+    }
     const stack: LineItem[] = [];
     
     items.forEach(item => {
@@ -130,11 +147,49 @@ export default function HierarchicalView({ data, columnHeaders }: HierarchicalVi
   const renderLineItem = (item: LineItem, index: number) => {
     const indentPadding = item.depth * 16; // 16px per level
     
+    // Handle different data formats (new structure vs old structure)
+    const getValueForColumn = (columnName: string): number => {
+      // For new structure with entityValues
+      if (item.entityValues && item.entityValues[columnName] !== undefined) {
+        return item.entityValues[columnName];
+      }
+      
+      // For old structure with values
+      if (item.values && item.values[columnName] !== undefined) {
+        return item.values[columnName];
+      }
+      
+      // Fallback
+      return 0;
+    };
+    
+    // Get total/summary value
+    const getTotalValue = (): number => {
+      // If we have a summary value directly
+      if (item.summaryValue !== undefined) {
+        return item.summaryValue;
+      }
+      
+      // If we have a 'Total' in values object
+      if (item.values && item.values['Total'] !== undefined) {
+        return item.values['Total'];
+      }
+      
+      // Calculate from entity values
+      if (item.entityValues) {
+        return Object.values(item.entityValues).reduce((sum, value) => sum + value, 0);
+      }
+      
+      return 0;
+    };
+    
+    const isItemTotal = item.isTotal || (item.name && item.name.toLowerCase().includes('total'));
+    
     return (
       <React.Fragment key={item.id}>
         <tr className={cn(
           "border-b",
-          item.isTotal ? "font-semibold bg-muted/20" : "bg-card"
+          isItemTotal ? "font-semibold bg-muted/20" : "bg-card"
         )}>
           <td 
             className="py-2 px-4 text-left" 
@@ -145,17 +200,17 @@ export default function HierarchicalView({ data, columnHeaders }: HierarchicalVi
           
           {columnHeaders.map(header => (
             <td key={`${item.id}-${header}`} className="py-2 px-4 text-right">
-              {formatCurrency(item.values[header] || 0)}
+              {formatCurrency(getValueForColumn(header))}
             </td>
           ))}
           
           <td className="py-2 px-4 text-right font-medium">
-            {formatCurrency(item.values['Total'] || 0)}
+            {formatCurrency(getTotalValue())}
           </td>
         </tr>
         
         {/* Render children recursively */}
-        {item.children.map((child, idx) => renderLineItem(child, idx))}
+        {item.children && item.children.map((child, idx) => renderLineItem(child, idx))}
       </React.Fragment>
     );
   };
