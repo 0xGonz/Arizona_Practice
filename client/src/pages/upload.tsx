@@ -264,8 +264,8 @@ export default function Upload() {
                   <div>
                     <h3 className="text-base font-medium mb-3">Actions</h3>
                     <div className="space-y-3">
-                      <button 
-                        className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50"
+                      <Button 
+                        className="w-full"
                         onClick={() => setShowProcessedData(true)}
                         disabled={
                           (processedDataType === "annual" && !uploadStatus.annual) ||
@@ -274,14 +274,15 @@ export default function Upload() {
                         }
                       >
                         Process and View Data
-                      </button>
+                      </Button>
                       
-                      <button 
-                        className="w-full border border-input bg-background hover:bg-accent px-4 py-2 rounded-md"
+                      <Button 
+                        className="w-full"
+                        variant="outline"
                         onClick={() => setShowProcessedData(false)}
                       >
                         Hide Data
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -293,117 +294,120 @@ export default function Upload() {
                     {processedDataType === "annual" && uploadStatus.annual ? (
                       <div className="space-y-4">
                         <h4 className="font-medium">Annual Data</h4>
-                        <div className="overflow-auto max-h-96">
-                          <table className="min-w-full border-collapse">
-                            <thead>
-                              <tr className="bg-muted">
-                                <th className="border p-2 text-left">Line Item</th>
-                                <th className="border p-2 text-right">Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {annualData && Array.isArray(annualData) && annualData.length > 0 ? (
-                                annualData.slice(0, 20).map((row: any, index: number) => {
-                                  console.log("Annual row data:", row); // Debug log
-                                  return (
-                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                      <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                      <td className="border p-2 text-right">
-                                        {Object.keys(row).find(k => k.includes('Total')) ? 
-                                          row[Object.keys(row).find(k => k.includes('Total')) || ''] : 'N/A'}
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              ) : (
-                                <tr>
-                                  <td colSpan={2} className="border p-2 text-center">No data available</td>
+                        <div className="overflow-auto max-h-[70vh]">
+                          {annualData && Array.isArray(annualData) && annualData.length > 0 ? (
+                            <table className="min-w-full border-collapse">
+                              <thead>
+                                <tr className="bg-muted">
+                                  <th className="border p-2 text-left">Line Item</th>
+                                  {Object.keys(annualData[0])
+                                    .filter(key => key !== 'Line Item')
+                                    .map((column, idx) => (
+                                      <th key={idx} className="border p-2 text-right">{column}</th>
+                                    ))
+                                  }
                                 </tr>
-                              )}
-                            </tbody>
-                          </table>
-                          {annualData && Array.isArray(annualData) && annualData.length > 20 && (
-                            <p className="text-sm text-muted-foreground mt-2">Showing first 20 rows of {annualData.length} total</p>
+                              </thead>
+                              <tbody>
+                                {annualData.map((row, index) => (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                    {Object.keys(row)
+                                      .filter(key => key !== 'Line Item')
+                                      .map((column, idx) => (
+                                        <td key={idx} className="border p-2 text-right">{row[column] || ''}</td>
+                                      ))
+                                    }
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-muted-foreground">No data available</p>
+                            </div>
                           )}
                         </div>
                       </div>
                     ) : processedDataType === "monthly-e" && uploadStatus.monthly[selectedEMonth]?.e ? (
                       <div className="space-y-4">
                         <h4 className="font-medium">Monthly Employee Data ({selectedEMonth.charAt(0).toUpperCase() + selectedEMonth.slice(1)})</h4>
-                        <div className="overflow-auto max-h-96">
-                          <table className="min-w-full border-collapse">
-                            <thead>
-                              <tr className="bg-muted">
-                                <th className="border p-2 text-left">Line Item</th>
-                                <th className="border p-2 text-right">All Employees</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {monthlyData[selectedEMonth]?.e && Array.isArray(monthlyData[selectedEMonth]?.e) && monthlyData[selectedEMonth]?.e.length > 0 ? (
-                                monthlyData[selectedEMonth].e.slice(0, 20).map((row: any, index: number) => {
-                                  console.log("Monthly E row data:", row); // Debug log
-                                  return (
-                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                      <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                      <td className="border p-2 text-right">
-                                        {Object.keys(row).find(k => k.includes('All')) ? 
-                                          row[Object.keys(row).find(k => k.includes('All')) || ''] : 'N/A'}
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              ) : (
-                                <tr>
-                                  <td colSpan={2} className="border p-2 text-center">No data available</td>
+                        <div className="overflow-auto max-h-[70vh]">
+                          {monthlyData[selectedEMonth]?.e && Array.isArray(monthlyData[selectedEMonth]?.e) && monthlyData[selectedEMonth]?.e.length > 0 ? (
+                            <table className="min-w-full border-collapse">
+                              <thead>
+                                <tr className="bg-muted">
+                                  <th className="border p-2 text-left">Line Item</th>
+                                  {Object.keys(monthlyData[selectedEMonth].e[0])
+                                    .filter(key => key !== 'Line Item')
+                                    .map((column, idx) => (
+                                      <th key={idx} className="border p-2 text-right">{column}</th>
+                                    ))
+                                  }
                                 </tr>
-                              )}
-                            </tbody>
-                          </table>
-                          {monthlyData[selectedEMonth]?.e && Array.isArray(monthlyData[selectedEMonth]?.e) && monthlyData[selectedEMonth]?.e.length > 20 && (
-                            <p className="text-sm text-muted-foreground mt-2">Showing first 20 rows of {monthlyData[selectedEMonth].e.length} total</p>
+                              </thead>
+                              <tbody>
+                                {monthlyData[selectedEMonth].e.map((row, index) => (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                    {Object.keys(row)
+                                      .filter(key => key !== 'Line Item')
+                                      .map((column, idx) => (
+                                        <td key={idx} className="border p-2 text-right">{row[column] || ''}</td>
+                                      ))
+                                    }
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-muted-foreground">No data available</p>
+                            </div>
                           )}
                         </div>
                       </div>
                     ) : processedDataType === "monthly-o" && uploadStatus.monthly[selectedOMonth]?.o ? (
                       <div className="space-y-4">
                         <h4 className="font-medium">Monthly Other Business Data ({selectedOMonth.charAt(0).toUpperCase() + selectedOMonth.slice(1)})</h4>
-                        <div className="overflow-auto max-h-96">
-                          <table className="min-w-full border-collapse">
-                            <thead>
-                              <tr className="bg-muted">
-                                <th className="border p-2 text-left">Line Item</th>
-                                <th className="border p-2 text-right">All Entities</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {monthlyData[selectedOMonth]?.o && Array.isArray(monthlyData[selectedOMonth]?.o) && monthlyData[selectedOMonth]?.o.length > 0 ? (
-                                monthlyData[selectedOMonth].o.slice(0, 20).map((row: any, index: number) => {
-                                  console.log("Monthly O row data:", row); // Debug log
-                                  return (
-                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                      <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                      <td className="border p-2 text-right">
-                                        {Object.keys(row).find(k => k.includes('All')) ? 
-                                          row[Object.keys(row).find(k => k.includes('All')) || ''] : 'N/A'}
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              ) : (
-                                <tr>
-                                  <td colSpan={2} className="border p-2 text-center">No data available</td>
+                        <div className="overflow-auto max-h-[70vh]">
+                          {monthlyData[selectedOMonth]?.o && Array.isArray(monthlyData[selectedOMonth]?.o) && monthlyData[selectedOMonth]?.o.length > 0 ? (
+                            <table className="min-w-full border-collapse">
+                              <thead>
+                                <tr className="bg-muted">
+                                  <th className="border p-2 text-left">Line Item</th>
+                                  {Object.keys(monthlyData[selectedOMonth].o[0])
+                                    .filter(key => key !== 'Line Item')
+                                    .map((column, idx) => (
+                                      <th key={idx} className="border p-2 text-right">{column}</th>
+                                    ))
+                                  }
                                 </tr>
-                              )}
-                            </tbody>
-                          </table>
-                          {monthlyData[selectedOMonth]?.o && Array.isArray(monthlyData[selectedOMonth]?.o) && monthlyData[selectedOMonth]?.o.length > 20 && (
-                            <p className="text-sm text-muted-foreground mt-2">Showing first 20 rows of {monthlyData[selectedOMonth].o.length} total</p>
+                              </thead>
+                              <tbody>
+                                {monthlyData[selectedOMonth].o.map((row, index) => (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
+                                    {Object.keys(row)
+                                      .filter(key => key !== 'Line Item')
+                                      .map((column, idx) => (
+                                        <td key={idx} className="border p-2 text-right">{row[column] || ''}</td>
+                                      ))
+                                    }
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-muted-foreground">No data available</p>
+                            </div>
                           )}
                         </div>
                       </div>
                     ) : (
                       <div className="text-center py-8">
-                        <p className="text-muted-foreground">No data uploaded for the selected type. Please upload data first.</p>
+                        <p className="text-muted-foreground">No data available for selected type. Please upload data first.</p>
                       </div>
                     )}
                   </div>
@@ -416,51 +420,73 @@ export default function Upload() {
         <TabsContent value="help">
           <Card>
             <CardHeader>
-              <CardTitle>CSV Format Guidelines</CardTitle>
-              <CardDescription>Requirements for file formats and structure</CardDescription>
+              <CardTitle>Help & Guidelines</CardTitle>
+              <CardDescription>Learn how to prepare and upload your financial data</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Annual Consolidated CSV</h3>
-                  <p className="mb-2">The annual CSV file should have the following structure:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Column A: "Line Item" - Contains the financial category labels</li>
-                    <li>Columns B-M: Monthly columns (e.g., "2024(Jan)", "2024(Feb)", ...)</li>
-                    <li>Column N: Annual total column (e.g., "2024 Total")</li>
-                  </ul>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-2">CSV File Requirements</h3>
+                <div className="space-y-4">
+                  <div className="bg-muted p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Annual CSV Format</h4>
+                    <p className="mb-2">Your annual CSV file should include:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>First column labeled "Line Item" containing expense/revenue categories</li>
+                      <li>Columns for each month (e.g., "2024(Jan)", "2024(Feb)", etc.)</li>
+                      <li>A "Total" column with yearly totals</li>
+                      <li>Numbers formatted as currency with commas and decimal places</li>
+                      <li>Negative values in parentheses, e.g., "(1,234.56)"</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-muted p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Monthly Employee (E) CSV Format</h4>
+                    <p className="mb-2">Your monthly E CSV files should include:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>First column labeled "Line Item" with expense/revenue categories</li>
+                      <li>Columns for each employee or department</li>
+                      <li>An "All Employees" column with totals</li>
+                      <li>Numbers formatted as currency with commas and decimal places</li>
+                      <li>Negative values in parentheses, e.g., "(1,234.56)"</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-muted p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Monthly Other Business (O) CSV Format</h4>
+                    <p className="mb-2">Your monthly O CSV files should include:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>First column labeled "Line Item" with expense/revenue categories</li>
+                      <li>Columns for each business entity</li>
+                      <li>An "All Entities" column with totals</li>
+                      <li>Numbers formatted as currency with commas and decimal places</li>
+                      <li>Negative values in parentheses, e.g., "(1,234.56)"</li>
+                    </ul>
+                  </div>
                 </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Monthly Employee (E) CSV</h3>
-                  <p className="mb-2">The monthly E CSV files should have the following structure:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Column A: "Line Item" - Contains the financial category labels</li>
-                    <li>Columns B-M: Individual employee columns (e.g., doctor names)</li>
-                    <li>Column N: Summary column (e.g., "All Employees")</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Monthly Other Business (O) CSV</h3>
-                  <p className="mb-2">The monthly O CSV files should have the following structure:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Column A: "Line Item" - Contains the financial category labels</li>
-                    <li>Columns B-M: Individual entity/department columns</li>
-                    <li>Column N: Summary column (e.g., "All Entities")</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Value Formatting</h3>
-                  <p className="mb-2">The system can parse values in the following formats:</p>
-                  <ul className="list-disc pl-6 space-y-1">
-                    <li>Dollar signs (e.g., "$1,500.00")</li>
-                    <li>Commas as thousand separators (e.g., "1,500.00")</li>
-                    <li>Parentheses for negative values (e.g., "($1,500.00)")</li>
-                    <li>Plain numbers (e.g., "1500.00")</li>
-                  </ul>
-                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Upload Process</h3>
+                <ol className="list-decimal pl-5 space-y-2">
+                  <li>Prepare your CSV files according to the formats above</li>
+                  <li>Navigate to the "Upload Data" tab</li>
+                  <li>Select the appropriate file type (Annual, Monthly E, or Monthly O)</li>
+                  <li>For monthly files, select the month from the dropdown</li>
+                  <li>Click "Choose File" and select your CSV file</li>
+                  <li>Click "Upload" to process the file</li>
+                  <li>Verify your data in the "Process & Validate" tab</li>
+                  <li>View results in the Dashboard</li>
+                </ol>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Troubleshooting</h3>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><span className="font-medium">Upload fails:</span> Ensure your CSV follows the required format</li>
+                  <li><span className="font-medium">Missing data:</span> Check that all required columns are present</li>
+                  <li><span className="font-medium">Incorrect values:</span> Verify number formatting in your CSV</li>
+                  <li><span className="font-medium">Dashboard not updating:</span> Confirm your data is properly processed in the "Process & Validate" tab</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
@@ -470,31 +496,32 @@ export default function Upload() {
   );
 }
 
+// Simple Select component for the dropdowns
 function Select({ 
   className, 
   placeholder, 
-  options, 
   value, 
-  onChange 
+  onChange, 
+  options 
 }: { 
-  className?: string, 
-  placeholder: string, 
-  options: { label: string, value: string }[],
-  value?: string,
-  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void 
+  className?: string;
+  placeholder?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  options: { label: string; value: string; }[];
 }) {
   return (
-    <div className={className}>
-      <select 
-        className="w-full p-2 border border-input rounded-md bg-white"
-        value={value || ""}
-        onChange={onChange}
-      >
-        <option value="" disabled>{placeholder}</option>
-        {options.map(option => (
-          <option key={option.value} value={option.value}>{option.label}</option>
-        ))}
-      </select>
-    </div>
+    <select 
+      className={`p-2 border border-input rounded-md ${className}`}
+      value={value}
+      onChange={onChange}
+    >
+      {placeholder && <option value="" disabled>{placeholder}</option>}
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   );
 }
