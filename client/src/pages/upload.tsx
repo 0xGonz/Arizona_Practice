@@ -21,10 +21,8 @@ export default function Upload() {
     if (type && month) {
       setActiveTab("upload");
       if (type === 'monthly-e') {
-        setSelectedMonth(month);
         setSelectedEMonth(month);
       } else if (type === 'monthly-o') {
-        setSelectedMonth(month);
         setSelectedOMonth(month);
       }
     }
@@ -158,38 +156,45 @@ export default function Upload() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="bg-muted rounded-md p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Check className="h-5 w-5 text-positive mr-2" />
-                    <div>
-                      <p className="font-medium">Annual Consolidated CSV</p>
-                      <p className="text-sm text-muted-foreground">Uploaded yesterday at 2:30 PM</p>
-                    </div>
+                {uploadHistory.length > 0 ? (
+                  uploadHistory.map((upload, index) => {
+                    // Format date
+                    const formattedDate = new Intl.DateTimeFormat('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: 'numeric',
+                      hour12: true
+                    }).format(upload.date);
+                    
+                    // Format file type for display
+                    let displayType = '';
+                    if (upload.type === 'annual') {
+                      displayType = 'Annual Consolidated CSV';
+                    } else if (upload.type === 'monthly-e') {
+                      displayType = `${upload.month?.charAt(0).toUpperCase()}${upload.month?.slice(1)} Employee (E) CSV`;
+                    } else if (upload.type === 'monthly-o') {
+                      displayType = `${upload.month?.charAt(0).toUpperCase()}${upload.month?.slice(1)} Other Business (O) CSV`;
+                    }
+                    
+                    return (
+                      <div key={index} className="bg-muted rounded-md p-4 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Check className="h-5 w-5 text-positive mr-2" />
+                          <div>
+                            <p className="font-medium">{displayType}</p>
+                            <p className="text-sm text-muted-foreground">Uploaded {formattedDate}</p>
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground">{upload.filename}</div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No uploads yet. Start by uploading your financial data files.</p>
                   </div>
-                  <div className="text-sm text-muted-foreground">2024_consolidated.csv</div>
-                </div>
-                
-                <div className="bg-muted rounded-md p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Check className="h-5 w-5 text-positive mr-2" />
-                    <div>
-                      <p className="font-medium">January Employee (E) CSV</p>
-                      <p className="text-sm text-muted-foreground">Uploaded yesterday at 2:32 PM</p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">2024_jan_employees.csv</div>
-                </div>
-                
-                <div className="bg-muted rounded-md p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Check className="h-5 w-5 text-positive mr-2" />
-                    <div>
-                      <p className="font-medium">January Other Business (O) CSV</p>
-                      <p className="text-sm text-muted-foreground">Uploaded yesterday at 2:35 PM</p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">2024_jan_other.csv</div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

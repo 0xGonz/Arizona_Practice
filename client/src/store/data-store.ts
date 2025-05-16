@@ -90,31 +90,90 @@ export const useStore = create<DataStore>((set) => ({
   // Process CSV Data
   processCSVData: (type, data, month) => set((state) => {
     if (type === 'annual') {
+      // Now properly store the data as an array
       const processedData = processAnnualCSV(data);
-      return { annualData: processedData };
+      // Add to upload history
+      const newHistory = [...state.uploadHistory, {
+        type: 'annual' as CSVType,
+        date: new Date(),
+        filename: 'annual_data.csv'
+      }];
+      
+      // Update upload status
+      const newStatus = { ...state.uploadStatus, annual: true };
+      
+      return { 
+        annualData: data, // Store original data
+        uploadHistory: newHistory,
+        uploadStatus: newStatus
+      };
     } else if (type === 'monthly-e' && month) {
       const processedData = processMonthlyCSV(data, type);
+      
+      // Add to upload history
+      const newHistory = [...state.uploadHistory, {
+        type: 'monthly-e',
+        date: new Date(),
+        filename: `${month}_e_data.csv`,
+        month
+      }];
+      
+      // Update upload status for this month's E file
+      const newStatus = { 
+        ...state.uploadStatus,
+        monthly: {
+          ...state.uploadStatus.monthly,
+          [month]: {
+            ...state.uploadStatus.monthly[month],
+            e: true
+          }
+        }
+      };
       
       return {
         monthlyData: {
           ...state.monthlyData,
           [month]: {
             ...state.monthlyData[month],
-            e: processedData
+            e: data // Store original data
           }
-        }
+        },
+        uploadHistory: newHistory,
+        uploadStatus: newStatus
       };
     } else if (type === 'monthly-o' && month) {
       const processedData = processMonthlyCSV(data, type);
       
+      // Add to upload history
+      const newHistory = [...state.uploadHistory, {
+        type: 'monthly-o',
+        date: new Date(),
+        filename: `${month}_o_data.csv`,
+        month
+      }];
+      
+      // Update upload status for this month's O file
+      const newStatus = { 
+        ...state.uploadStatus,
+        monthly: {
+          ...state.uploadStatus.monthly,
+          [month]: {
+            ...state.uploadStatus.monthly[month],
+            o: true
+          }
+        }
+      };
+      
       return {
         monthlyData: {
           ...state.monthlyData,
           [month]: {
             ...state.monthlyData[month],
-            o: processedData
+            o: data // Store original data
           }
-        }
+        },
+        uploadHistory: newHistory,
+        uploadStatus: newStatus
       };
     }
     
