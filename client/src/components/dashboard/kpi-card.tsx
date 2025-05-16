@@ -1,11 +1,11 @@
-import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon, CreditCard, DollarSign, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface KPICardProps {
   title: string;
   value: number;
   change?: number;
-  icon: string; // Material icon name
+  icon?: React.ReactNode;
 }
 
 export default function KPICard({ title, value, change = 0, icon }: KPICardProps) {
@@ -21,12 +21,21 @@ export default function KPICard({ title, value, change = 0, icon }: KPICardProps
     maximumFractionDigits: 0
   }).format(value);
 
+  // Default icons based on title if none provided
+  const getDefaultIcon = () => {
+    if (title.toLowerCase().includes('revenue')) return <DollarSign className="h-5 w-5 text-primary" />;
+    if (title.toLowerCase().includes('expense')) return <CreditCard className="h-5 w-5 text-primary" />;
+    return <TrendingUp className="h-5 w-5 text-primary" />;
+  };
+
+  const displayIcon = icon || getDefaultIcon();
+
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-neutral-text font-medium">{title}</h3>
-          <span className="material-icons text-primary">{icon}</span>
+          <div className="text-primary">{displayIcon}</div>
         </div>
         
         <div className="flex items-baseline">
