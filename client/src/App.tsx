@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "@/components/layout/layout";
 import Dashboard from "@/pages/dashboard";
-import Monthly from "@/pages/monthly";
+import Monthly from "@/pages/monthly-improved";
 import DoctorPerformance from "@/pages/doctor-performance";
 import DepartmentAnalysis from "@/pages/department-analysis";
 import Upload from "@/pages/upload";

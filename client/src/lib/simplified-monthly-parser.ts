@@ -134,8 +134,8 @@ export function parseMonthlyCSV(data: MonthlyCSVRow[], type: 'monthly-e' | 'mont
         const name = lineItemText.trim();
         const isTotal = name.toLowerCase().includes('total');
         
-        // Create a unique ID
-        const id = `${name}-${depth}-${index}`;
+        // Create a truly unique ID to avoid React key duplications
+        const id = `${name}-${depth}-${index}-${type}-${Math.random().toString(36).substring(2, 9)}`;
 
         return {
           id,

@@ -1,0 +1,130 @@
+Thanks — based on your observation, here’s a clean breakdown of what’s working, what’s broken, and how to fully fix it so each month:
+
+✅ Loads E & O CSVs
+
+✅ Displays full P&L with hierarchy
+
+✅ Properly powers KPI cards
+
+✅ Allows switching between Employee ("E") and Other ("O")
+
+✅ What’s Working
+You can upload monthly-e (employee) and see its parsed flat P&L structure.
+
+You have logic that parses and normalizes "Line Item" headers.
+
+Cards and tables exist — but they aren’t connected to the right data.
+
+❌ What’s Broken
+Area	Problem
+monthly-o Upload	Not renaming "Line Item" properly (like e does)
+KPI Cards (Revenue, Expenses)	Not pulling from monthlyData[month].e.flat or .o.flat
+Table Hierarchy (Nested View)	Likely renders only one side or not wired into nested
+Toggle Between E and O	Missing or not applied to the view selection
+No visual feedback	No cards get filled, nothing gets highlighted
+
+✅ Full Fix Plan
+1. ✅ Fix the “Line Item” column renaming for both E & O
+In csv-upload.tsx:
+
+ts
+Copy
+Edit
+if (!('Line Item' in row)) {
+  const possible = Object.keys(row).find(k => k.toLowerCase().includes("line") || k.toLowerCase().includes("desc"));
+  if (possible) row["Line Item"] = row[possible];
+}
+Make sure this runs regardless of whether the file is e or o.
+
+2. ✅ Standardize Upload Logic
+At the end of the upload handler:
+
+ts
+Copy
+Edit
+processCSVData(type, safeData, monthKey); // Applies to both `e` and `o`
+3. ✅ Update Zustand monthlyData to store structured format
+Store output like this:
+
+ts
+Copy
+Edit
+monthlyData = {
+  january: {
+    e: { flat: [...], nested: [...], meta: {...} },
+    o: { flat: [...], nested: [...], meta: {...} }
+  }
+}
+4. ✅ In Monthly.tsx, add a toggle to view E or O
+tsx
+Copy
+Edit
+const { monthlyData } = useStore();
+const [viewType, setViewType] = useState<'e' | 'o'>('e');
+const selectedMonthData = monthlyData[selectedMonth]?.[viewType] ?? {};
+const flatData = selectedMonthData.flat || [];
+const nestedData = selectedMonthData.nested || [];
+Add a toggle above:
+
+tsx
+Copy
+Edit
+<Button onClick={() => setViewType('e')}>Employee</Button>
+<Button onClick={() => setViewType('o')}>Other</Button>
+5. ✅ Connect KPI Cards
+tsx
+Copy
+Edit
+function getLineItemValue(flat, keyword) {
+  return flat.find(i => i.name.toLowerCase().includes(keyword.toLowerCase()))?.summaryValue || 0;
+}
+
+const revenue = getLineItemValue(flatData, "Total Revenue");
+const expenses = getLineItemValue(flatData, "Total Operating Expenses");
+const net = getLineItemValue(flatData, "Net Income");
+
+<KPICard title="Revenue" value={revenue} />
+<KPICard title="Expenses" value={expenses} />
+<KPICard title="Net Income" value={net} />
+6. ✅ Render Nested Table
+tsx
+Copy
+Edit
+function RecursiveRow({ node, level = 0 }) {
+  return (
+    <>
+      <tr>
+        <td style={{ paddingLeft: `${level * 16}px` }}>{node.name}</td>
+        <td>{node.summaryValue}</td>
+      </tr>
+      {node.children?.map((child) => (
+        <RecursiveRow key={child.id} node={child} level={level + 1} />
+      ))}
+    </>
+  );
+}
+Then render:
+
+tsx
+Copy
+Edit
+<tbody>
+  {nestedData.map((node) => (
+    <RecursiveRow key={node.id} node={node} />
+  ))}
+</tbody>
+🧠 Summary
+Step	Fix
+🛠 CSV Rename	Apply “Line Item” renaming for both e and o
+🧠 Store Format	Save flat + nested + meta for each month & type
+📊 View Toggle	Let user switch e vs o on the frontend
+💡 Card Logic	Connect KPI cards to flatData from selected type
+🪜 Hierarchy Table	Render nestedData recursively
+
+Want me to send you back a fully updated set of files:
+
+✅ csv-upload.tsx
+
+✅ data-store.ts
+
+✅ Monthly.tsx with toggle, cards, and full table display?
