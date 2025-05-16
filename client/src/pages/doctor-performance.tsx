@@ -105,7 +105,7 @@ export default function DoctorPerformance() {
             </CardHeader>
             <CardContent>
               {monthlyTrend.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={400}>
                   <BarChart 
                     data={monthlyTrend}
                     margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
@@ -145,7 +145,7 @@ export default function DoctorPerformance() {
               <CardTitle>Expense Composition</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
+              <ResponsiveContainer width="100%" height={400}>
                 <BarChart 
                   layout="vertical" 
                   data={expenseCategories}
@@ -176,20 +176,20 @@ export default function DoctorPerformance() {
               <CardTitle>Provider Profitability</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
+              <ResponsiveContainer width="100%" height={450}>
                 <BarChart 
                   data={filteredData}
-                  margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="name" 
                     angle={-45} 
                     textAnchor="end" 
-                    height={60}
+                    height={80}
                     interval={0}
                     tick={{ fontSize: 12 }}
-                    tickMargin={10}
+                    tickMargin={15}
                   />
                   <YAxis 
                     tickFormatter={(value) => `$${value.toLocaleString()}`} 
@@ -200,7 +200,7 @@ export default function DoctorPerformance() {
                     layout="horizontal" 
                     verticalAlign="bottom" 
                     align="center"
-                    wrapperStyle={{ paddingTop: 10 }}
+                    wrapperStyle={{ paddingTop: 15 }}
                   />
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
                   <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
