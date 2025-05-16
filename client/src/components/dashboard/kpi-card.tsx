@@ -39,7 +39,9 @@ export default function KPICard({ title, value, change = 0, icon }: KPICardProps
         </div>
         
         <div className="flex items-baseline">
-          <p className="text-2xl font-bold numeric">{formattedValue}</p>
+          <p className={`text-2xl font-bold numeric ${title.toLowerCase().includes('net') && value < 0 ? 'text-red-600' : ''}`}>
+            {formattedValue}
+          </p>
           
           {change !== 0 && (
             <span className={`ml-2 flex items-center text-sm ${isPositive ? 'text-positive' : 'text-negative'}`}>

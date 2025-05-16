@@ -285,7 +285,7 @@ export default function MonthlyImproved() {
                   <CardTitle className="text-lg font-semibold">Net Income</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-green-600">
+                  <div className={`text-3xl font-bold ${financialMetrics.netIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
                     {formatCurrency(financialMetrics.netIncome)}
                   </div>
                 </CardContent>
