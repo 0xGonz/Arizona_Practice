@@ -56,17 +56,27 @@ export default function HierarchicalView({ data, columnHeaders }: HierarchicalVi
 
   // Process all rows to create a list of LineItems with their depth
   const processedItems = data
-    .filter(row => row['Line Item'] && row['Line Item'].trim() !== '')
+    .filter(row => row['Line Item'] !== undefined)
     .map(row => {
+      // Keep the original line item string exactly as it appears in CSV
       const originalLineItem = row['Line Item'];
+      
+      // Calculate depth based on leading spaces
       const depth = getLineItemDepth(originalLineItem);
+      
+      // For display, we'll trim the name but preserve the full structure
       const name = originalLineItem.trim();
       const isTotal = name.toLowerCase().includes('total');
       
-      // Calculate values for each provider column
+      // Calculate values for each provider column directly from row data
       const values: Record<string, number> = {};
       columnHeaders.forEach(header => {
-        values[header] = parseFinancialValue(row[header] || '0');
+        // Only parse if the cell has a value
+        if (row[header] !== undefined && row[header] !== '') {
+          values[header] = parseFinancialValue(row[header]);
+        } else {
+          values[header] = 0;
+        }
       });
       
       // Check for a total column (either named or empty column)
