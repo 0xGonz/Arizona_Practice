@@ -67,7 +67,7 @@ export default function CSVUpload({
           // Log for debugging
           console.log(`CSV Upload processed for ${type}${monthKey ? ` (${monthKey})` : ''}`);
           
-          // Update upload status with standardized month key
+          // Update upload status with standardized month key - fixed to handle missing values
           if (type === 'annual') {
             setUploadStatus({ annual: true });
           } else if (type === 'monthly-e' && monthKey) {
@@ -75,16 +75,30 @@ export default function CSVUpload({
             const updatedMonthStatus = { 
               e: true,
               // Preserve existing 'o' value or set to false
-              o: (uploadStatus.monthly[monthKey]?.o || false) 
+              o: false 
             };
+            
+            // If this month already exists in the status, preserve its 'o' value
+            if (uploadStatus.monthly && uploadStatus.monthly[monthKey]) {
+              updatedMonthStatus.o = !!uploadStatus.monthly[monthKey].o;
+            }
+            
+            console.log(`Setting monthly-e upload status for ${monthKey}:`, updatedMonthStatus);
             setUploadStatus({ monthly: { [monthKey]: updatedMonthStatus } });
           } else if (type === 'monthly-o' && monthKey) {
             // For monthly-o, ensure both e and o properties exist
             const updatedMonthStatus = { 
               // Preserve existing 'e' value or set to false
-              e: (uploadStatus.monthly[monthKey]?.e || false),
+              e: false,
               o: true 
             };
+            
+            // If this month already exists in the status, preserve its 'e' value
+            if (uploadStatus.monthly && uploadStatus.monthly[monthKey]) {
+              updatedMonthStatus.e = !!uploadStatus.monthly[monthKey].e;
+            }
+            
+            console.log(`Setting monthly-o upload status for ${monthKey}:`, updatedMonthStatus);
             setUploadStatus({ monthly: { [monthKey]: updatedMonthStatus } });
           }
 
