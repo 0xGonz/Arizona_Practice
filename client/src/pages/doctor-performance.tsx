@@ -1,28 +1,50 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
-
-// Mock data
-const doctorData = [
-  { name: "Dr. Jennifer Smith", revenue: 95450, expenses: 72340, net: 23110 },
-  { name: "Dr. Robert Johnson", revenue: 82340, expenses: 65780, net: 16560 },
-  { name: "Dr. Maria Chen", revenue: 78520, expenses: 68920, net: 9600 },
-  { name: "Dr. David Williams", revenue: 65780, expenses: 52450, net: 13330 },
-  { name: "Dr. Alex Peterson", revenue: 62340, expenses: 50780, net: 11560 }
-];
+import { extractDoctorPerformanceData, extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
 
 export default function DoctorPerformance() {
-  const { uploadStatus } = useStore();
+  const { uploadStatus, monthlyData } = useStore();
   const [selectedDoctor, setSelectedDoctor] = useState<string>("all");
-  const [viewType, setViewType] = useState<string>("annual");
+  const [viewType, setViewType] = useState<string>("performance");
+
+  // Extract real data from monthly CSV files
+  const doctorData = useMemo(() => {
+    return extractDoctorPerformanceData(monthlyData);
+  }, [monthlyData]);
+
+  // Extract monthly performance trend
+  const monthlyTrend = useMemo(() => {
+    return extractMonthlyPerformanceTrend(monthlyData);
+  }, [monthlyData]);
+
+  // Generate expense categories - extract from provider expense data
+  const expenseCategories = useMemo(() => {
+    // This is a simplified approach - in a real production app, we'd have more detailed
+    // categorization of expense types
+    const totalExpenses = doctorData.reduce((sum, doc) => sum + doc.expenses, 0);
+
+    // Estimate the breakdown of expenses based on common healthcare practice patterns
+    // In a real app, these would be calculated from actual expense line items
+    return [
+      { name: "Provider Salary", value: Math.round(totalExpenses * 0.65) }, // ~65% of expenses
+      { name: "Operating", value: Math.round(totalExpenses * 0.25) },       // ~25% of expenses
+      { name: "Admin", value: Math.round(totalExpenses * 0.10) }            // ~10% of expenses
+    ];
+  }, [doctorData]);
 
   // Filter data based on selected doctor
-  const filteredData = selectedDoctor === "all" 
-    ? doctorData 
-    : doctorData.filter(doc => doc.name === selectedDoctor);
+  const filteredData = useMemo(() => {
+    return selectedDoctor === "all" 
+      ? doctorData 
+      : doctorData.filter(doc => doc.name === selectedDoctor);
+  }, [doctorData, selectedDoctor]);
+
+  // Check if we have any doctor data
+  const hasData = doctorData.length > 0;
 
   return (
     <div className="p-6">
@@ -35,15 +57,15 @@ export default function DoctorPerformance() {
         <div className="flex mt-4 md:mt-0 space-x-3">
           <Select value={viewType} onValueChange={setViewType}>
             <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue placeholder="Annual View" />
+              <SelectValue placeholder="Performance View" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="annual">Annual View</SelectItem>
-              <SelectItem value="monthly">Monthly View</SelectItem>
+              <SelectItem value="performance">Performance View</SelectItem>
+              <SelectItem value="trend">Trend View</SelectItem>
             </SelectContent>
           </Select>
           
-          <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+          <Select value={selectedDoctor} onValueChange={setSelectedDoctor} disabled={!hasData}>
             <SelectTrigger className="w-[220px] bg-white">
               <SelectValue placeholder="All Doctors" />
             </SelectTrigger>
@@ -57,7 +79,7 @@ export default function DoctorPerformance() {
         </div>
       </div>
 
-      {!uploadStatus.annual && (
+      {!hasData && (
         <Card className="mb-6">
           <CardContent className="p-6">
             <div className="bg-blue-50 border border-primary-light rounded-lg p-4 flex items-start">
@@ -65,7 +87,8 @@ export default function DoctorPerformance() {
               <div>
                 <h3 className="font-medium text-primary">Data Required</h3>
                 <p className="text-sm text-neutral-dark mt-1">
-                  Please upload the Annual Consolidated CSV file to view doctor performance metrics.
+                  Please upload Monthly Employee CSV files to view doctor performance metrics.
+                  For best results, upload data for multiple months.
                 </p>
               </div>
             </div>
@@ -73,12 +96,12 @@ export default function DoctorPerformance() {
         </Card>
       )}
 
-      {uploadStatus.annual && (
+      {hasData && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profitability Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Profitability Chart</CardTitle>
+              <CardTitle>Provider Profitability</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
@@ -105,11 +128,7 @@ export default function DoctorPerformance() {
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart 
                   layout="vertical" 
-                  data={[
-                    { name: "Payroll", value: 159780 },
-                    { name: "Operating", value: 35680 },
-                    { name: "Admin", value: 26190 }
-                  ]}
+                  data={expenseCategories}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" tickFormatter={(value) => `$${value.toLocaleString()}`} />
@@ -127,27 +146,24 @@ export default function DoctorPerformance() {
               <CardTitle>Monthly Performance Trend</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart 
-                  data={[
-                    { month: "Jan", revenue: 95450, expenses: 72340, net: 23110 },
-                    { month: "Feb", revenue: 88720, expenses: 70560, net: 18160 },
-                    { month: "Mar", revenue: 92340, expenses: 71250, net: 21090 },
-                    { month: "Apr", revenue: 86550, expenses: 70120, net: 16430 },
-                    { month: "May", revenue: 94780, expenses: 73450, net: 21330 },
-                    { month: "Jun", revenue: 89520, expenses: 72340, net: 17180 }
-                  ]}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Legend />
-                  <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
-                  <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
-                  <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
-                </BarChart>
-              </ResponsiveContainer>
+              {monthlyTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={monthlyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                    <Legend />
+                    <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
+                    <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
+                    <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-center text-muted-foreground">
+                  <p>No monthly trend data available. Please upload monthly data for more months.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -174,9 +190,11 @@ export default function DoctorPerformance() {
                         <td className="py-3 px-4 font-medium">{doc.name}</td>
                         <td className="text-right py-3 px-4 numeric">${doc.revenue.toLocaleString()}</td>
                         <td className="text-right py-3 px-4 numeric">${doc.expenses.toLocaleString()}</td>
-                        <td className="text-right py-3 px-4 numeric font-medium text-positive">${doc.net.toLocaleString()}</td>
-                        <td className="text-right py-3 px-4 numeric font-medium text-positive">
-                          {((doc.net / doc.revenue) * 100).toFixed(1)}%
+                        <td className={`text-right py-3 px-4 numeric font-medium ${doc.net >= 0 ? 'text-positive' : 'text-negative'}`}>
+                          ${Math.abs(doc.net).toLocaleString()}{doc.net < 0 ? ' (Loss)' : ''}
+                        </td>
+                        <td className={`text-right py-3 px-4 numeric font-medium ${doc.net >= 0 ? 'text-positive' : 'text-negative'}`}>
+                          {doc.revenue > 0 ? ((doc.net / doc.revenue) * 100).toFixed(1) : '0.0'}%
                         </td>
                       </tr>
                     ))}

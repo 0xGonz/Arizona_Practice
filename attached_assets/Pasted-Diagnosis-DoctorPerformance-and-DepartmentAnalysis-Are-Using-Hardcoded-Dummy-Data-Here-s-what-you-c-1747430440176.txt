@@ -1,0 +1,199 @@
+Diagnosis: DoctorPerformance and DepartmentAnalysis Are Using Hardcoded Dummy Data
+Here’s what you currently have:
+
+🔴 DoctorPerformance.tsx
+Uses:
+
+ts
+Copy
+Edit
+const doctorData = [
+  { name: "Dr. Jennifer Smith", revenue: 95450, expenses: 72340, net: 23110 },
+  ...
+];
+🔴 DepartmentAnalysis.tsx
+Uses:
+
+ts
+Copy
+Edit
+const departmentData = [
+  { name: "Cardiology", revenue: 405780, expenses: 325120, net: 80660 },
+  ...
+];
+✅ Next Step
+I’ll now replace the hardcoded mock data in both files and rewire the components to use:
+
+✅ monthlyData[selectedMonth].e.flat
+
+✅ .meta.entityColumns to get doctor or department names
+
+✅ Aggregated values per doctor or department
+
+I’ll now generate clean, fully integrated replacements for both files. 
+
+Monthly Data Fix Plan
+
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+// ✅ DoctorPerformance.tsx (Fully Dynamic)
+      </Card>
+    </div>
+  );
+}
+
+// ✅ DepartmentAnalysis.tsx (Fully Dynamic)
+import { useState } from "react";
+import { useStore } from "@/store/data-store";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { Button } from "@/components/ui/button";
+
+const COLORS = ['#42A5F5', '#66BB6A', '#FFA726', '#EF5350', '#AB47BC'];
+
+export default function DepartmentAnalysis() {
+  const { monthlyData } = useStore();
+  const [selectedMonth, setSelectedMonth] = useState<string>(Object.keys(monthlyData)[0] || 'january');
+  const [viewType, setViewType] = useState<'e' | 'o'>('e');
+
+  const data = monthlyData[selectedMonth]?.[viewType];
+  const flat = data?.flat ?? [];
+  const departments = data?.meta?.entityColumns ?? [];
+
+  const departmentMetrics = departments.map((dep) => {
+    let revenue = 0, expenses = 0;
+    for (const row of flat) {
+      if (row.name.toLowerCase().includes("revenue")) revenue += row.entityValues[dep] || 0;
+      if (row.name.toLowerCase().includes("expense")) expenses += row.entityValues[dep] || 0;
+    }
+    return {
+      name: dep,
+      revenue,
+      expenses,
+      net: revenue - expenses
+    };
+  });
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Department Analysis</h1>
+      <div className="flex gap-4 mb-4">
+        {Object.keys(monthlyData).map(month => (
+          <Button key={month} onClick={() => setSelectedMonth(month)}>{month}</Button>
+        ))}
+        <Button onClick={() => setViewType('e')}>Employee</Button>
+        <Button onClick={() => setViewType('o')}>Other</Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Department Net Income - {selectedMonth}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+              <Pie
+                data={departmentMetrics.map(d => ({ name: d.name, value: d.net }))}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={150}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name }) => name}
+              >
+                {departmentMetrics.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+Edited
+
+Answer in chat instead
+✅ Both the Doctor Performance and Department Analysis pages are now fully modular and connected to live monthlyData.
+
+🔧 Key Fixes Applied:
+Doctor Performance
+Removes all mock data
+
+Dynamically loads doctors from meta.entityColumns
+
+Aggregates per-doctor revenue, expenses, and net using monthly flat data
+
+Department Analysis
+Removes all mock data
+
+Dynamically loads departments from the same source
+
+Visualizes net income per department using a PieChart
+
+🧪 Usage:
+Works across all uploaded months
+
+Switches cleanly between 'e' and 'o' data
+
+Auto-updates as new CSVs are uploaded
+
+Would you like the updated file versions to copy back into your repo?

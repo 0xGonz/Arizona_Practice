@@ -1,36 +1,50 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useStore } from "@/store/data-store";
+import { extractDepartmentPerformanceData, extractAncillaryMetrics, extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
 
-// Mock data
-const departmentData = [
-  { name: "Cardiology", revenue: 405780, expenses: 325120, net: 80660 },
-  { name: "Orthopedics", revenue: 358450, expenses: 298340, net: 60110 },
-  { name: "MRI", revenue: 245780, expenses: 198560, net: 47220 },
-  { name: "Geriatric Practice", revenue: 178450, expenses: 221030, net: -42580 },
-  { name: "Physical Therapy", revenue: 112340, expenses: 143580, net: -31240 }
-];
-
+// Consistent colors for visualizations
 const COLORS = ['#42A5F5', '#66BB6A', '#FFA726', '#EF5350', '#AB47BC'];
 
 export default function DepartmentAnalysis() {
-  const { uploadStatus } = useStore();
+  const { uploadStatus, monthlyData } = useStore();
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
-  const [viewType, setViewType] = useState<string>("annual");
+  const [viewType, setViewType] = useState<string>("department");
+
+  // Extract real department data from monthly CSV files
+  const departmentData = useMemo(() => {
+    return extractDepartmentPerformanceData(monthlyData);
+  }, [monthlyData]);
+  
+  // Extract monthly performance trend
+  const monthlyTrend = useMemo(() => {
+    return extractMonthlyPerformanceTrend(monthlyData);
+  }, [monthlyData]);
+  
+  // Extract ancillary service metrics
+  const ancillaryMetrics = useMemo(() => {
+    return extractAncillaryMetrics(monthlyData);
+  }, [monthlyData]);
+  
+  // Format data for ancillary chart
+  const ancillaryData = useMemo(() => [
+    { name: "Revenue", value: ancillaryMetrics.revenue },
+    { name: "Expenses", value: ancillaryMetrics.expenses },
+    { name: "Profit", value: ancillaryMetrics.revenue - ancillaryMetrics.expenses }
+  ], [ancillaryMetrics]);
 
   // Filter data based on selected department
-  const filteredData = selectedDepartment === "all" 
-    ? departmentData 
-    : departmentData.filter(dept => dept.name === selectedDepartment);
+  const filteredData = useMemo(() => {
+    return selectedDepartment === "all" 
+      ? departmentData 
+      : departmentData.filter(dept => dept.name === selectedDepartment);
+  }, [departmentData, selectedDepartment]);
 
-  const ancillaryData = [
-    { name: "Revenue", value: 968210 },
-    { name: "Expenses", value: 425180 },
-    { name: "Profit", value: 543030 }
-  ];
+  // Check if we have any department data
+  const hasData = departmentData.length > 0;
 
   return (
     <div className="p-6">
@@ -43,15 +57,15 @@ export default function DepartmentAnalysis() {
         <div className="flex mt-4 md:mt-0 space-x-3">
           <Select value={viewType} onValueChange={setViewType}>
             <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue placeholder="Annual View" />
+              <SelectValue placeholder="Department View" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="annual">Annual View</SelectItem>
-              <SelectItem value="monthly">Monthly View</SelectItem>
+              <SelectItem value="department">Department View</SelectItem>
+              <SelectItem value="ancillary">Ancillary Services</SelectItem>
             </SelectContent>
           </Select>
           
-          <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+          <Select value={selectedDepartment} onValueChange={setSelectedDepartment} disabled={!hasData}>
             <SelectTrigger className="w-[220px] bg-white">
               <SelectValue placeholder="All Departments" />
             </SelectTrigger>
@@ -65,7 +79,7 @@ export default function DepartmentAnalysis() {
         </div>
       </div>
 
-      {!uploadStatus.annual && (
+      {!hasData && (
         <Card className="mb-6">
           <CardContent className="p-6">
             <div className="bg-blue-50 border border-primary-light rounded-lg p-4 flex items-start">
@@ -73,7 +87,8 @@ export default function DepartmentAnalysis() {
               <div>
                 <h3 className="font-medium text-primary">Data Required</h3>
                 <p className="text-sm text-neutral-dark mt-1">
-                  Please upload the Annual Consolidated CSV file to view department analysis metrics.
+                  Please upload Monthly Other Business CSV files to view department analysis metrics.
+                  For best results, upload data for multiple months.
                 </p>
               </div>
             </div>
@@ -81,7 +96,7 @@ export default function DepartmentAnalysis() {
         </Card>
       )}
 
-      {uploadStatus.annual && (
+      {hasData && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Comparison Chart */}
           <Card>
@@ -104,39 +119,45 @@ export default function DepartmentAnalysis() {
             </CardContent>
           </Card>
 
-          {/* Unit-Level Heatmap (Visualization alternative) */}
+          {/* Revenue Distribution */}
           <Card>
             <CardHeader>
               <CardTitle>Revenue Distribution</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <PieChart>
-                  <Pie
-                    data={departmentData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={130}
-                    fill="#8884d8"
-                    dataKey="revenue"
-                    nameKey="name"
-                    label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {departmentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                </PieChart>
-              </ResponsiveContainer>
+              {departmentData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie
+                      data={departmentData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={130}
+                      fill="#8884d8"
+                      dataKey="revenue"
+                      nameKey="name"
+                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {departmentData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-center text-muted-foreground">
+                  <p>No revenue distribution data available.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Ancillary ROI Dashboard */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Ancillary ROI Dashboard</CardTitle>
+              <CardTitle>Ancillary Services ROI</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -146,26 +167,34 @@ export default function DepartmentAnalysis() {
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
                     <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                    <Bar dataKey="value" fill="#42A5F5" />
+                    <Bar dataKey="value" name="Amount" fill="#42A5F5" />
                   </BarChart>
                 </ResponsiveContainer>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <p className="text-sm text-neutral-text mb-1">Ancillary Revenue</p>
-                    <p className="text-xl font-semibold numeric text-primary">$968,210</p>
+                    <p className="text-xl font-semibold numeric text-primary">
+                      ${ancillaryMetrics.revenue.toLocaleString()}
+                    </p>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <p className="text-sm text-neutral-text mb-1">Ancillary Expenses</p>
-                    <p className="text-xl font-semibold numeric text-primary">$425,180</p>
+                    <p className="text-xl font-semibold numeric text-primary">
+                      ${ancillaryMetrics.expenses.toLocaleString()}
+                    </p>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <p className="text-sm text-neutral-text mb-1">Profit Margin</p>
-                    <p className="text-xl font-semibold numeric text-positive">56.1%</p>
+                    <p className={`text-xl font-semibold numeric ${ancillaryMetrics.profitMargin >= 0 ? 'text-positive' : 'text-negative'}`}>
+                      {ancillaryMetrics.profitMargin}%
+                    </p>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <p className="text-sm text-neutral-text mb-1">ROI</p>
-                    <p className="text-xl font-semibold numeric text-positive">128%</p>
+                    <p className={`text-xl font-semibold numeric ${ancillaryMetrics.roi >= 0 ? 'text-positive' : 'text-negative'}`}>
+                      {ancillaryMetrics.roi}%
+                    </p>
                   </div>
                 </div>
               </div>
@@ -178,34 +207,40 @@ export default function DepartmentAnalysis() {
               <CardTitle>Department Metrics</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b border-neutral-border">
-                      <th className="text-left py-3 px-4 font-medium">Department</th>
-                      <th className="text-right py-3 px-4 font-medium">Revenue</th>
-                      <th className="text-right py-3 px-4 font-medium">Expenses</th>
-                      <th className="text-right py-3 px-4 font-medium">Net Income</th>
-                      <th className="text-right py-3 px-4 font-medium">Margin %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {departmentData.map((dept, index) => (
-                      <tr key={index} className="border-b border-neutral-border">
-                        <td className="py-3 px-4 font-medium">{dept.name}</td>
-                        <td className="text-right py-3 px-4 numeric">${dept.revenue.toLocaleString()}</td>
-                        <td className="text-right py-3 px-4 numeric">${dept.expenses.toLocaleString()}</td>
-                        <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
-                          ${Math.abs(dept.net).toLocaleString()}{dept.net < 0 ? ' (Loss)' : ''}
-                        </td>
-                        <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
-                          {((dept.net / dept.revenue) * 100).toFixed(1)}%
-                        </td>
+              {departmentData.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-neutral-border">
+                        <th className="text-left py-3 px-4 font-medium">Department</th>
+                        <th className="text-right py-3 px-4 font-medium">Revenue</th>
+                        <th className="text-right py-3 px-4 font-medium">Expenses</th>
+                        <th className="text-right py-3 px-4 font-medium">Net Income</th>
+                        <th className="text-right py-3 px-4 font-medium">Margin %</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {departmentData.map((dept, index) => (
+                        <tr key={index} className="border-b border-neutral-border">
+                          <td className="py-3 px-4 font-medium">{dept.name}</td>
+                          <td className="text-right py-3 px-4 numeric">${dept.revenue.toLocaleString()}</td>
+                          <td className="text-right py-3 px-4 numeric">${dept.expenses.toLocaleString()}</td>
+                          <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
+                            ${Math.abs(dept.net).toLocaleString()}{dept.net < 0 ? ' (Loss)' : ''}
+                          </td>
+                          <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
+                            {dept.revenue > 0 ? ((dept.net / dept.revenue) * 100).toFixed(1) : '0.0'}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-32 text-center text-muted-foreground">
+                  <p>No department data available. Please upload monthly Other Business files.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

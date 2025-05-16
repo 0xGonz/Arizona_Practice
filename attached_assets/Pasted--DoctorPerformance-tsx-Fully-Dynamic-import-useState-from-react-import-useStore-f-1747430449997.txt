@@ -1,0 +1,135 @@
+// ✅ DoctorPerformance.tsx (Fully Dynamic)
+import { useState } from "react";
+import { useStore } from "@/store/data-store";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Button } from "@/components/ui/button";
+
+export default function DoctorPerformance() {
+  const { monthlyData } = useStore();
+  const [selectedMonth, setSelectedMonth] = useState<string>(Object.keys(monthlyData)[0] || 'january');
+  const [viewType, setViewType] = useState<'e' | 'o'>('e');
+
+  const data = monthlyData[selectedMonth]?.[viewType];
+  const flat = data?.flat ?? [];
+  const doctors = data?.meta?.entityColumns ?? [];
+
+  const doctorPerformance = doctors.map((doctor) => {
+    let revenue = 0, expenses = 0;
+    for (const row of flat) {
+      if (row.name.toLowerCase().includes("revenue")) revenue += row.entityValues[doctor] || 0;
+      if (row.name.toLowerCase().includes("expense")) expenses += row.entityValues[doctor] || 0;
+    }
+    return {
+      name: doctor,
+      revenue,
+      expenses,
+      net: revenue - expenses
+    };
+  });
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Doctor Performance</h1>
+      <div className="flex gap-4 mb-4">
+        {Object.keys(monthlyData).map(month => (
+          <Button key={month} onClick={() => setSelectedMonth(month)}>{month}</Button>
+        ))}
+        <Button onClick={() => setViewType('e')}>Employee</Button>
+        <Button onClick={() => setViewType('o')}>Other</Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Doctor Breakdown - {selectedMonth}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={doctorPerformance} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="revenue" fill="#42A5F5" />
+              <Bar dataKey="expenses" fill="#EF5350" />
+              <Bar dataKey="net" fill="#66BB6A" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ✅ DepartmentAnalysis.tsx (Fully Dynamic)
+import { useState } from "react";
+import { useStore } from "@/store/data-store";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { Button } from "@/components/ui/button";
+
+const COLORS = ['#42A5F5', '#66BB6A', '#FFA726', '#EF5350', '#AB47BC'];
+
+export default function DepartmentAnalysis() {
+  const { monthlyData } = useStore();
+  const [selectedMonth, setSelectedMonth] = useState<string>(Object.keys(monthlyData)[0] || 'january');
+  const [viewType, setViewType] = useState<'e' | 'o'>('e');
+
+  const data = monthlyData[selectedMonth]?.[viewType];
+  const flat = data?.flat ?? [];
+  const departments = data?.meta?.entityColumns ?? [];
+
+  const departmentMetrics = departments.map((dep) => {
+    let revenue = 0, expenses = 0;
+    for (const row of flat) {
+      if (row.name.toLowerCase().includes("revenue")) revenue += row.entityValues[dep] || 0;
+      if (row.name.toLowerCase().includes("expense")) expenses += row.entityValues[dep] || 0;
+    }
+    return {
+      name: dep,
+      revenue,
+      expenses,
+      net: revenue - expenses
+    };
+  });
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Department Analysis</h1>
+      <div className="flex gap-4 mb-4">
+        {Object.keys(monthlyData).map(month => (
+          <Button key={month} onClick={() => setSelectedMonth(month)}>{month}</Button>
+        ))}
+        <Button onClick={() => setViewType('e')}>Employee</Button>
+        <Button onClick={() => setViewType('o')}>Other</Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Department Net Income - {selectedMonth}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+              <Pie
+                data={departmentMetrics.map(d => ({ name: d.name, value: d.net }))}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={150}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name }) => name}
+              >
+                {departmentMetrics.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
