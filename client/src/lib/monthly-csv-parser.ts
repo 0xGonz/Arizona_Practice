@@ -192,16 +192,16 @@ export function processMonthlyCSV(data: MonthlyCSVRow[], type: 'monthly-e' | 'mo
       console.error("Error building hierarchy:", hierarchyError);
     }
     
-    // Return the processed structure
+    // Return the processed structure with careful validation to prevent errors
     const result: ProcessedCSV = {
-      flat: lineItems,
-      nested: nested,
+      flat: Array.isArray(lineItems) ? lineItems : [],
+      nested: Array.isArray(nested) ? nested : [],
       meta: {
-        entityColumns,
+        entityColumns: Array.isArray(entityColumns) ? entityColumns : [],
         summaryColumn: summaryColumn || null,
         type
       },
-      raw: data
+      raw: Array.isArray(data) ? data : []
     };
     
     return result;

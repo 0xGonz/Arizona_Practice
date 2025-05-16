@@ -1,0 +1,20 @@
+[vite] connecting...
+[vite] connected.
+CSV parse complete, parsed 205 rows
+Attempting to process monthly-e CSV data for january: 205 rows
+Processing monthly-e data for january 205 rows
+Error processing monthly-e data for january: 
+TypeError {}
+message: "Cannot read properties of undefined (reading 'length')"
+stack: "TypeError: Cannot read properties of undefined (reading 'length')↵ at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/store/data-store.ts?t=1747425566385:380:73↵ at setState (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/zustand.js?v=560a4516:13:55)↵ at processCSVData (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/store/data-store.ts?t=1747425566385:327:42)↵ at Object.complete (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/upload/csv-upload.tsx?t=1747425741940:99:13)↵ at l.parseChunk (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/papaparse.js?v=560a4516:33:349)↵ at l._chunkLoaded (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/papaparse.js?v=560a4516:82:132)↵ at FileReader.<anonymous> (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/papaparse.js?v=560a4516:317:13)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+Error during CSV processing: 
+TypeError {}
+message: "Cannot read properties of undefined (reading 'length')"
+stack: "TypeError: Cannot read properties of undefined (reading 'length')↵ at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/store/data-store.ts?t=1747425566385:380:73↵ at setState (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/zustand.js?v=560a4516:13:55)↵ at processCSVData (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/store/data-store.ts?t=1747425566385:327:42)↵ at Object.complete (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/upload/csv-upload.tsx?t=1747425741940:99:13)↵ at l.parseChunk (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/papaparse.js?v=560a4516:33:349)↵ at l._chunkLoaded (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/papaparse.js?v=560a4516:82:132)↵ at FileReader.<anonymous> (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/papaparse.js?v=560a4516:317:13)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object

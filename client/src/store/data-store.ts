@@ -554,12 +554,19 @@ export const useStore = create<DataStore>((set, get) => ({
         console.log(`Processed monthly-e data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
         
         // Add to upload history
-        const newUploadHistory = [...state.uploadHistory, {
-          type: 'monthly-e' as CSVType,
-          date: new Date(),
-          filename: `${month}_e_data.csv`,
-          month
-        }];
+        const newUploadHistory = Array.isArray(state.uploadHistory) ? 
+          [...state.uploadHistory, {
+            type: 'monthly-e' as CSVType,
+            date: new Date(),
+            filename: `${month}_e_data.csv`,
+            month
+          }] : 
+          [{
+            type: 'monthly-e' as CSVType,
+            date: new Date(),
+            filename: `${month}_e_data.csv`,
+            month
+          }];
         
         // Create or update monthlyData for this month with structured data
         let existingMonthData = {};
@@ -632,12 +639,19 @@ export const useStore = create<DataStore>((set, get) => ({
         console.log(`Processed monthly-o data with ${processedData.flat.length} line items and ${processedData.nested.length} top-level categories`);
         
         // Add to upload history
-        const newUploadHistory = [...state.uploadHistory, {
-          type: 'monthly-o' as CSVType,
-          date: new Date(),
-          filename: `${month}_o_data.csv`,
-          month
-        }];
+        const newUploadHistory = Array.isArray(state.uploadHistory) ? 
+          [...state.uploadHistory, {
+            type: 'monthly-o' as CSVType,
+            date: new Date(),
+            filename: `${month}_o_data.csv`,
+            month
+          }] : 
+          [{
+            type: 'monthly-o' as CSVType,
+            date: new Date(),
+            filename: `${month}_o_data.csv`,
+            month
+          }];
         
         // Create or update monthlyData for this month with structured data
         let existingMonthData = {};
