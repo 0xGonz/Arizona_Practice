@@ -162,14 +162,24 @@ export default function Upload() {
               <div className="space-y-4">
                 {uploadHistory.length > 0 ? (
                   uploadHistory.map((upload, index) => {
-                    // Format date
-                    const formattedDate = new Intl.DateTimeFormat('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: 'numeric',
-                      hour12: true
-                    }).format(upload.date);
+                    // Format date - ensure we have a valid date object
+                    let formattedDate = "Unknown date";
+                    try {
+                      // If the date is stored as a string, convert it to a Date object
+                      const dateObj = typeof upload.date === 'string' 
+                        ? new Date(upload.date) 
+                        : upload.date;
+                        
+                      formattedDate = new Intl.DateTimeFormat('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true
+                      }).format(dateObj);
+                    } catch (err) {
+                      console.error("Error formatting date:", err);
+                    }
                     
                     // Format file type for display
                     let displayType = '';
