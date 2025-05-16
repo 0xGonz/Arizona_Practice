@@ -104,20 +104,20 @@ export default function DepartmentAnalysis() {
               <CardTitle>Department Comparison</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart 
                   data={filteredData} 
-                  margin={{ top: 10, right: 30, left: 20, bottom: 40 }}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="name" 
                     angle={-45} 
                     textAnchor="end" 
-                    height={70}
+                    height={50}
                     interval={0}
                     tick={{ fontSize: 12 }}
-                    tickMargin={10}
+                    tickMargin={5}
                   />
                   <YAxis 
                     tickFormatter={(value) => `$${value.toLocaleString()}`} 
