@@ -591,17 +591,56 @@ export function extractMonthlySummaryData(monthlyData: any) {
       
       console.log(`Extracting monthly data for ${month} (E-file)...`);
       
-      // Go through all line items to find specific ones by exact match
-      for (const item of eData.lineItems) {
-        if (item.name === "Total Revenue") {
+      // Debug - log all line items to find the exact names
+      console.log("Available line items in E-file data:", eData.lineItems.map((item, index) => `${index + 1}: ${item.name}`));
+      
+      // Go through all line items to find specific ones by exact match and line number
+      for (let i = 0; i < eData.lineItems.length; i++) {
+        const item = eData.lineItems[i];
+        const lineNumber = i + 1; // Adding 1 because array is 0-indexed but CSV lines are 1-indexed
+        
+        // For debugging
+        if (item.name.includes("Revenue") || item.name.includes("Expense") || item.name.includes("Income")) {
+          console.log(`Found item (line ${lineNumber}): ${item.name} = ${item.summaryValue}`);
+        }
+        
+        // Line 17 in CSV file is Total Revenue (as specified by user)
+        if (lineNumber === 17) {
           revenue = parseFloat(item.summaryValue || 0);
-          console.log(`Found Total Revenue: ${revenue}`);
+          console.log(`Found Total Revenue (line 17): ${revenue}`);
         }
-        else if (item.name === "Total Operating Expenses") {
+        // Line 161 in CSV file is Total Operating Expenses (as specified by user)
+        else if (lineNumber === 161) {
           expenses = parseFloat(item.summaryValue || 0);
-          console.log(`Found Total Operating Expenses: ${expenses}`);
+          console.log(`Found Total Operating Expenses (line 161): ${expenses}`);
         }
-        else if (item.name === "Net Income") {
+        // Also look by name as fallback
+        else if (
+          item.name === "Total Revenue" || 
+          item.name === "Revenue Total" || 
+          item.name === "TOTAL REVENUE"
+        ) {
+          if (!revenue) { // Only set if not already set by line number
+            revenue = parseFloat(item.summaryValue || 0);
+            console.log(`Found Total Revenue by name: ${revenue}`);
+          }
+        }
+        else if (
+          item.name === "Total Operating Expenses" || 
+          item.name === "Total Expenses" || 
+          item.name === "TOTAL OPERATING EXPENSES" ||
+          item.name === "Operating Expenses Total"
+        ) {
+          if (!expenses) { // Only set if not already set by line number
+            expenses = parseFloat(item.summaryValue || 0);
+            console.log(`Found Total Operating Expenses by name: ${expenses}`);
+          }
+        }
+        else if (
+          item.name === "Net Income" || 
+          item.name === "NET INCOME" || 
+          item.name === "Total Net Income"
+        ) {
           net = parseFloat(item.summaryValue || 0);
           console.log(`Found Net Income: ${net}`);
         }
@@ -639,17 +678,56 @@ export function extractMonthlySummaryData(monthlyData: any) {
       
       console.log(`Extracting monthly data for ${month} (O-file)...`);
       
-      // Go through all line items to find specific ones by exact match
-      for (const item of oData.lineItems) {
-        if (item.name === "Total Revenue") {
+      // Debug - log all line items to find the exact names
+      console.log("Available line items in O-file data:", oData.lineItems.map((item, index) => `${index + 1}: ${item.name}`));
+      
+      // Go through all line items to find specific ones by exact match and line number
+      for (let i = 0; i < oData.lineItems.length; i++) {
+        const item = oData.lineItems[i];
+        const lineNumber = i + 1; // Adding 1 because array is 0-indexed but CSV lines are 1-indexed
+        
+        // For debugging
+        if (item.name.includes("Revenue") || item.name.includes("Expense") || item.name.includes("Income")) {
+          console.log(`Found item (O) (line ${lineNumber}): ${item.name} = ${item.summaryValue}`);
+        }
+        
+        // Line 17 in CSV file is Total Revenue (as specified by user)
+        if (lineNumber === 17) {
           revenue = parseFloat(item.summaryValue || 0);
-          console.log(`Found Total Revenue (O): ${revenue}`);
+          console.log(`Found Total Revenue (O) (line 17): ${revenue}`);
         }
-        else if (item.name === "Total Operating Expenses") {
+        // Line 161 in CSV file is Total Operating Expenses (as specified by user)
+        else if (lineNumber === 161) {
           expenses = parseFloat(item.summaryValue || 0);
-          console.log(`Found Total Operating Expenses (O): ${expenses}`);
+          console.log(`Found Total Operating Expenses (O) (line 161): ${expenses}`);
         }
-        else if (item.name === "Net Income") {
+        // Also look by name as fallback
+        else if (
+          item.name === "Total Revenue" || 
+          item.name === "Revenue Total" || 
+          item.name === "TOTAL REVENUE"
+        ) {
+          if (!revenue) { // Only set if not already set by line number
+            revenue = parseFloat(item.summaryValue || 0);
+            console.log(`Found Total Revenue (O) by name: ${revenue}`);
+          }
+        }
+        else if (
+          item.name === "Total Operating Expenses" || 
+          item.name === "Total Expenses" || 
+          item.name === "TOTAL OPERATING EXPENSES" ||
+          item.name === "Operating Expenses Total"
+        ) {
+          if (!expenses) { // Only set if not already set by line number
+            expenses = parseFloat(item.summaryValue || 0);
+            console.log(`Found Total Operating Expenses (O) by name: ${expenses}`);
+          }
+        }
+        else if (
+          item.name === "Net Income" || 
+          item.name === "NET INCOME" || 
+          item.name === "Total Net Income"
+        ) {
           net = parseFloat(item.summaryValue || 0);
           console.log(`Found Net Income (O): ${net}`);
         }
