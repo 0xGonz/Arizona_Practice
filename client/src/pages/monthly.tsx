@@ -106,7 +106,9 @@ export default function Monthly() {
     // Log the data to help with debugging
     console.log(`Monthly data loaded:`, { 
       eData: eData?.length || 0,
-      oData: oData?.length || 0
+      oData: oData?.length || 0,
+      eNestedData: eNestedData?.length || 0,
+      oNestedData: oNestedData?.length || 0
     });
     
     // Log first few rows to understand structure
@@ -114,7 +116,14 @@ export default function Monthly() {
       console.log("First row of monthly data:", eData[0]);
     }
     
-    return { eData, oData };
+    return { 
+      eData, 
+      oData,
+      eNestedData,
+      oNestedData,
+      eMetadata,
+      oMetadata
+    };
   }, [monthlyData, monthLower, activeMonth]);
 
   // Calculate financial metrics from the monthly data
