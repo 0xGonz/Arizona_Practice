@@ -132,16 +132,38 @@ export default function MonthlyImproved() {
   const monthsWithData = useMemo(() => {
     const result = new Set<string>();
     
-    // Check all months in the data store
+    // Check all months in the data store - supports any month format
     Object.keys(monthlyData || {}).forEach(month => {
       const data = monthlyData[month];
       if (data?.e?.lineItems?.length > 0 || data?.o?.lineItems?.length > 0) {
-        // Find the matching month name in proper case
-        const matchingMonth = months.find(m => 
-          m.toLowerCase() === month.toLowerCase()
+        // Try multiple matching strategies for complete flexibility
+        
+        // 1. Direct case-insensitive match
+        const monthLower = month.toLowerCase();
+        const directMatch = months.find(m => 
+          m.toLowerCase() === monthLower
         );
-        if (matchingMonth) {
-          result.add(matchingMonth);
+        
+        if (directMatch) {
+          result.add(directMatch);
+          return;
+        }
+        
+        // 2. Month map lookup (for normalized entries like "january" → "January")
+        if (Object.keys(monthMap).includes(monthLower)) {
+          const mappedMonth = monthMap[monthLower as keyof typeof monthMap];
+          result.add(mappedMonth);
+          return;
+        }
+        
+        // 3. Partial match (if stored as abbreviations like "Jan")
+        const partialMatch = months.find(m => 
+          m.toLowerCase().startsWith(monthLower) || 
+          monthLower.startsWith(m.toLowerCase().substring(0, 3))
+        );
+        
+        if (partialMatch) {
+          result.add(partialMatch);
         }
       }
     });
