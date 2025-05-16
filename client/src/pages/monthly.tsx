@@ -5,6 +5,7 @@ import UploadBanner from "@/components/upload/upload-banner";
 import { useStore } from "@/store/data-store";
 import { parseFinancialValue } from "@/lib/csv-parser";
 import HierarchicalView from "@/components/monthly/hierarchical-view";
+import RecursiveLineItemTable from "@/components/monthly/recursive-line-item-table";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -42,9 +43,22 @@ export default function Monthly() {
     ];
     
     // Find the first matching month key that exists in monthlyData
-    const matchingMonthKey = possibleMonthKeys.find(key => 
-      monthlyData[key] && (monthlyData[key]?.e?.length > 0 || monthlyData[key]?.o?.length > 0)
-    );
+    // Check for both new (structured) and old format data
+    const matchingMonthKey = possibleMonthKeys.find(key => {
+      const monthData = monthlyData[key];
+      if (!monthData) return false;
+      
+      // Check for new structured format first
+      if (monthData.e && typeof monthData.e === 'object' && !Array.isArray(monthData.e)) {
+        return !!monthData.e.flat || !!monthData.e.raw;
+      }
+      
+      // Check for old format as fallback
+      if (Array.isArray(monthData.e) && monthData.e.length > 0) return true;
+      if (Array.isArray(monthData.o) && monthData.o.length > 0) return true;
+      
+      return false;
+    });
     
     if (!matchingMonthKey) {
       console.log(`No monthly data found for: ${monthLower} (or alternative spellings)`);
@@ -53,8 +67,41 @@ export default function Monthly() {
     
     console.log(`Found monthly data using key: ${matchingMonthKey}`, monthlyData[matchingMonthKey]);
     
-    const eData = monthlyData[matchingMonthKey]?.e || [];
-    const oData = monthlyData[matchingMonthKey]?.o || [];
+    // Extract data with support for both new and old formats
+    let eData = [];
+    let oData = [];
+    let eNestedData = [];
+    let oNestedData = [];
+    let eMetadata = {};
+    let oMetadata = {};
+    
+    const monthDataObj = monthlyData[matchingMonthKey];
+    
+    // Handle new structured format
+    if (monthDataObj.e && typeof monthDataObj.e === 'object' && !Array.isArray(monthDataObj.e)) {
+      // New format with hierarchy
+      eData = monthDataObj.e.flat || monthDataObj.e.raw || [];
+      eNestedData = monthDataObj.e.nested || [];
+      eMetadata = monthDataObj.e.meta || {};
+      console.log("Found structured eData with:", eData.length, "flat items and", eNestedData.length, "nested categories");
+    } else if (Array.isArray(monthDataObj.e)) {
+      // Old format (flat array)
+      eData = monthDataObj.e;
+      console.log("Found legacy eData with:", eData.length, "items");
+    }
+    
+    // Same for o data
+    if (monthDataObj.o && typeof monthDataObj.o === 'object' && !Array.isArray(monthDataObj.o)) {
+      // New format with hierarchy
+      oData = monthDataObj.o.flat || monthDataObj.o.raw || [];
+      oNestedData = monthDataObj.o.nested || [];
+      oMetadata = monthDataObj.o.meta || {};
+      console.log("Found structured oData with:", oData.length, "flat items and", oNestedData.length, "nested categories");
+    } else if (Array.isArray(monthDataObj.o)) {
+      // Old format (flat array)
+      oData = monthDataObj.o;
+      console.log("Found legacy oData with:", oData.length, "items");
+    }
     
     // Log the data to help with debugging
     console.log(`Monthly data loaded:`, { 

@@ -410,8 +410,12 @@ export const useStore = create<DataStore>((set, get) => ({
       }
       
     } else if (type === 'monthly-e' && month) {
-      // Process the monthly data and log it for debugging
+      // Process the monthly data with enhanced parser
       console.log(`Processing monthly-e data for ${month}`, data ? data.length : 0, "rows");
+      
+      // Use our enhanced parser that returns both flat and nested data
+      const processedData = processMonthlyCSV(data, 'monthly-e');
+      console.log(`Processed monthly-e data with ${processedData.lineItems.length} line items and ${processedData.nested.length} top-level categories`);
       
       // Add to upload history
       const newUploadHistory = [...state.uploadHistory, {
@@ -421,12 +425,20 @@ export const useStore = create<DataStore>((set, get) => ({
         month
       }];
       
-      // Create or update monthlyData for this month
+      // Create or update monthlyData for this month with structured data
       const updatedMonthlyData = {
         ...state.monthlyData,
         [month]: {
           ...state.monthlyData[month],
-          e: data
+          e: {
+            raw: data,
+            flat: processedData.lineItems,
+            nested: processedData.nested,
+            meta: {
+              entityColumns: processedData.entityColumns,
+              summaryColumn: processedData.summaryColumn
+            }
+          }
         }
       };
       
@@ -444,7 +456,7 @@ export const useStore = create<DataStore>((set, get) => ({
           localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
           localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
           localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
-          console.log(`Monthly-e data saved to localStorage for ${month}`);
+          console.log(`Enhanced monthly-e data saved to localStorage for ${month}`);
         } catch (error) {
           console.error('Error saving monthly-e data to localStorage:', error);
         }
@@ -457,8 +469,12 @@ export const useStore = create<DataStore>((set, get) => ({
       };
       
     } else if (type === 'monthly-o' && month) {
-      // Process the monthly data and log it for debugging
+      // Process the monthly data with enhanced parser
       console.log(`Processing monthly-o data for ${month}`, data ? data.length : 0, "rows");
+      
+      // Use our enhanced parser that returns both flat and nested data
+      const processedData = processMonthlyCSV(data, 'monthly-o');
+      console.log(`Processed monthly-o data with ${processedData.lineItems.length} line items and ${processedData.nested.length} top-level categories`);
       
       // Add to upload history
       const newUploadHistory = [...state.uploadHistory, {
@@ -468,12 +484,20 @@ export const useStore = create<DataStore>((set, get) => ({
         month
       }];
       
-      // Create or update monthlyData for this month
+      // Create or update monthlyData for this month with structured data
       const updatedMonthlyData = {
         ...state.monthlyData,
         [month]: {
           ...state.monthlyData[month],
-          o: data
+          o: {
+            raw: data,
+            flat: processedData.lineItems,
+            nested: processedData.nested,
+            meta: {
+              entityColumns: processedData.entityColumns,
+              summaryColumn: processedData.summaryColumn
+            }
+          }
         }
       };
       
@@ -491,7 +515,7 @@ export const useStore = create<DataStore>((set, get) => ({
           localStorage.setItem('monthlyData', JSON.stringify(updatedMonthlyData));
           localStorage.setItem('uploadHistory', JSON.stringify(newUploadHistory));
           localStorage.setItem('uploadStatus', JSON.stringify(newStatus));
-          console.log(`Monthly-o data saved to localStorage for ${month}`);
+          console.log(`Enhanced monthly-o data saved to localStorage for ${month}`);
         } catch (error) {
           console.error('Error saving monthly-o data to localStorage:', error);
         }
