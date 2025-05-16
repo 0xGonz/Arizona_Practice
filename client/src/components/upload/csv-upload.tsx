@@ -61,45 +61,77 @@ export default function CSVUpload({
           // Ensure month is standardized to lowercase
           const monthKey = month ? month.toLowerCase().trim() : '';
           
-          // Process the CSV data with standardized month key
-          processCSVData(type, data, monthKey);
-          
-          // Log for debugging
-          console.log(`CSV Upload processed for ${type}${monthKey ? ` (${monthKey})` : ''}`);
-          
-          // Update upload status with standardized month key - fixed to handle missing values
-          if (type === 'annual') {
-            setUploadStatus({ annual: true });
-          } else if (type === 'monthly-e' && monthKey) {
-            // For monthly-e, ensure both e and o properties exist
-            const updatedMonthStatus = { 
-              e: true,
-              // Preserve existing 'o' value or set to false
-              o: false 
-            };
+          try {
+            // Log the data for debugging
+            console.log(`Attempting to process ${type} CSV data for ${monthKey || 'annual'}:`, data.length, "rows");
             
-            // If this month already exists in the status, preserve its 'o' value
-            if (uploadStatus.monthly && uploadStatus.monthly[monthKey]) {
-              updatedMonthStatus.o = !!uploadStatus.monthly[monthKey].o;
+            // Special handling for monthly data
+            if ((type === 'monthly-e' || type === 'monthly-o') && monthKey) {
+              // Check if the data has a valid structure with Line Item column
+              let hasLineItemColumn = false;
+              for (const row of data) {
+                if ('Line Item' in row) {
+                  hasLineItemColumn = true;
+                  break;
+                }
+              }
+              
+              if (!hasLineItemColumn) {
+                throw new Error("CSV file is missing the 'Line Item' column required for monthly data");
+              }
             }
             
-            console.log(`Setting monthly-e upload status for ${monthKey}:`, updatedMonthStatus);
-            setUploadStatus({ monthly: { [monthKey]: updatedMonthStatus } });
-          } else if (type === 'monthly-o' && monthKey) {
-            // For monthly-o, ensure both e and o properties exist
-            const updatedMonthStatus = { 
-              // Preserve existing 'e' value or set to false
-              e: false,
-              o: true 
-            };
+            // Process the CSV data with standardized month key
+            processCSVData(type, data, monthKey);
             
-            // If this month already exists in the status, preserve its 'e' value
-            if (uploadStatus.monthly && uploadStatus.monthly[monthKey]) {
-              updatedMonthStatus.e = !!uploadStatus.monthly[monthKey].e;
+            // Log for debugging
+            console.log(`CSV Upload processed for ${type}${monthKey ? ` (${monthKey})` : ''}`);
+            
+            // Update upload status with standardized month key
+            if (type === 'annual') {
+              setUploadStatus({ annual: true });
+            } else if (type === 'monthly-e' && monthKey) {
+              // Create a fresh monthly status object if needed
+              const currentMonthly = uploadStatus.monthly || {};
+              
+              // For monthly-e, ensure both e and o properties exist
+              const updatedMonthStatus = { 
+                e: true,
+                // Preserve existing 'o' value or set to false
+                o: (currentMonthly[monthKey]?.o) || false 
+              };
+              
+              console.log(`Setting monthly-e upload status for ${monthKey}:`, updatedMonthStatus);
+              setUploadStatus({
+                monthly: {
+                  ...currentMonthly,
+                  [monthKey]: updatedMonthStatus
+                }
+              });
+            } else if (type === 'monthly-o' && monthKey) {
+              // Create a fresh monthly status object if needed
+              const currentMonthly = uploadStatus.monthly || {};
+              
+              // For monthly-o, ensure both e and o properties exist
+              const updatedMonthStatus = { 
+                // Preserve existing 'e' value or set to false
+                e: (currentMonthly[monthKey]?.e) || false,
+                o: true 
+              };
+              
+              console.log(`Setting monthly-o upload status for ${monthKey}:`, updatedMonthStatus);
+              setUploadStatus({
+                monthly: {
+                  ...currentMonthly,
+                  [monthKey]: updatedMonthStatus
+                }
+              });
             }
-            
-            console.log(`Setting monthly-o upload status for ${monthKey}:`, updatedMonthStatus);
-            setUploadStatus({ monthly: { [monthKey]: updatedMonthStatus } });
+          } catch (processError) {
+            console.error("Error during CSV processing:", processError);
+            setError(`Error processing CSV: ${processError.message || "Unknown error"}`);
+            setIsUploading(false);
+            return;
           }
 
           // Success notification
