@@ -42,18 +42,58 @@ export default function CSVUpload({
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => {
+        // Remove BOM characters or any special characters that might be in the header
+        return header.replace(/^\uFEFF/, '').trim();
+      },
       complete: (results) => {
         try {
           if (results.errors && results.errors.length > 0) {
+            console.error("CSV parsing errors:", results.errors);
             setError(`CSV parsing error: ${results.errors[0].message}`);
             setIsUploading(false);
             return;
           }
 
-          // Validate CSV structure based on type
+          // Log parsed data for debugging
+          console.log("CSV parse complete, parsed", results.data ? results.data.length : 0, "rows");
+          
+          // Ensure we have an array of objects with at least a Line Item column
           const data = results.data as Record<string, string>[];
+          
+          // Special case for financial data: we need to identify the 'Line Item' column
+          // It might be named differently or have BOM characters
+          if (Array.isArray(data) && data.length > 0) {
+            const firstRow = data[0];
+            const headers = Object.keys(firstRow || {});
+            
+            // Check if we need to rename any column to 'Line Item'
+            const hasLineItem = 'Line Item' in firstRow;
+            if (!hasLineItem) {
+              // Look for a column that might be the line item column
+              const possibleLineItemColumns = headers.filter(h => 
+                h.toLowerCase().includes('line') || 
+                h.toLowerCase().includes('item') ||
+                h.toLowerCase().includes('description')
+              );
+              
+              if (possibleLineItemColumns.length > 0) {
+                // Use the first matching column as Line Item
+                const lineItemColumn = possibleLineItemColumns[0];
+                console.log(`Renaming column '${lineItemColumn}' to 'Line Item'`);
+                
+                // Rename the column in all rows
+                data.forEach(row => {
+                  row['Line Item'] = row[lineItemColumn];
+                  // Don't delete the original column to avoid breaking any code that might use it
+                });
+              }
+            }
+          }
+          
+          // Validate CSV structure based on type
           if (!validateCSVStructure(type, data)) {
-            setError('CSV format does not match the expected structure');
+            setError('CSV format does not match the expected structure - needs a Line Item column');
             setIsUploading(false);
             return;
           }
