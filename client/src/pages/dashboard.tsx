@@ -157,91 +157,97 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="py-6">
-      <h1 className="text-3xl font-bold mb-8">Financial Dashboard</h1>
+    <div className="container px-4 py-6 mx-auto max-w-full">
+      <h1 className="text-3xl font-bold mb-6">Financial Dashboard</h1>
       
-      {/* Combined KPI Cards */}
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
-        {/* Combined Revenue Card */}
-        <Card className="bg-gradient-to-br from-blue-50 to-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-blue-800 flex items-center text-lg">
-              <DollarSignIcon className="w-5 h-5 mr-2 text-blue-600" />
+      {/* Combined KPI Cards - match monthly analysis design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+        {/* Revenue Card */}
+        <Card className="shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
+          <CardHeader className="pb-2 px-4 pt-4">
+            <CardTitle className="text-lg font-semibold flex items-center">
+              <span className="bg-blue-100 p-1.5 rounded-full mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </span>
               Total Revenue
             </CardTitle>
-            <CardDescription>All months, combined businesses</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-800">
+          <CardContent className="px-4 pb-4">
+            <div className="text-2xl md:text-3xl font-bold text-blue-600">
               {formatCurrency(aggregatedData.totalRevenue)}
             </div>
-            <div className="mt-1 text-sm text-blue-600 flex flex-col">
-              <span>
-                <ArrowUpIcon className="inline h-4 w-4 mr-1" />
+            <div className="text-sm text-gray-600 flex flex-col mt-2">
+              <span className="flex items-center">
+                <span className="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
                 E-Files: {formatCurrency(aggregatedData.totalERevenue)}
               </span>
-              <span>
-                <ArrowUpIcon className="inline h-4 w-4 mr-1" />
+              <span className="flex items-center">
+                <span className="w-2 h-2 bg-indigo-400 rounded-full mr-1"></span>
                 O-Files: {formatCurrency(aggregatedData.totalORevenue)}
               </span>
             </div>
           </CardContent>
         </Card>
         
-        {/* Combined Expenses Card */}
-        <Card className="bg-gradient-to-br from-red-50 to-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-red-800 flex items-center text-lg">
-              <DollarSignIcon className="w-5 h-5 mr-2 text-red-600" />
+        {/* Expenses Card */}
+        <Card className="shadow-lg border-l-4 border-red-500 hover:shadow-xl transition-shadow">
+          <CardHeader className="pb-2 px-4 pt-4">
+            <CardTitle className="text-lg font-semibold flex items-center">
+              <span className="bg-red-100 p-1.5 rounded-full mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </span>
               Total Expenses
             </CardTitle>
-            <CardDescription>All months, combined businesses</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-red-800">
+          <CardContent className="px-4 pb-4">
+            <div className="text-2xl md:text-3xl font-bold text-red-600">
               {formatCurrency(aggregatedData.totalExpenses)}
             </div>
-            <div className="mt-1 text-sm text-red-600 flex flex-col">
-              <span>
-                <ArrowUpIcon className="inline h-4 w-4 mr-1" />
+            <div className="text-sm text-gray-600 flex flex-col mt-2">
+              <span className="flex items-center">
+                <span className="w-2 h-2 bg-red-400 rounded-full mr-1"></span>
                 E-Files: {formatCurrency(aggregatedData.totalEExpenses)}
               </span>
-              <span>
-                <ArrowUpIcon className="inline h-4 w-4 mr-1" />
+              <span className="flex items-center">
+                <span className="w-2 h-2 bg-rose-400 rounded-full mr-1"></span>
                 O-Files: {formatCurrency(aggregatedData.totalOExpenses)}
               </span>
             </div>
           </CardContent>
         </Card>
         
-        {/* Combined Net Income Card */}
-        <Card className={`bg-gradient-to-br ${aggregatedData.netIncome >= 0 ? 'from-green-50 to-white' : 'from-amber-50 to-white'}`}>
-          <CardHeader className="pb-2">
-            <CardTitle className={`${aggregatedData.netIncome >= 0 ? 'text-green-800' : 'text-amber-800'} flex items-center text-lg`}>
-              <DollarSignIcon className={`w-5 h-5 mr-2 ${aggregatedData.netIncome >= 0 ? 'text-green-600' : 'text-amber-600'}`} />
+        {/* Net Income Card */}
+        <Card className="shadow-lg border-l-4 border-green-500 sm:col-span-2 md:col-span-1 hover:shadow-xl transition-shadow">
+          <CardHeader className="pb-2 px-4 pt-4">
+            <CardTitle className="text-lg font-semibold flex items-center">
+              <span className={`${aggregatedData.netIncome < 0 ? 'bg-red-100' : 'bg-green-100'} p-1.5 rounded-full mr-2`}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={aggregatedData.netIncome < 0 ? 'text-red-600' : 'text-green-600'}>
+                  {aggregatedData.netIncome < 0 
+                    ? <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                    : <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  }
+                </svg>
+              </span>
               Net Income
             </CardTitle>
-            <CardDescription>Total profit/loss</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className={`text-3xl font-bold ${aggregatedData.netIncome >= 0 ? 'text-green-800' : 'text-amber-800'}`}>
+          <CardContent className="px-4 pb-4">
+            <div className={`text-2xl md:text-3xl font-bold ${aggregatedData.netIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
               {formatCurrency(aggregatedData.netIncome)}
             </div>
-            <div className={`mt-1 text-sm flex flex-col`}>
-              <span className={aggregatedData.eNetIncome >= 0 ? 'text-green-600' : 'text-amber-600'}>
-                {aggregatedData.eNetIncome >= 0 ? (
-                  <ArrowUpIcon className="inline h-4 w-4 mr-1" />
-                ) : (
-                  <ArrowDownIcon className="inline h-4 w-4 mr-1" />
-                )}
+            <div className="text-sm text-gray-600 flex flex-col mt-2">
+              <span className={`flex items-center ${aggregatedData.eNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`w-2 h-2 ${aggregatedData.eNetIncome < 0 ? 'bg-red-400' : 'bg-green-400'} rounded-full mr-1`}></span>
                 E-Files: {formatCurrency(aggregatedData.eNetIncome)}
               </span>
-              <span className={aggregatedData.oNetIncome >= 0 ? 'text-green-600' : 'text-amber-600'}>
-                {aggregatedData.oNetIncome >= 0 ? (
-                  <ArrowUpIcon className="inline h-4 w-4 mr-1" />
-                ) : (
-                  <ArrowDownIcon className="inline h-4 w-4 mr-1" />
-                )}
+              <span className={`flex items-center ${aggregatedData.oNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`w-2 h-2 ${aggregatedData.oNetIncome < 0 ? 'bg-red-400' : 'bg-green-400'} rounded-full mr-1`}></span>
                 O-Files: {formatCurrency(aggregatedData.oNetIncome)}
               </span>
             </div>
@@ -250,12 +256,16 @@ export default function Dashboard() {
       </div>
       
       {/* Monthly Trend Chart */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Monthly Financial Trends</CardTitle>
-          <CardDescription>Revenue, expenses, and net income by month</CardDescription>
+      <Card className="shadow-lg border-t-4 border-blue-500 mb-6">
+        <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
+          <CardTitle className="text-xl font-semibold flex items-center justify-between">
+            <span>Monthly Financial Trends</span>
+            <span className="text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+              All Months {new Date().getFullYear()}
+            </span>
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
@@ -294,6 +304,81 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Data Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Employee Data Card */}
+        <Card className="shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
+          <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
+            <CardTitle className="text-lg font-semibold">
+              Employee Data (E-Files)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total Revenue:</span>
+                <span className="font-semibold text-blue-600">{formatCurrency(aggregatedData.totalERevenue)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total Expenses:</span>
+                <span className="font-semibold text-red-600">{formatCurrency(aggregatedData.totalEExpenses)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-gray-600">Net Income:</span>
+                <span className={`font-semibold ${aggregatedData.eNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {formatCurrency(aggregatedData.eNetIncome)}
+                </span>
+              </div>
+              <div className="pt-2 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Profit Margin:</span>
+                  <span className={`font-semibold ${aggregatedData.eNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {aggregatedData.totalERevenue === 0 ? '0.0%' : 
+                      ((aggregatedData.eNetIncome / aggregatedData.totalERevenue) * 100).toFixed(1) + '%'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Other Business Data Card */}
+        <Card className="shadow-lg border-l-4 border-indigo-500 hover:shadow-xl transition-shadow">
+          <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
+            <CardTitle className="text-lg font-semibold">
+              Other Business Data (O-Files)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total Revenue:</span>
+                <span className="font-semibold text-blue-600">{formatCurrency(aggregatedData.totalORevenue)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total Expenses:</span>
+                <span className="font-semibold text-red-600">{formatCurrency(aggregatedData.totalOExpenses)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-gray-600">Net Income:</span>
+                <span className={`font-semibold ${aggregatedData.oNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {formatCurrency(aggregatedData.oNetIncome)}
+                </span>
+              </div>
+              <div className="pt-2 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Profit Margin:</span>
+                  <span className={`font-semibold ${aggregatedData.oNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {aggregatedData.totalORevenue === 0 ? '0.0%' : 
+                      ((aggregatedData.oNetIncome / aggregatedData.totalORevenue) * 100).toFixed(1) + '%'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
