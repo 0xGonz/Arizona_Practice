@@ -19,7 +19,7 @@ export function processMonthlyCSV(
 } {
   if (!data || !Array.isArray(data) || data.length === 0) {
     console.error('Invalid CSV data for processing');
-    return { lineItems: [], entityColumns, summaryColumn };
+    return { lineItems: [], entityColumns, summaryColumn, type };
   }
 
   console.log(`Processing ${type} data for ${month} with ${data.length} rows`);
