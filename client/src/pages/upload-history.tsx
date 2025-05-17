@@ -91,8 +91,20 @@ export default function UploadHistory() {
     return null;
   };
   
+  // De-duplicate uploads by keeping only the most recent upload for each month/type combination
+  const dedupedHistory = uploadHistory.reduce((result, item) => {
+    const uniqueKey = `${item.month || 'annual'}-${item.type}`;
+    if (!result[uniqueKey] || result[uniqueKey].id < item.id) {
+      result[uniqueKey] = item;
+    }
+    return result;
+  }, {} as Record<string, typeof uploadHistory[0]>);
+  
+  // Convert the de-duplicated map back to an array
+  const dedupedUploads = Object.values(dedupedHistory);
+  
   // Group history by month and type
-  const groupedHistory = uploadHistory.reduce((acc, item) => {
+  const groupedHistory = dedupedUploads.reduce((acc, item) => {
     const key = item.month ? `${item.month}` : 'annual';
     if (!acc[key]) {
       acc[key] = [];
