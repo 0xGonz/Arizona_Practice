@@ -130,7 +130,6 @@ export function ProfitabilityChart({
                   <Bar 
                     dataKey="net" 
                     name="Net Contribution" 
-                    fill="#10b981"
                     // Color bars based on positive/negative values
                     fill={(entry) => (entry.net >= 0 ? '#10b981' : '#ef4444')}
                   />

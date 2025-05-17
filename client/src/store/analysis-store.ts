@@ -1,74 +1,60 @@
 import { create } from 'zustand';
-import { format, subMonths } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
-// Type definitions for the analysis store
-interface DateRange {
-  from: Date | undefined;
-  to: Date | undefined;
-}
-
-export interface AnalysisFilters {
+interface AnalysisFilters {
   range: DateRange;
-  selectedEmployee: string | null;
-  selectedBusiness: string | null;
+  selectedEmployee: string;
+  selectedBusiness: string;
 }
 
 interface AnalysisStore {
-  // Filters
   filters: AnalysisFilters;
-  
-  // Actions
   setDateRange: (range: DateRange) => void;
-  setSelectedEmployee: (employeeId: string | null) => void;
-  setSelectedBusiness: (businessId: string | null) => void;
-  resetFilters: () => void;
+  selectEntity: (id: string) => void;
+  clearFilters: () => void;
 }
 
-// Set default range to last 12 months
-const getDefaultRange = (): DateRange => {
-  const now = new Date();
-  return {
-    from: subMonths(now, 12),
-    to: now
-  };
-};
-
-// Create the store
 export const useAnalysisStore = create<AnalysisStore>((set) => ({
-  // Initial state
   filters: {
-    range: getDefaultRange(),
-    selectedEmployee: null,
-    selectedBusiness: null
+    range: {
+      from: undefined,
+      to: undefined
+    },
+    selectedEmployee: '',
+    selectedBusiness: '',
   },
   
-  // Actions
-  setDateRange: (range) => set(state => ({
+  // Set the date range
+  setDateRange: (range: DateRange) => set((state) => ({
     filters: {
       ...state.filters,
       range
     }
   })),
   
-  setSelectedEmployee: (employeeId) => set(state => ({
-    filters: {
-      ...state.filters,
-      selectedEmployee: employeeId
-    }
-  })),
+  // Select an entity (either employee or business)
+  selectEntity: (id: string) => set((state) => {
+    // Determine which type of entity was selected based on current route/context
+    const isEmployee = window.location.pathname.includes('employee');
+
+    return {
+      filters: {
+        ...state.filters,
+        selectedEmployee: isEmployee ? id : state.filters.selectedEmployee,
+        selectedBusiness: !isEmployee ? id : state.filters.selectedBusiness,
+      }
+    };
+  }),
   
-  setSelectedBusiness: (businessId) => set(state => ({
+  // Clear all filters
+  clearFilters: () => set({
     filters: {
-      ...state.filters,
-      selectedBusiness: businessId
+      range: {
+        from: undefined,
+        to: undefined
+      },
+      selectedEmployee: '',
+      selectedBusiness: '',
     }
-  })),
-  
-  resetFilters: () => set({
-    filters: {
-      range: getDefaultRange(),
-      selectedEmployee: null,
-      selectedBusiness: null
-    }
-  })
+  }),
 }));

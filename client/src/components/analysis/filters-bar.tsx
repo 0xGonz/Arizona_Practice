@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
-
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
+import { CalendarIcon, Filter, RefreshCw } from 'lucide-react';
+import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
+import { useQuery } from '@tanstack/react-query';
 import { useAnalysisStore } from '@/store/analysis-store';
 
 interface FiltersBarProps {
@@ -17,107 +16,114 @@ interface FiltersBarProps {
 }
 
 export function FiltersBar({ entityType }: FiltersBarProps) {
-  const { filters, setDateRange, setSelectedEmployee, setSelectedBusiness, resetFilters } = useAnalysisStore();
-  const [date, setDate] = useState<DateRange | undefined>(filters.range);
-
-  // Fetch employee or business list based on entityType
-  const { data: entities, isLoading } = useQuery({
+  const { filters, setDateRange, clearFilters, selectEntity } = useAnalysisStore();
+  
+  // Fetch entity list (employee or business)
+  const { data: entityList, isLoading: isEntityLoading } = useQuery({
     queryKey: [`/api/analytics/${entityType}/list`],
     staleTime: 12 * 60 * 60 * 1000, // 12 hours
   });
-
+  
   // Handle date range selection
-  const handleDateSelect = (selectedRange: DateRange | undefined) => {
-    setDate(selectedRange);
-    if (selectedRange?.from) {
-      setDateRange(selectedRange);
-    }
+  const handleDateRangeSelect = (range: DateRange) => {
+    setDateRange(range);
   };
-
+  
   // Handle entity selection
-  const handleEntitySelect = (entityId: string) => {
-    if (entityType === 'employee') {
-      setSelectedEmployee(entityId === 'all' ? null : entityId);
+  const handleEntitySelect = (value: string) => {
+    if (value === 'all') {
+      // Clear the entity selection
+      selectEntity('');
     } else {
-      setSelectedBusiness(entityId === 'all' ? null : entityId);
+      // Set the selected entity
+      selectEntity(value);
     }
   };
-
-  // Format date for display
-  const formatDate = (date: Date | undefined) => {
-    return date ? format(date, 'LLL dd, y') : '';
+  
+  // Handle filter reset
+  const handleResetFilters = () => {
+    clearFilters();
   };
-
+  
+  // Format date range for display
+  const dateRangeText = React.useMemo(() => {
+    if (filters.range.from && filters.range.to) {
+      return `${format(filters.range.from, 'MMM d, yyyy')} - ${format(filters.range.to, 'MMM d, yyyy')}`;
+    }
+    if (filters.range.from) {
+      return `${format(filters.range.from, 'MMM d, yyyy')} - Present`;
+    }
+    return 'All Time';
+  }, [filters.range]);
+  
   return (
-    <Card className="bg-white mb-6">
-      <CardContent className="flex flex-col md:flex-row items-center justify-between gap-4 pt-4">
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-          <span className="text-sm font-medium">Filter by date:</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "justify-start text-left font-normal md:w-[300px]",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date?.from ? (
-                  date.to ? (
-                    <>
-                      {formatDate(date.from)} - {formatDate(date.to)}
-                    </>
-                  ) : (
-                    formatDate(date.from)
-                  )
-                ) : (
-                  "Select date range"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={date?.from}
-                selected={date}
-                onSelect={handleDateSelect}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-          <span className="text-sm font-medium">
-            {entityType === 'employee' ? 'Select employee:' : 'Select business line:'}
-          </span>
-          <Select 
-            onValueChange={handleEntitySelect} 
-            value={entityType === 'employee' ? filters.selectedEmployee || 'all' : filters.selectedBusiness || 'all'}
-          >
-            <SelectTrigger className="w-full md:w-[200px]">
-              <SelectValue placeholder={entityType === 'employee' ? "Select employee" : "Select business line"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All {entityType === 'employee' ? 'Employees' : 'Business Lines'}</SelectItem>
-              {!isLoading && entities?.map((entity: any) => (
-                <SelectItem key={entity.id} value={entity.id}>
-                  {entity.name}
+    <Card className="mb-6">
+      <CardContent className="p-4">
+        <div className="flex flex-wrap gap-4 items-end">
+          {/* Date Range Filter */}
+          <div className="flex-1 min-w-[200px]">
+            <Label className="mb-2 block text-sm">Date Range</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRangeText}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={filters.range.from}
+                  selected={filters.range}
+                  onSelect={handleDateRangeSelect}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          {/* Entity Selection Filter */}
+          <div className="flex-1 min-w-[200px]">
+            <Label className="mb-2 block text-sm">
+              {entityType === 'employee' ? 'Employee' : 'Business Line'}
+            </Label>
+            <Select 
+              value={entityType === 'employee' ? filters.selectedEmployee : filters.selectedBusiness} 
+              onValueChange={handleEntitySelect}
+              disabled={isEntityLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={`All ${entityType === 'employee' ? 'Employees' : 'Business Lines'}`} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  All {entityType === 'employee' ? 'Employees' : 'Business Lines'}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {Array.isArray(entityList) && entityList.map((entity: any) => (
+                  <SelectItem key={entity.id} value={entity.id}>
+                    {entity.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Reset Button */}
+          <div>
+            <Button 
+              variant="ghost" 
+              onClick={handleResetFilters}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset
+            </Button>
+          </div>
         </div>
-
-        <Button 
-          variant="outline" 
-          onClick={resetFilters}
-          className="w-full md:w-auto"
-        >
-          Reset Filters
-        </Button>
       </CardContent>
     </Card>
   );

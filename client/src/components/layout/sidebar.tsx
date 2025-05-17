@@ -4,7 +4,10 @@ import {
   CalendarDays, 
   Upload, 
   History, 
-  Stethoscope
+  Stethoscope,
+  User,
+  Building,
+  LineChart
 } from "lucide-react";
 
 interface NavItem {
