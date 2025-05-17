@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CSVType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { LoadDataButton } from "@/components/upload/load-data-button";
 
 export default function UploadHistory() {
   const { uploadHistory, uploadStatus, clearUploadedData, annualData, monthlyData, loadCSVContent } = useStore();
@@ -192,6 +193,14 @@ export default function UploadHistory() {
                                   </td>
                                   <td className="py-3 px-4 text-right">
                                     <div className="flex justify-end gap-2">
+                                      <LoadDataButton
+                                        uploadId={item.id}
+                                        type={item.type}
+                                        month={item.month}
+                                        variant="ghost"
+                                        size="sm"
+                                      />
+                                      
                                       <Button
                                         variant="ghost"
                                         size="sm"
