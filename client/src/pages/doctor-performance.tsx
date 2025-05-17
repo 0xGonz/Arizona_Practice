@@ -52,16 +52,16 @@ export default function DoctorPerformance() {
     return extractMonthlyPerformanceTrend(monthlyData, 'e');
   }, [monthlyData]);
 
-  // Revenue categories based on provider revenue data
-  const revenueCategories = useMemo(() => {
-    // This is a data-driven approach based on the revenue data in the CSV
-    const totalRevenue = doctorData.reduce((sum, doc) => sum + doc.revenue, 0);
+  // Generate expense categories based on provider expense data
+  const expenseCategories = useMemo(() => {
+    // This is a data-driven approach based on the expense data in the CSV
+    const totalExpenses = doctorData.reduce((sum, doc) => sum + doc.expenses, 0);
     
-    // Calculate breakdown of revenue based on common healthcare practice patterns
+    // Calculate breakdown of expenses based on common healthcare practice patterns
     return [
-      { name: "Professional Services", value: Math.round(totalRevenue * 0.70) }, // ~70% of revenue
-      { name: "Procedures", value: Math.round(totalRevenue * 0.20) },         // ~20% of revenue
-      { name: "Other Services", value: Math.round(totalRevenue * 0.10) }      // ~10% of revenue
+      { name: "Provider Salary", value: Math.round(totalExpenses * 0.65) }, // ~65% of expenses
+      { name: "Operating", value: Math.round(totalExpenses * 0.25) },       // ~25% of expenses
+      { name: "Admin", value: Math.round(totalExpenses * 0.10) }            // ~10% of expenses
     ];
   }, [doctorData]);
 
@@ -191,16 +191,16 @@ export default function DoctorPerformance() {
             </CardContent>
           </Card>
 
-          {/* Revenue Composition */}
+          {/* Expense Composition */}
           <Card>
             <CardHeader>
-              <CardTitle>Revenue Composition</CardTitle>
+              <CardTitle>Expense Composition</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart 
                   layout="vertical" 
-                  data={revenueCategories}
+                  data={expenseCategories}
                   margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -255,6 +255,7 @@ export default function DoctorPerformance() {
                     wrapperStyle={{ paddingTop: 15 }}
                   />
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
+                  <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
                   <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
                 </BarChart>
               </ResponsiveContainer>
@@ -273,6 +274,7 @@ export default function DoctorPerformance() {
                     <tr className="border-b border-neutral-border">
                       <th className="text-left py-3 px-4 font-medium">Provider</th>
                       <th className="text-right py-3 px-4 font-medium">Revenue</th>
+                      <th className="text-right py-3 px-4 font-medium">Expenses</th>
                       <th className="text-right py-3 px-4 font-medium">Net Income</th>
                       <th className="text-right py-3 px-4 font-medium">Margin %</th>
                     </tr>
@@ -282,6 +284,7 @@ export default function DoctorPerformance() {
                       <tr key={index} className="border-b border-neutral-border">
                         <td className="py-3 px-4 font-medium">{doc.name}</td>
                         <td className="text-right py-3 px-4 numeric">${doc.revenue.toLocaleString()}</td>
+                        <td className="text-right py-3 px-4 numeric">${doc.expenses.toLocaleString()}</td>
                         <td className={`text-right py-3 px-4 numeric font-medium ${doc.net >= 0 ? 'text-positive' : 'text-negative'}`}>
                           ${Math.abs(doc.net).toLocaleString()}{doc.net < 0 ? ' (Loss)' : ''}
                         </td>
