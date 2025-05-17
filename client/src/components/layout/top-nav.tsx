@@ -33,22 +33,14 @@ export default function TopNav() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center px-4 py-2 bg-white border-b">
+        <div className="flex items-center space-x-2 mr-4">
           <Stethoscope className="w-6 h-6 text-primary" />
           <h1 className="text-xl font-bold text-primary hidden sm:block">Clinic Analytics</h1>
         </div>
         
-        {/* Mobile menu button */}
-        <button 
-          className="md:hidden p-2 rounded-md hover:bg-gray-100"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        
         {/* Desktop navigation */}
-        <nav className="hidden md:flex items-center overflow-x-auto">
+        <nav className="hidden md:flex items-center flex-1 overflow-x-auto">
           {navigationItems.map((item, index) => {
             const isActive = location === item.path || 
               (item.path === "/" && location === "/monthly");
@@ -70,6 +62,14 @@ export default function TopNav() {
             );
           })}
         </nav>
+        
+        {/* Mobile menu button */}
+        <button 
+          className="md:hidden ml-auto p-2 rounded-md hover:bg-gray-100"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          <Menu className="w-5 h-5" />
+        </button>
       </div>
       
       {/* Mobile menu */}
