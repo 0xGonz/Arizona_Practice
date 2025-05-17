@@ -33,6 +33,15 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { FileBarChart, Users, Building2, FileText } from "lucide-react";
+
+// Navigation tabs for the top of the page
+const navigationTabs = [
+  { id: "employee", name: "Employee Data (E)", icon: <Users className="w-4 h-4 mr-2" /> },
+  { id: "business", name: "Business Data (O)", icon: <Building2 className="w-4 h-4 mr-2" /> },
+  { id: "overview", name: "Overview", icon: <FileBarChart className="w-4 h-4 mr-2" /> },
+  { id: "details", name: "Details", icon: <FileText className="w-4 h-4 mr-2" /> },
+];
 
 export default function DataAnalysis() {
   const { monthlyData } = useStore();
@@ -187,171 +196,307 @@ export default function DataAnalysis() {
     <div className="container py-6">
       <h1 className="text-3xl font-bold mb-6">Financial Data Analysis</h1>
       
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="month-select">Select Month</Label>
-          <Select
-            value={selectedMonth}
-            onValueChange={setSelectedMonth}
-          >
-            <SelectTrigger id="month-select">
-              <SelectValue placeholder="Select Month" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableMonths.map((month) => (
-                <SelectItem key={month} value={month}>
-                  {month.charAt(0).toUpperCase() + month.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="search-input">Search Line Items</Label>
-          <Input
-            id="search-input"
-            placeholder="Search by line item name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="line-item-select">Filter by Line Item</Label>
-          <Select
-            value={selectedLineItem}
-            onValueChange={setSelectedLineItem}
-          >
-            <SelectTrigger id="line-item-select">
-              <SelectValue placeholder="Select Line Item" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Line Items</SelectItem>
-              {availableLineItems.map((item: any) => (
-                <SelectItem key={item.name} value={item.name}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="employee">Employee Data (E-files)</TabsTrigger>
-          <TabsTrigger value="business">Business Data (O-files)</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="employee">
-          <Card>
-            <CardHeader>
-              <CardTitle>Employee Financial Data</CardTitle>
-              <CardDescription>
-                {selectedMonth !== "all" 
-                  ? `Analysis of employee financial data for ${selectedMonth}` 
-                  : "Select a month to view employee financial data"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {selectedMonth === "all" ? (
-                <div className="text-center p-6">Please select a month to view data</div>
-              ) : employeeData.employees && employeeData.employees.length > 0 ? (
-                <ScrollArea className="h-[500px]">
-                  <div className="w-full overflow-auto">
-                    <Table>
-                      <TableCaption>Employee Financial Data for {selectedMonth}</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="min-w-[200px] sticky left-0 bg-background">Line Item</TableHead>
-                          {employeeData.employees.map((employee: string) => (
-                            <TableHead key={employee} className="min-w-[150px]">{employee}</TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredLineItemsData.map((item: any, idx: number) => (
-                          <TableRow key={`${item.name}-${idx}`} className={item.isTotal ? "font-bold bg-muted/50" : ""}>
-                            <TableCell 
-                              className={`sticky left-0 bg-background ${item.isTotal ? "font-bold" : ""}`}
-                              style={{ paddingLeft: `${item.depth * 16}px` }}
-                            >
-                              {item.name}
-                              {item.isTotal && <Badge className="ml-2 bg-primary">Total</Badge>}
-                            </TableCell>
+      {/* Top Navigation Tabs */}
+      <div className="mb-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full mb-4 flex justify-between bg-background border overflow-auto">
+            {navigationTabs.map((tab) => (
+              <TabsTrigger 
+                key={tab.id} 
+                value={tab.id}
+                className="flex-1 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary"
+              >
+                <div className="flex items-center justify-center">
+                  {tab.icon}
+                  <span>{tab.name}</span>
+                </div>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          {/* Filters Section */}
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="month-select">Select Month</Label>
+              <Select
+                value={selectedMonth}
+                onValueChange={setSelectedMonth}
+              >
+                <SelectTrigger id="month-select">
+                  <SelectValue placeholder="Select Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableMonths.map((month) => (
+                    <SelectItem key={month} value={month}>
+                      {month.charAt(0).toUpperCase() + month.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="search-input">Search Line Items</Label>
+              <Input
+                id="search-input"
+                placeholder="Search by line item name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="line-item-select">Filter by Line Item</Label>
+              <Select
+                value={selectedLineItem}
+                onValueChange={setSelectedLineItem}
+              >
+                <SelectTrigger id="line-item-select">
+                  <SelectValue placeholder="Select Line Item" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Line Items</SelectItem>
+                  {availableLineItems.map((item: any) => (
+                    <SelectItem key={item.name} value={item.name}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Employee Data Tab Content */}
+          <TabsContent value="employee">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="w-5 h-5 mr-2" />
+                  Employee Financial Data
+                </CardTitle>
+                <CardDescription>
+                  {selectedMonth !== "all" 
+                    ? `Analysis of employee financial data for ${selectedMonth}` 
+                    : "Select a month to view employee financial data"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedMonth === "all" ? (
+                  <div className="text-center p-6">Please select a month to view data</div>
+                ) : employeeData.employees && employeeData.employees.length > 0 ? (
+                  <ScrollArea className="h-[500px]">
+                    <div className="w-full overflow-auto">
+                      <Table>
+                        <TableCaption>Employee Financial Data for {selectedMonth}</TableCaption>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[200px] sticky left-0 bg-background">Line Item</TableHead>
                             {employeeData.employees.map((employee: string) => (
-                              <TableCell key={`${employee}-${idx}`}>
-                                {typeof item[employee] === 'number' ? formatCurrency(item[employee]) : item[employee] || '-'}
-                              </TableCell>
+                              <TableHead key={employee} className="min-w-[150px]">{employee}</TableHead>
                             ))}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center p-6">No employee data available for the selected month</div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="business">
-          <Card>
-            <CardHeader>
-              <CardTitle>Business Department Data</CardTitle>
-              <CardDescription>
-                {selectedMonth !== "all" 
-                  ? `Analysis of business department data for ${selectedMonth}` 
-                  : "Select a month to view business department data"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {selectedMonth === "all" ? (
-                <div className="text-center p-6">Please select a month to view data</div>
-              ) : businessData.departments && businessData.departments.length > 0 ? (
-                <ScrollArea className="h-[500px]">
-                  <div className="w-full overflow-auto">
-                    <Table>
-                      <TableCaption>Business Department Data for {selectedMonth}</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="min-w-[200px] sticky left-0 bg-background">Line Item</TableHead>
-                          {businessData.departments.map((department: string) => (
-                            <TableHead key={department} className="min-w-[150px]">{department}</TableHead>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredLineItemsData.map((item: any, idx: number) => (
+                            <TableRow key={`${item.name}-${idx}`} className={item.isTotal ? "font-bold bg-muted/50" : ""}>
+                              <TableCell 
+                                className={`sticky left-0 bg-background ${item.isTotal ? "font-bold" : ""}`}
+                                style={{ paddingLeft: `${item.depth * 16}px` }}
+                              >
+                                {item.name}
+                                {item.isTotal && <Badge className="ml-2 bg-primary">Total</Badge>}
+                              </TableCell>
+                              {employeeData.employees.map((employee: string) => (
+                                <TableCell key={`${employee}-${idx}`}>
+                                  {typeof item[employee] === 'number' ? formatCurrency(item[employee]) : item[employee] || '-'}
+                                </TableCell>
+                              ))}
+                            </TableRow>
                           ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredLineItemsData.map((item: any, idx: number) => (
-                          <TableRow key={`${item.name}-${idx}`} className={item.isTotal ? "font-bold bg-muted/50" : ""}>
-                            <TableCell 
-                              className={`sticky left-0 bg-background ${item.isTotal ? "font-bold" : ""}`}
-                              style={{ paddingLeft: `${item.depth * 16}px` }}
-                            >
-                              {item.name}
-                              {item.isTotal && <Badge className="ml-2 bg-primary">Total</Badge>}
-                            </TableCell>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="text-center p-6">No employee data available for the selected month</div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Business Data Tab Content */}
+          <TabsContent value="business">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Building2 className="w-5 h-5 mr-2" />
+                  Business Department Data
+                </CardTitle>
+                <CardDescription>
+                  {selectedMonth !== "all" 
+                    ? `Analysis of business department data for ${selectedMonth}` 
+                    : "Select a month to view business department data"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedMonth === "all" ? (
+                  <div className="text-center p-6">Please select a month to view data</div>
+                ) : businessData.departments && businessData.departments.length > 0 ? (
+                  <ScrollArea className="h-[500px]">
+                    <div className="w-full overflow-auto">
+                      <Table>
+                        <TableCaption>Business Department Data for {selectedMonth}</TableCaption>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[200px] sticky left-0 bg-background">Line Item</TableHead>
                             {businessData.departments.map((department: string) => (
-                              <TableCell key={`${department}-${idx}`}>
-                                {typeof item[department] === 'number' ? formatCurrency(item[department]) : item[department] || '-'}
-                              </TableCell>
+                              <TableHead key={department} className="min-w-[150px]">{department}</TableHead>
                             ))}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredLineItemsData.map((item: any, idx: number) => (
+                            <TableRow key={`${item.name}-${idx}`} className={item.isTotal ? "font-bold bg-muted/50" : ""}>
+                              <TableCell 
+                                className={`sticky left-0 bg-background ${item.isTotal ? "font-bold" : ""}`}
+                                style={{ paddingLeft: `${item.depth * 16}px` }}
+                              >
+                                {item.name}
+                                {item.isTotal && <Badge className="ml-2 bg-primary">Total</Badge>}
+                              </TableCell>
+                              {businessData.departments.map((department: string) => (
+                                <TableCell key={`${department}-${idx}`}>
+                                  {typeof item[department] === 'number' ? formatCurrency(item[department]) : item[department] || '-'}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="text-center p-6">No business department data available for the selected month</div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Overview Tab Content */}
+          <TabsContent value="overview">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileBarChart className="w-5 h-5 mr-2" />
+                  Financial Overview
+                </CardTitle>
+                <CardDescription>
+                  High-level summary of key financial metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-lg border p-4">
+                    <h3 className="text-lg font-medium mb-2">Employee Data Summary</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Key financial metrics for doctors and employees
+                    </p>
+                    {selectedMonth !== "all" && employeeData.employees && employeeData.employees.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Number of Employees:</span>
+                          <span className="font-medium">{employeeData.employees.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Line Items:</span>
+                          <span className="font-medium">{employeeData.lineItemsData.length}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center p-4 text-muted-foreground">
+                        Select a month to view summary data
+                      </div>
+                    )}
                   </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center p-6">No business department data available for the selected month</div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  
+                  <div className="rounded-lg border p-4">
+                    <h3 className="text-lg font-medium mb-2">Business Data Summary</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Key financial metrics for business departments
+                    </p>
+                    {selectedMonth !== "all" && businessData.departments && businessData.departments.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Number of Departments:</span>
+                          <span className="font-medium">{businessData.departments.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Line Items:</span>
+                          <span className="font-medium">{businessData.lineItemsData.length}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center p-4 text-muted-foreground">
+                        Select a month to view summary data
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Details Tab Content */}
+          <TabsContent value="details">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="w-5 h-5 mr-2" />
+                  Detailed Analysis
+                </CardTitle>
+                <CardDescription>
+                  In-depth analysis of financial data
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-4">Data Structure Information</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="rounded-lg border p-4">
+                        <h4 className="text-md font-medium mb-2">E-File Structure</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Employee (E) files contain doctor and employee financial data.
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          <li>Columns represent individual doctors/employees</li>
+                          <li>Rows represent financial line items</li>
+                          <li>Data includes revenue, expenses and net income</li>
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="rounded-lg border p-4">
+                        <h4 className="text-md font-medium mb-2">O-File Structure</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Business (O) files contain department financial data.
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          <li>Columns represent business departments</li>
+                          <li>Rows represent financial line items</li>
+                          <li>Data includes revenue, expenses and operating costs</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
