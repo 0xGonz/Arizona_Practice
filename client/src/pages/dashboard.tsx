@@ -161,7 +161,8 @@ export default function Dashboard() {
         oExpenses: monthOExpenses,
         netIncome: monthNetIncome,
         eNetIncome: monthENetIncome,
-        oNetIncome: monthONetIncome
+        oNetIncome: monthONetIncome,
+        payrollExpenses: monthPayrollExpenses
       });
     });
     
