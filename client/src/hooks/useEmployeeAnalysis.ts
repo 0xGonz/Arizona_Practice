@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '../lib/queryClient';
+import { api } from '../lib/queryClient';
 
 // Half day in milliseconds for stale time
 const HALF_DAY = 12 * 60 * 60 * 1000;
@@ -39,11 +39,7 @@ export function useEmployeeSummary(range: AnalyticsRange) {
 export function useEmployeeDetail(id: string | null, range: AnalyticsRange) {
   return useQuery({ 
     queryKey: ['emp-detail', id, range],
-    queryFn: () => apiRequest<EmployeeAnalyticsData[]>({
-      method: 'GET',
-      url: '/api/analytics/employee/detail',
-      params: { employeeId: id, ...range }
-    }),
+    queryFn: () => api.get('/api/analytics/employee/detail', { params: { employeeId: id, ...range } }),
     enabled: !!id,
     staleTime: HALF_DAY
   });
@@ -55,10 +51,7 @@ export function useEmployeeDetail(id: string | null, range: AnalyticsRange) {
 export function useEmployeeList() {
   return useQuery({ 
     queryKey: ['employee-list'],
-    queryFn: () => apiRequest<EmployeeListItem[]>({
-      method: 'GET',
-      url: '/api/analytics/employee/list'
-    }),
+    queryFn: () => api.get('/api/analytics/employee/list'),
     staleTime: HALF_DAY
   });
 }

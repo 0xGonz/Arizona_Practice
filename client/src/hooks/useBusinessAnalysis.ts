@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '../lib/queryClient';
+import { api } from '../lib/queryClient';
 import { AnalyticsRange } from './useEmployeeAnalysis';
 
 // Half day in milliseconds for stale time
@@ -24,11 +24,7 @@ export interface BusinessListItem {
 export function useBusinessSummary(range: AnalyticsRange) {
   return useQuery({ 
     queryKey: ['biz-summary', range],
-    queryFn: () => apiRequest<BusinessAnalyticsData[]>({
-      method: 'GET',
-      url: '/api/analytics/business/summary',
-      params: range
-    }),
+    queryFn: () => api.get('/api/analytics/business/summary', { params: range }),
     staleTime: HALF_DAY
   });
 }
@@ -39,11 +35,7 @@ export function useBusinessSummary(range: AnalyticsRange) {
 export function useBusinessDetail(id: string | null, range: AnalyticsRange) {
   return useQuery({ 
     queryKey: ['biz-detail', id, range],
-    queryFn: () => apiRequest<BusinessAnalyticsData[]>({
-      method: 'GET',
-      url: '/api/analytics/business/detail',
-      params: { businessId: id, ...range }
-    }),
+    queryFn: () => api.get('/api/analytics/business/detail', { params: { businessId: id, ...range } }),
     enabled: !!id,
     staleTime: HALF_DAY
   });
@@ -55,10 +47,7 @@ export function useBusinessDetail(id: string | null, range: AnalyticsRange) {
 export function useBusinessList() {
   return useQuery({ 
     queryKey: ['business-list'],
-    queryFn: () => apiRequest<BusinessListItem[]>({
-      method: 'GET',
-      url: '/api/analytics/business/list'
-    }),
+    queryFn: () => api.get('/api/analytics/business/list'),
     staleTime: HALF_DAY
   });
 }
