@@ -256,11 +256,13 @@ export default function DataAnalysis() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Line Items</SelectItem>
-                  {availableLineItems.map((item: any) => (
-                    <SelectItem key={item.name} value={item.name}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
+                  {availableLineItems
+                    .filter((item: any) => item.name && item.name.trim() !== "")
+                    .map((item: any) => (
+                      <SelectItem key={item.name} value={item.name || `item-${Math.random()}`}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
