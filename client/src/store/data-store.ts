@@ -594,14 +594,15 @@ export const useStore = create<DataStore>((set, get) => ({
       console.log(`Loading CSV content for upload ID ${id}`);
       
       // Fetch the CSV data from the server
-      const response = await apiRequest(`/api/uploads/${id}`);
+      const response = await fetch(`/api/uploads/${id}`);
       
-      if (!response) {
-        console.error(`Failed to load CSV content for upload ID ${id}`);
+      if (!response.ok) {
+        console.error(`Failed to load CSV content for upload ID ${id}. Status: ${response.status}`);
         return undefined;
       }
       
-      const { type, content, filename, month } = response;
+      const data = await response.json();
+      const { type, content, filename, month } = data;
       
       if (!content) {
         console.error(`No content found for upload ID ${id}`);
