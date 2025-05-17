@@ -566,8 +566,15 @@ export default function Dashboard() {
                 <XAxis dataKey="month" />
                 <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
                 <Tooltip 
-                  formatter={(value, name) => {
-                    if (name === 'payroll') return [formatCurrency(value as number), 'Payroll & Related Expenses'];
+                  formatter={(value, name, props) => {
+                    if (name === 'payroll') {
+                      const monthData = props.payload?.[0];
+                      let percentage = 0;
+                      if (monthData && monthData.payload.revenue > 0) {
+                        percentage = (monthData.payload.payroll / monthData.payload.revenue) * 100;
+                      }
+                      return [`${formatCurrency(value as number)} (${percentage.toFixed(1)}% of Revenue)`, 'Payroll & Related Expenses'];
+                    }
                     return [formatCurrency(value as number), 'Revenue'];
                   }}
                   labelFormatter={(label) => `Month: ${label}`}
