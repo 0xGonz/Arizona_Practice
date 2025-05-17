@@ -554,21 +554,33 @@ export default function Dashboard() {
         <CardContent className="p-4">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
+              <ComposedChart
                 data={aggregatedData.monthlyTrends.map(trend => ({
                   month: trend.month,
                   payroll: trend.payrollExpenses || 0,
-                  revenue: trend.revenue || 0
+                  revenue: trend.revenue || 0,
+                  percentage: trend.revenue ? Math.round((trend.payrollExpenses / trend.revenue) * 100) : 0
                 }))}
-                margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                <YAxis 
+                  yAxisId="left"
+                  tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} 
+                />
+                <YAxis 
+                  yAxisId="right" 
+                  orientation="right" 
+                  domain={[0, 100]}
+                  tickFormatter={(value) => `${value}%`}
+                />
                 <Tooltip 
                   formatter={(value, name) => {
                     if (name === 'payroll') return [formatCurrency(value as number), 'Payroll & Related Expenses'];
-                    return [formatCurrency(value as number), 'Revenue'];
+                    if (name === 'revenue') return [formatCurrency(value as number), 'Revenue'];
+                    if (name === 'percentage') return [`${value}%`, 'Payroll as % of Revenue'];
+                    return [value, name];
                   }}
                   labelFormatter={(label) => `Month: ${label}`}
                 />
@@ -584,6 +596,16 @@ export default function Dashboard() {
                   name="Payroll & Related Expenses" 
                   fill="#f97316" 
                   radius={[4, 4, 0, 0]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="percentage"
+                  name="Payroll as % of Revenue"
+                  stroke="#dc2626"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  yAxisId="percentage"
                 />
               </BarChart>
             </ResponsiveContainer>
