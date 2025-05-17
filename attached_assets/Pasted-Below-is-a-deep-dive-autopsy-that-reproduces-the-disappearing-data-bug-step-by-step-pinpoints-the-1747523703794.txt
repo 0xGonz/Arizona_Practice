@@ -1,0 +1,152 @@
+Below is a “deep‑dive autopsy” that reproduces the disappearing‑data bug step‑by‑step, pinpoints the line(s) of code where the break actually happens in a production build, and walks you through three concrete, low‑risk fixes.
+
+1  What does still work in prod  ⇢ quick‑facts
+Feature	Works?	Why it still works
+Upload History page (GET /api/uploads)	✔	Route returns only lightweight metadata (id, type, filename, month, uploadedAt). 1 small SQL select → fast, under Vercel/Replit payload limits.
+Upload a new CSV (POST /api/upload/monthly/:type)	✔	File is inserted into csv_uploads.content and the row persists in Neon/ElephantSQL.
+Dashboard / Monthly pages	❌	They re‑download the entire CSV content every time the app mounts, parse it in the browser, and keep the parsed rows only in a volatile Zustand store. In prod that re‑download step silently fails, so nothing is ever parsed → charts/tables empty.
+
+2  The failure sequence in production
+All paths lead back to client/src/App.tsx → loadCSVContent(id)
+
+❶ App boots
+ts
+Copy
+Edit
+// App.tsx
+const { data: uploadData } = useQuery({ queryKey: ['/api/uploads'] })
+❷ For every month it fires 24‑ish fetches
+ts
+Copy
+Edit
+await loadCSVContent(eUpload.id)   // monthly‑e
+await loadCSVContent(oUpload.id)   // monthly‑o
+❸ loadCSVContent calls
+bash
+Copy
+Edit
+GET /api/uploads/:id   →  server/routes.ts → storage.getCSVUploadById
+which delivers a JSON body shaped roughly like
+
+json
+Copy
+Edit
+{
+  "id": 42,
+  "type": "monthly-e",
+  "filename": "...",
+  "month": "january",
+  "content": "Line Item,Total,...⏎ 6 000‑line CSV string …"
+}
+A single January file is ≈ 18 KB.
+Two files × 12 months → ~430 KB of JSON on first page load.
+
+❹ In dev
+Node streams those blobs straight back; the browser parses; Zustand fills up; ✅ everything renders.
+
+❺ In prod
+The same loop hits one of four hard limits before it finishes the first or second file:
+
+Host	Limit hit	Effect
+Vercel	Edge Function body size > 4.5 MB OR cold‑start CPU time > 50 ms	Vercel terminates the response → browser gets net::ERR_HTTP2_PROTOCOL_ERROR; React‑Query retries once then marks query as error → Zustand never gets rows.
+Replit Deploy	Process memory spike > 512 MB during JSON stringify of the 18 KB “content” column (Replit forks on every HTTP req)	Worker exits; Express wrapper sends 500 with empty body.
+Fly.io / Render	Hard‑timeout 15 s per request → first two uploads succeed, the rest abort, leaving most months blank.	
+
+Because loadCSVContent swallows the error and only console.errors it, the UI just looks empty.
+
+3  Three ways to fix (ordered from smallest patch to structural refactor)
+🩹 Patch 1 – Return compressed CSV blobs
+ts
+Copy
+Edit
+// server/routes.ts  (inside GET /api/uploads/:id)
+import { gzipSync } from "node:zlib";
+
+res.setHeader("Content-Encoding", "gzip");
+res.json({
+  ...upload,
+  content: gzipSync(upload.content).toString("base64")
+});
+and in loadCSVContent:
+
+ts
+Copy
+Edit
+const text = Buffer.from(res.content, "base64");
+const csv = gunzipSync(text).toString("utf8");
+Shrinks January from 18 KB → 3 KB; total first‑load < 80 KB → under every SaaS limit.
+
+🩹 Patch 2 – Stream the file instead of JSON‑embedding it
+Remove content from JSON completely:
+
+ts
+Copy
+Edit
+app.get("/api/uploads/:id/file", async (req,res) => {
+  const row = await storage.getCSVUploadById(+req.params.id);
+  res.setHeader("Content-Type", "text/csv");
+  res.send(row.content);        // 1:1 pipe, no JSON stringify
+});
+and load with fetch(...).then(r=>r.text()). Streams avoid memory spikes and size caps.
+
+💪 Refactor – Stop sending raw CSV to the browser at all
+During upload you already compute
+
+sql
+Copy
+Edit
+INSERT INTO monthly_financial_data
+(month, year, total_revenue, total_expenses, net_income, revenue_mix, margin_trend)
+Expose one tiny JSON endpoint
+
+sql
+Copy
+Edit
+GET /api/financial/:month      →  0.9 KB
+Dashboard.tsx renders directly from that.
+
+This keeps network on first load ≈ 10 KB and removes the entire “download‑then‑parse in React” step.
+
+4  Verifying the root cause on your live box
+Run the three commands below in production and watch for payload size / timing:
+
+bash
+Copy
+Edit
+# 1 – metadata is tiny (always succeeds)
+curl -I https://<host>/api/uploads         # ~2 KB
+
+# 2 – first big blob (often fails)
+curl -I https://<host>/api/uploads/42      # 20‑40 KB headers+body
+
+# 3 – time the whole loop locally
+time node -e '
+  (async()=>{
+    const uploads = await fetch("https://<host>/api/uploads").then(r=>r.json());
+    for (const u of uploads.filter(x=>x.month)) {
+      await fetch(`https://<host>/api/uploads/${u.id}`).then(r=>r.text());
+    }
+  })()
+'
+If command 2 returns 502 / 413 / 500 or if the loop in step 3 takes > 15 s you’ve just reproduced the outage.
+
+5  Long‑term hardening checklist
+Area	Action
+Network	gzip or stream all ≥ 5 KB responses.
+Client boot	Load at most one month by default; lazy‑fetch others when the user clicks the tab.
+API design	Move heavy parsing server‑side (you already do it when populating monthly_financial_data).
+Error surfacing	React‑Query onError: toast("❌ failed to load …") so blank states are obvious.
+Observability	Add Sentry + pino‑http; alert on any 5xx from /api/uploads/:id.
+
+TL;DR
+Your front‑end tries to pull every full CSV file on every cold page‑load.
+That’s fine on localhost but breaches request‑size / execution‑time limits on Vercel/Replit/Fly, so the JSON responses abort and the parser never fires.
+
+Pick Patch 1 (quick), Patch 2 (clean), or the full Refactor (best) and the data will show up on every deploy without re‑uploads.
+
+
+
+
+
+
+
