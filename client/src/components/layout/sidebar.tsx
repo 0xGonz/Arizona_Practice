@@ -4,7 +4,10 @@ import {
   CalendarDays, 
   Upload, 
   History, 
-  Stethoscope
+  Stethoscope,
+  Users,
+  Building,
+  Search
 } from "lucide-react";
 
 interface NavItem {
@@ -19,6 +22,14 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
     items: [
       { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
       { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-5 h-5" /> }
+    ]
+  },
+  {
+    section: "Detailed Analysis",
+    items: [
+      { name: "Employee Analysis", path: "/employee-analysis", icon: <Users className="w-5 h-5" /> },
+      { name: "Business Analysis", path: "/business-analysis", icon: <Building className="w-5 h-5" /> },
+      { name: "Financial Query", path: "/financial-query", icon: <Search className="w-5 h-5" /> }
     ]
   },
   {
