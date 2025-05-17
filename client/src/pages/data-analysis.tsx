@@ -464,8 +464,20 @@ export default function DataAnalysis() {
                   <FileBarChart className="w-5 h-5 mr-2" />
                   Financial Overview
                 </CardTitle>
-                <CardDescription>
-                  High-level summary of key financial metrics for {selectedMonth !== "all" ? selectedMonth : "all months"}
+                <CardDescription className="flex items-center gap-2">
+                  Key financial metrics for {selectedMonth !== "all" ? selectedMonth : "all months"}
+                  <Select 
+                    value={activeTab} 
+                    onValueChange={setActiveTab}
+                    defaultValue="employee">
+                    <SelectTrigger className="w-[160px] h-8">
+                      <SelectValue placeholder="Data Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="employee">Employee (E) Data</SelectItem>
+                      <SelectItem value="business">Business (O) Data</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -481,8 +493,197 @@ export default function DataAnalysis() {
                   </div>
                 ) : (
                   <>
-                    {/* KPI Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    {/* Main Financial Metrics Bar Graph */}
+                    <Card className="mb-6">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-medium">Key Financial Metrics</CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-72">
+                        {(activeTab === "employee" && employeeData.employees?.length > 0) || 
+                         (activeTab === "business" && businessData.departments?.length > 0) ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RechartsBarChart
+                              data={[
+                                {
+                                  name: "Total Revenue",
+                                  value: activeTab === "employee" 
+                                    ? employeeData.lineItemsData?.find((i: any) => 
+                                        i.name === "Total Revenue" || i.name === "Collections" || i.name === "Total Income"
+                                      )?.[employeeData.employees?.[0]] || 0
+                                    : businessData.lineItemsData?.find((i: any) => 
+                                        i.name === "Total Revenue" || i.name === "Total Income" || i.name.includes("Total Income")
+                                      )?.[businessData.departments?.[0]] || 0,
+                                  color: "#3b82f6" // blue
+                                },
+                                {
+                                  name: "Total Expenses",
+                                  value: activeTab === "employee"
+                                    ? employeeData.lineItemsData?.find((i: any) => 
+                                        i.name === "Total Operating Expenses" || i.name === "Total Expenses" || i.name.includes("Total Expenses")
+                                      )?.[employeeData.employees?.[0]] || 0
+                                    : businessData.lineItemsData?.find((i: any) => 
+                                        i.name === "Total Operating Expenses" || i.name === "Total Expenses" || i.name.includes("Total Expenses")
+                                      )?.[businessData.departments?.[0]] || 0,
+                                  color: "#ef4444" // red
+                                },
+                                {
+                                  name: "Net Income",
+                                  value: activeTab === "employee"
+                                    ? employeeData.lineItemsData?.find((i: any) => 
+                                        i.name === "Net Income (Loss)" || i.name === "Net Income" || i.name.includes("Net Income")
+                                      )?.[employeeData.employees?.[0]] || 0
+                                    : businessData.lineItemsData?.find((i: any) => 
+                                        i.name === "Net Income (Loss)" || i.name === "Net Income" || i.name.includes("Net Income")
+                                      )?.[businessData.departments?.[0]] || 0,
+                                  color: "#22c55e" // green
+                                }
+                              ]}
+                              margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis dataKey="name" />
+                              <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`} />
+                              <RechartsTooltip formatter={(value) => formatCurrency(value as number)} />
+                              <Legend />
+                              <Bar dataKey="value" name="Amount">
+                                {[0, 1, 2].map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={index === 0 ? "#3b82f6" : index === 1 ? "#ef4444" : "#22c55e"} />
+                                ))}
+                              </Bar>
+                            </RechartsBarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <p className="text-muted-foreground">No data available for selected type</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Detailed Financial Data */}
+                    <Card className="mb-6">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-medium flex items-center">
+                          {activeTab === "employee" ? (
+                            <><Users className="w-5 h-5 mr-2" /> Employee Breakdown</>
+                          ) : (
+                            <><Building2 className="w-5 h-5 mr-2" /> Department Breakdown</>
+                          )}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-96">
+                        {activeTab === "employee" ? (
+                          employeeData.employees && employeeData.employees.length > 0 ? (
+                            <div className="h-full overflow-auto">
+                              <table className="w-full border-collapse">
+                                <thead className="bg-muted/50 sticky top-0">
+                                  <tr>
+                                    <th className="text-left p-2 border-b">Employee</th>
+                                    <th className="text-right p-2 border-b">Revenue</th>
+                                    <th className="text-right p-2 border-b">Expenses</th>
+                                    <th className="text-right p-2 border-b">Net Income</th>
+                                    <th className="text-right p-2 border-b">Payroll Expense</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {employeeData.employees.map((emp: string, idx: number) => {
+                                    const revenue = employeeData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Revenue" || i.name === "Collections"
+                                    )?.[emp] || 0;
+                                    
+                                    const expenses = employeeData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Operating Expenses" || i.name === "Total Expenses"
+                                    )?.[emp] || 0;
+                                    
+                                    const netIncome = employeeData.lineItemsData?.find((i: any) => 
+                                      i.name === "Net Income (Loss)" || i.name === "Net Income"
+                                    )?.[emp] || 0;
+                                    
+                                    const payroll = employeeData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Payroll and Related Expense" || 
+                                      i.name === "Payroll Expense" || 
+                                      i.name.includes("Payroll")
+                                    )?.[emp] || 0;
+                                    
+                                    return (
+                                      <tr key={`emp-${idx}`} className="hover:bg-muted/30">
+                                        <td className="p-2 border-b">{emp}</td>
+                                        <td className="text-right p-2 border-b text-blue-600">{formatCurrency(revenue)}</td>
+                                        <td className="text-right p-2 border-b text-red-600">{formatCurrency(expenses)}</td>
+                                        <td className={`text-right p-2 border-b ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                          {formatCurrency(netIncome)}
+                                        </td>
+                                        <td className="text-right p-2 border-b">{formatCurrency(payroll)}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <p className="text-muted-foreground">No employee data available</p>
+                            </div>
+                          )
+                        ) : (
+                          businessData.departments && businessData.departments.length > 0 ? (
+                            <div className="h-full overflow-auto">
+                              <table className="w-full border-collapse">
+                                <thead className="bg-muted/50 sticky top-0">
+                                  <tr>
+                                    <th className="text-left p-2 border-b">Department</th>
+                                    <th className="text-right p-2 border-b">Revenue</th>
+                                    <th className="text-right p-2 border-b">Expenses</th>
+                                    <th className="text-right p-2 border-b">Net Income</th>
+                                    <th className="text-right p-2 border-b">Payroll Expense</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {businessData.departments.map((dept: string, idx: number) => {
+                                    const revenue = businessData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Revenue" || i.name === "Total Income"
+                                    )?.[dept] || 0;
+                                    
+                                    const expenses = businessData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Operating Expenses" || i.name === "Total Expenses"
+                                    )?.[dept] || 0;
+                                    
+                                    const netIncome = businessData.lineItemsData?.find((i: any) => 
+                                      i.name === "Net Income (Loss)" || i.name === "Net Income"
+                                    )?.[dept] || 0;
+                                    
+                                    const payroll = businessData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Payroll and Related Expense" || 
+                                      i.name === "Payroll Expense" || 
+                                      i.name.includes("Payroll")
+                                    )?.[dept] || 0;
+                                    
+                                    return (
+                                      <tr key={`dept-${idx}`} className="hover:bg-muted/30">
+                                        <td className="p-2 border-b">{dept}</td>
+                                        <td className="text-right p-2 border-b text-blue-600">{formatCurrency(revenue)}</td>
+                                        <td className="text-right p-2 border-b text-red-600">{formatCurrency(expenses)}</td>
+                                        <td className={`text-right p-2 border-b ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                          {formatCurrency(netIncome)}
+                                        </td>
+                                        <td className="text-right p-2 border-b">{formatCurrency(payroll)}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <p className="text-muted-foreground">No department data available</p>
+                            </div>
+                          )
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <Card className="bg-blue-50 border-blue-200">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-blue-700">Total Revenue</CardTitle>
@@ -492,13 +693,12 @@ export default function DataAnalysis() {
                             <DollarSign className="h-4 w-4 text-blue-600 mr-1" />
                             <span className="text-2xl font-bold text-blue-800">
                               {formatCurrency(
-                                employeeData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[employeeData.employees?.[0]] || 0
+                                activeTab === "employee" 
+                                  ? employeeData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[employeeData.employees?.[0]] || 0
+                                  : businessData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[businessData.departments?.[0]] || 0
                               )}
                             </span>
                           </div>
-                          <p className="text-xs mt-1 flex items-center text-blue-600">
-                            <TrendingUp className="w-3 h-3 mr-1" /> From Employee Data
-                          </p>
                         </CardContent>
                       </Card>
                       
@@ -511,13 +711,12 @@ export default function DataAnalysis() {
                             <DollarSign className="h-4 w-4 text-red-600 mr-1" />
                             <span className="text-2xl font-bold text-red-800">
                               {formatCurrency(
-                                businessData.lineItemsData?.find((i: any) => i.name === "Total Operating Expenses")?.[businessData.departments?.[0]] || 0
+                                activeTab === "employee"
+                                  ? employeeData.lineItemsData?.find((i: any) => i.name === "Total Operating Expenses")?.[employeeData.employees?.[0]] || 0
+                                  : businessData.lineItemsData?.find((i: any) => i.name === "Total Operating Expenses")?.[businessData.departments?.[0]] || 0
                               )}
                             </span>
                           </div>
-                          <p className="text-xs mt-1 flex items-center text-red-600">
-                            <TrendingDown className="w-3 h-3 mr-1" /> Business Operations
-                          </p>
                         </CardContent>
                       </Card>
                       
@@ -530,191 +729,40 @@ export default function DataAnalysis() {
                             <DollarSign className="h-4 w-4 text-green-600 mr-1" />
                             <span className="text-2xl font-bold text-green-800">
                               {formatCurrency(
-                                employeeData.lineItemsData?.find((i: any) => i.name === "Net Income (Loss)")?.[employeeData.employees?.[0]] || 0
+                                activeTab === "employee"
+                                  ? employeeData.lineItemsData?.find((i: any) => i.name === "Net Income (Loss)")?.[employeeData.employees?.[0]] || 0
+                                  : businessData.lineItemsData?.find((i: any) => i.name === "Net Income (Loss)")?.[businessData.departments?.[0]] || 0
                               )}
                             </span>
                           </div>
-                          {(employeeData.lineItemsData?.find((i: any) => i.name === "Net Income (Loss)")?.[employeeData.employees?.[0]] || 0) >= 0 ? (
-                            <p className="text-xs mt-1 flex items-center text-green-600">
-                              <ArrowUp className="w-3 h-3 mr-1" /> Positive Earnings
-                            </p>
-                          ) : (
-                            <p className="text-xs mt-1 flex items-center text-red-600">
-                              <ArrowDown className="w-3 h-3 mr-1" /> Loss Reported
-                            </p>
-                          )}
                         </CardContent>
                       </Card>
                       
                       <Card className="bg-purple-50 border-purple-200">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-purple-700">Departments</CardTitle>
+                          <CardTitle className="text-sm font-medium text-purple-700">Total Payroll</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="flex items-center">
-                            <Building2 className="h-4 w-4 text-purple-600 mr-1" />
+                            <DollarSign className="h-4 w-4 text-purple-600 mr-1" />
                             <span className="text-2xl font-bold text-purple-800">
-                              {businessData.departments?.length || 0}
+                              {formatCurrency(
+                                activeTab === "employee"
+                                  ? employeeData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Payroll and Related Expense" ||
+                                      i.name === "Payroll Expense" || 
+                                      i.name.includes("Payroll")
+                                    )?.[employeeData.employees?.[0]] || 0
+                                  : businessData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Payroll and Related Expense" || 
+                                      i.name === "Payroll Expense" || 
+                                      i.name.includes("Payroll")
+                                    )?.[businessData.departments?.[0]] || 0
+                              )}
                             </span>
                           </div>
-                          <p className="text-xs mt-1 flex items-center text-purple-600">
-                            <Users className="w-3 h-3 mr-1" /> Active Business Units
-                          </p>
                         </CardContent>
                       </Card>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      {/* Revenue Chart */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-sm flex items-center">
-                            <BarChart className="w-4 h-4 mr-2" />
-                            Revenue by Department
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="h-64">
-                          {businessData.departments && businessData.departments.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <RechartsBarChart
-                                data={businessData.departments.map((dept: string) => ({
-                                  name: dept,
-                                  revenue: businessData.lineItemsData?.find((i: any) => 
-                                    i.name === "Total Revenue" || i.name === "Total Income" || i.name.includes("Revenue")
-                                  )?.[dept] || 0
-                                }))}
-                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
-                                <RechartsTooltip formatter={(value) => formatCurrency(value as number)} />
-                                <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
-                              </RechartsBarChart>
-                            </ResponsiveContainer>
-                          ) : (
-                            <div className="flex items-center justify-center h-full">
-                              <p className="text-muted-foreground">No department data available</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                      
-                      {/* Employee Chart */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-sm flex items-center">
-                            <PieChart className="w-4 h-4 mr-2" />
-                            Employee Revenue Distribution
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="h-64">
-                          {employeeData.employees && employeeData.employees.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <RechartsPieChart>
-                                <Pie
-                                  data={employeeData.employees.map((emp: string) => ({
-                                    name: emp,
-                                    value: employeeData.lineItemsData?.find((i: any) => 
-                                      i.name === "Total Revenue" || i.name === "Collections" || i.name.includes("Revenue")
-                                    )?.[emp] || 0
-                                  }))}
-                                  dataKey="value"
-                                  nameKey="name"
-                                  cx="50%"
-                                  cy="50%"
-                                  outerRadius={80}
-                                  fill="#8884d8"
-                                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                >
-                                  {employeeData.employees.map((entry: any, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={`hsl(${index * 30}, 70%, 50%)`} />
-                                  ))}
-                                </Pie>
-                                <RechartsTooltip formatter={(value) => formatCurrency(value as number)} />
-                              </RechartsPieChart>
-                            </ResponsiveContainer>
-                          ) : (
-                            <div className="flex items-center justify-center h-full">
-                              <p className="text-muted-foreground">No employee data available</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="rounded-lg border p-4">
-                        <h3 className="text-lg font-medium mb-2 flex items-center">
-                          <Users className="w-5 h-5 mr-2" />
-                          Employee Data Summary
-                        </h3>
-                        <p className="text-muted-foreground mb-4">
-                          Key financial metrics for doctors and employees
-                        </p>
-                        {employeeData.employees && employeeData.employees.length > 0 ? (
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span>Number of Employees:</span>
-                              <span className="font-medium">{employeeData.employees.length}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Total Line Items:</span>
-                              <span className="font-medium">{employeeData.lineItemsData?.length || 0}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Average Revenue:</span>
-                              <span className="font-medium">
-                                {formatCurrency(
-                                  employeeData.employees.reduce((total, emp) => 
-                                    total + (employeeData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[emp] || 0), 0
-                                  ) / (employeeData.employees.length || 1)
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center p-4 text-muted-foreground">
-                            No employee data available for this month
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="rounded-lg border p-4">
-                        <h3 className="text-lg font-medium mb-2 flex items-center">
-                          <Building2 className="w-5 h-5 mr-2" />
-                          Business Data Summary
-                        </h3>
-                        <p className="text-muted-foreground mb-4">
-                          Key financial metrics for business departments
-                        </p>
-                        {businessData.departments && businessData.departments.length > 0 ? (
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span>Number of Departments:</span>
-                              <span className="font-medium">{businessData.departments.length}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Total Line Items:</span>
-                              <span className="font-medium">{businessData.lineItemsData?.length || 0}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Best Performing Department:</span>
-                              <span className="font-medium">
-                                {businessData.departments.reduce((best, dept) => {
-                                  const revenue = businessData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[dept] || 0;
-                                  const bestRevenue = businessData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[best] || 0;
-                                  return revenue > bestRevenue ? dept : best;
-                                }, businessData.departments[0])}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center p-4 text-muted-foreground">
-                            No business data available for this month
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </>
                 )}
