@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { FiltersBar } from '@/components/analysis/filters-bar';
-import { KPICards } from '@/components/analysis/kpi-cards';
 import { MonthlyBarChart } from '@/components/analysis/monthly-bar-chart';
 import { ProfitabilityChart } from '@/components/analysis/profitability-chart';
 import { AnalysisTable } from '@/components/analysis/analysis-table';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Percent } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAnalysisStore } from '@/store/analysis-store';
 import { useStore } from '@/store/data-store';
+
+// Utility functions for formatting
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+};
+
+const formatPercent = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  }).format(value / 100);
+};
 
 function FinancialAnalysis() {
   const [activeTab, setActiveTab] = useState<'employee' | 'business'>('employee');
@@ -175,12 +194,51 @@ function FinancialAnalysis() {
           <TabsContent value="employee" className="space-y-6">
             <FiltersBar entityType="employee" />
             
-            <KPICards 
-              revenue={kpiData.revenue} 
-              expenses={kpiData.expenses} 
-              profit={kpiData.profit} 
-              margin={kpiData.margin} 
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card className="border-l-4 border-emerald-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Total Revenue</h3>
+                    <DollarSign className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(kpiData.revenue)}</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-l-4 border-amber-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Total Expenses</h3>
+                    <BarChart3 className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(kpiData.expenses)}</p>
+                </CardContent>
+              </Card>
+              
+              <Card className={`border-l-4 ${kpiData.profit >= 0 ? 'border-emerald-500' : 'border-red-500'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Net Income</h3>
+                    {kpiData.profit > 0 ? (
+                      <TrendingUp className="w-5 h-5 text-emerald-500" />
+                    ) : (
+                      <TrendingDown className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(kpiData.profit)}</p>
+                </CardContent>
+              </Card>
+              
+              <Card className={`border-l-4 ${kpiData.margin >= 0 ? 'border-blue-500' : 'border-red-500'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Profit Margin</h3>
+                    <Percent className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <p className="text-2xl font-bold">{formatPercent(kpiData.margin)}</p>
+                </CardContent>
+              </Card>
+            </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <MonthlyBarChart 
@@ -203,12 +261,51 @@ function FinancialAnalysis() {
           <TabsContent value="business" className="space-y-6">
             <FiltersBar entityType="business" />
             
-            <KPICards 
-              revenue={kpiData.revenue} 
-              expenses={kpiData.expenses} 
-              profit={kpiData.profit} 
-              margin={kpiData.margin} 
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card className="border-l-4 border-emerald-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Total Revenue</h3>
+                    <DollarSign className="w-5 h-5 text-emerald-500" />
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(kpiData.revenue)}</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-l-4 border-amber-500">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Total Expenses</h3>
+                    <BarChart3 className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(kpiData.expenses)}</p>
+                </CardContent>
+              </Card>
+              
+              <Card className={`border-l-4 ${kpiData.profit >= 0 ? 'border-emerald-500' : 'border-red-500'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Net Income</h3>
+                    {kpiData.profit > 0 ? (
+                      <TrendingUp className="w-5 h-5 text-emerald-500" />
+                    ) : (
+                      <TrendingDown className="w-5 h-5 text-red-500" />
+                    )}
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(kpiData.profit)}</p>
+                </CardContent>
+              </Card>
+              
+              <Card className={`border-l-4 ${kpiData.margin >= 0 ? 'border-blue-500' : 'border-red-500'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-neutral-dark">Profit Margin</h3>
+                    <Percent className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <p className="text-2xl font-bold">{formatPercent(kpiData.margin)}</p>
+                </CardContent>
+              </Card>
+            </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <MonthlyBarChart 
