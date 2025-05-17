@@ -176,7 +176,7 @@ export default function UploadHistory() {
                             const isExpanded = expandedItem === itemKey;
                             
                             return (
-                              <React.Fragment key={index}>
+                              <tbody key={index}>
                                 <tr className="border-b">
                                   <td className="py-3 px-4">
                                     <div className="flex items-center">
@@ -265,7 +265,7 @@ export default function UploadHistory() {
                                     </td>
                                   </tr>
                                 )}
-                              </React.Fragment>
+                              </tbody>
                             );
                           })}
                         </tbody>
@@ -302,7 +302,7 @@ export default function UploadHistory() {
                               const fileData = getFileData(item.type as CSVType, item.month);
                               
                               return (
-                                <React.Fragment key={index}>
+                                <tbody key={index}>
                                   <tr className="border-b">
                                     <td className="py-3 px-4">
                                       <Badge variant={item.type.includes('e') ? 'default' : 'outline'}>
