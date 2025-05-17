@@ -15,8 +15,13 @@ export default function DoctorPerformance() {
   
   // Get available months with 'e' data
   const availableMonths = useMemo(() => {
-    const months = Object.keys(monthlyData || {})
-      .filter(month => monthlyData[month]?.e?.lineItems?.length > 0)
+    if (!monthlyData) return [];
+    
+    const months = Object.keys(monthlyData)
+      .filter(month => {
+        const eData = monthlyData[month]?.e;
+        return eData && eData.lineItems && eData.lineItems.length > 0;
+      })
       .sort();
     
     return months;

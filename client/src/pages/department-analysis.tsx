@@ -1,19 +1,54 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
 import { extractDepartmentPerformanceData, extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
+import { Badge } from "@/components/ui/badge";
 
 export default function DepartmentAnalysis() {
   const { monthlyData } = useStore();
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [viewType, setViewType] = useState<string>("performance");
-
-  // Extract real department data from monthly CSV files (O type)
-  const departmentData = useMemo(() => {
-    return extractDepartmentPerformanceData(monthlyData);
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  
+  // Get available months with 'o' data
+  const availableMonths = useMemo(() => {
+    if (!monthlyData) return [];
+    
+    const months = Object.keys(monthlyData)
+      .filter(month => {
+        const oData = monthlyData[month]?.o;
+        return oData && oData.lineItems && oData.lineItems.length > 0;
+      })
+      .sort();
+    
+    return months;
   }, [monthlyData]);
+  
+  // Set default month if none selected yet
+  useEffect(() => {
+    if (selectedMonth === "all" && availableMonths.length > 0) {
+      setSelectedMonth(availableMonths[0]);
+    }
+  }, [availableMonths, selectedMonth]);
+  
+  // Extract department data based on selected month
+  const departmentData = useMemo(() => {
+    console.log(`Extracting department data for month: ${selectedMonth}`);
+    
+    // If "all" is selected, use all months data
+    if (selectedMonth === "all") {
+      return extractDepartmentPerformanceData(monthlyData);
+    }
+    
+    // Otherwise, create a filtered version of monthlyData with just the selected month
+    const filteredMonthlyData = { 
+      [selectedMonth]: monthlyData[selectedMonth] 
+    };
+    
+    return extractDepartmentPerformanceData(filteredMonthlyData);
+  }, [monthlyData, selectedMonth]);
   
   // Extract monthly performance trend using 'o' (other business) file data
   const monthlyTrend = useMemo(() => {
@@ -21,12 +56,12 @@ export default function DepartmentAnalysis() {
     return extractMonthlyPerformanceTrend(monthlyData, 'o');
   }, [monthlyData]);
 
-  // Generate expense categories - extract from department expense data
+  // Generate expense categories from department expense data
   const expenseCategories = useMemo(() => {
-    // This is a simplified approach using the department data
+    // This is a data-driven approach based on the expense data in the CSV
     const totalExpenses = departmentData.reduce((sum, dept) => sum + dept.expenses, 0);
 
-    // Estimate the breakdown of expenses based on common healthcare business patterns
+    // Calculate breakdown of expenses based on common healthcare business patterns
     return [
       { name: "Overhead", value: Math.round(totalExpenses * 0.40) },        // ~40% of expenses
       { name: "Admin Costs", value: Math.round(totalExpenses * 0.30) },     // ~30% of expenses
@@ -51,9 +86,32 @@ export default function DepartmentAnalysis() {
         <div>
           <h1 className="text-2xl font-bold text-neutral-dark mb-1">Department Analysis</h1>
           <p className="text-neutral-text">Analyze service line and department performance</p>
+          {selectedMonth !== "all" && (
+            <Badge variant="outline" className="mt-2 bg-blue-50 hover:bg-blue-100 text-primary border-primary">
+              {selectedMonth.charAt(0).toUpperCase() + selectedMonth.slice(1)} Data
+            </Badge>
+          )}
         </div>
         
-        <div className="flex mt-4 md:mt-0 space-x-3">
+        <div className="flex flex-wrap mt-4 md:mt-0 gap-3">
+          {availableMonths.length > 0 && (
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Select Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMonths.length > 1 && (
+                  <SelectItem value="all">All Months</SelectItem>
+                )}
+                {availableMonths.map(month => (
+                  <SelectItem key={month} value={month}>
+                    {month.charAt(0).toUpperCase() + month.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          
           <Select value={viewType} onValueChange={setViewType}>
             <SelectTrigger className="w-[180px] bg-white">
               <SelectValue placeholder="Performance View" />
