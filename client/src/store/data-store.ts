@@ -331,7 +331,7 @@ export const useStore = create<DataStore>((set, get) => ({
         ) || null;
         
         // Use the enhanced monthly parser to get flat and nested structures
-        const processedData = parseMonthlyCSV(data, cleanMonth, entityColumns, summaryColumn, csvType);
+        const processedData = processMonthlyCSV(data, cleanMonth, entityColumns, summaryColumn, csvType);
         
         // Calculate total monthly values
         const entityTotals = {} as Record<string, number>;

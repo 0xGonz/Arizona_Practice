@@ -50,6 +50,7 @@ export interface ComparisonData {
   category: string;
   professional: number;
   ancillary: number;
+  color?: string;
 }
 
 // Hierarchical Line Item Structure
