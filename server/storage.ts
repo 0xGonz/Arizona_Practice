@@ -349,7 +349,7 @@ export class DatabaseStorage implements IStorage {
   
   async storeDepartmentData(departmentData: any[], month: string, uploadId: number): Promise<boolean> {
     try {
-      console.log(`Storing ${departmentData.length} department records for ${month}, uploadId ${uploadId}`);
+      console.log(`Storing department data for ${month}, uploadId ${uploadId}`);
       
       // First clear existing data for this month/uploadId
       await db.delete(departmentPerformance)
@@ -360,20 +360,15 @@ export class DatabaseStorage implements IStorage {
       
       // Insert new data
       for (const dept of departmentData) {
-        const profitMargin = dept.revenue > 0 ? ((dept.netIncome || 0) / dept.revenue) * 100 : 0;
-        
         await db.insert(departmentPerformance).values({
           name: dept.name,
           month: month,
-          year: new Date().getFullYear(),
-          revenue: dept.revenue || 0,
-          expenses: dept.expenses || 0,
-          netIncome: dept.netIncome || 0,
-          profitMargin: profitMargin.toFixed(2),
+          revenue: dept.revenue,
+          expenses: dept.expenses,
+          netIncome: dept.net,
           uploadId: uploadId,
           createdAt: new Date()
         });
-        console.log(`Inserted department: ${dept.name} for ${month}`);
       }
       
       return true;
@@ -385,7 +380,7 @@ export class DatabaseStorage implements IStorage {
   
   async storeDoctorData(doctorData: any[], month: string, uploadId: number): Promise<boolean> {
     try {
-      console.log(`Storing ${doctorData.length} doctor records for ${month}, uploadId ${uploadId}`);
+      console.log(`Storing doctor data for ${month}, uploadId ${uploadId}`);
       
       // First clear existing data for this month/uploadId
       await db.delete(doctorPerformance)
@@ -396,22 +391,15 @@ export class DatabaseStorage implements IStorage {
       
       // Insert new data
       for (const doctor of doctorData) {
-        const percentage = doctor.revenue > 0 ? ((doctor.netIncome || 0) / doctor.revenue) * 100 : 0;
-        
-        const doctorRecord = {
+        await db.insert(doctorPerformance).values({
           name: doctor.name,
           month: month,
-          year: new Date().getFullYear(),
-          revenue: doctor.revenue || 0,
-          expenses: doctor.expenses || 0,
-          netIncome: doctor.netIncome || 0,
-          percentageOfTotal: percentage.toFixed(2),
+          revenue: doctor.revenue,
+          expenses: doctor.expenses,
+          netIncome: doctor.net,
           uploadId: uploadId,
           createdAt: new Date()
-        };
-        
-        await db.insert(doctorPerformance).values(doctorRecord);
-        console.log(`Inserted doctor: ${doctor.name} for ${month}`);
+        });
       }
       
       return true;
@@ -443,14 +431,14 @@ export class DatabaseStorage implements IStorage {
       // Insert new data
       await db.insert(monthlyFinancialData).values({
         month: month,
-        year: new Date().getFullYear(),
-        total_revenue: totalRevenue.toString(),
-        total_expenses: totalExpenses.toString(),
-        net_income: netIncome.toString(),
-        revenue_mix: revenueMix,
-        margin_trend: marginTrend,
-        upload_id: uploadId,
-        created_at: new Date()
+        year: 2024, // Set the correct year for the data
+        totalRevenue: totalRevenue,
+        totalExpenses: totalExpenses,
+        netIncome: netIncome,
+        revenueMix: JSON.stringify(revenueMix),
+        marginTrend: JSON.stringify(marginTrend),
+        uploadId: uploadId,
+        createdAt: new Date()
       });
       
       return true;

@@ -7,28 +7,13 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-type RequestOpts = {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  data?: any;
-  params?: Record<string, any>;
-};
-
 export async function apiRequest(
+  method: string,
   url: string,
-  opts: RequestOpts = {},
+  data?: unknown | undefined,
 ): Promise<any> {
   try {
-    const { method = 'GET', data, params } = opts;
-    
-    // Attach query parameters when provided
-    const urlObj = new URL(url, window.location.origin);
-    if (params) {
-      Object.entries(params).forEach(([k, v]) => 
-        urlObj.searchParams.set(k, String(v))
-      );
-    }
-
-    const res = await fetch(urlObj.toString(), {
+    const res = await fetch(url, {
       method,
       headers: data ? { "Content-Type": "application/json" } : {},
       body: data ? JSON.stringify(data) : undefined,
@@ -42,15 +27,6 @@ export async function apiRequest(
     throw error;
   }
 }
-
-// API utility helpers
-export const api = {
-  get: (url: string, opts = {}) => apiRequest(url, { ...opts, method: 'GET' }),
-  post: (url: string, data: any) => apiRequest(url, { method: 'POST', data }),
-  put: (url: string, data: any) => apiRequest(url, { method: 'PUT', data }),
-  patch: (url: string, data: any) => apiRequest(url, { method: 'PATCH', data }),
-  delete: (url: string) => apiRequest(url, { method: 'DELETE' }),
-};
 
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
