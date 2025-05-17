@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
-import { extractDepartmentPerformanceData, extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
+import { extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
+import { extractDepartmentPerformanceData } from "@/lib/department-utils";
 import { Badge } from "@/components/ui/badge";
 
 export default function DepartmentAnalysis() {
