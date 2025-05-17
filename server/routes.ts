@@ -126,28 +126,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/departments/:month", async (req, res) => {
     try {
       const { month } = req.params;
+      console.log(`API request for department data - month: ${month}`);
       
-      // Get department data from the database
+      // First try to get data from the database
       const departments = await db.select().from(departmentPerformance)
         .where(eq(departmentPerformance.month, month))
         .orderBy(desc(departmentPerformance.revenue));
       
-      if (!departments || departments.length === 0) {
-        // If no data in database, extract from CSV files
-        const upload = await storage.getMostRecentUploadByType('monthly-o', month);
-        
-        if (!upload) {
-          return res.status(404).json({ 
-            message: `No monthly CSV data found for ${month}`,
-            departments: [] 
-          });
-        }
-        
-        // Parse CSV content if available
-        if (upload.content) {
+      console.log(`Database query for ${month} returned ${departments.length} departments`);
+      
+      if (departments && departments.length > 0) {
+        // We found data in the database, return it
+        console.log(`Returning ${departments.length} departments from database for ${month}`);
+        return res.status(200).json({ 
+          source: 'database',
+          departments 
+        });
+      }
+      
+      // If no data in database, extract from CSV files
+      console.log(`No department data in database for ${month}, checking CSV files...`);
+      const upload = await storage.getMostRecentUploadByType('monthly-o', month);
+      
+      if (!upload) {
+        console.log(`No monthly O-type CSV found for ${month}`);
+        return res.status(404).json({ 
+          message: `No monthly CSV data found for ${month}`,
+          departments: [] 
+        });
+      }
+      
+      console.log(`Found CSV upload (ID: ${upload.id}) for ${month}, parsing content...`);
+      
+      // Parse CSV content if available
+      if (upload.content) {
+        try {
           // We'll use the same extraction logic as in client code
           const Papa = require('papaparse');
-          const parseResult = Papa.parse(upload.content, { header: true, skipEmptyLines: true });
+          const parseResult = Papa.parse(upload.content, { 
+            header: true, 
+            skipEmptyLines: true,
+            transformHeader: (header) => header.trim()
+          });
+          
+          console.log(`CSV parsed with ${parseResult.data.length} rows`);
+          
+          if (parseResult.errors && parseResult.errors.length > 0) {
+            console.warn('CSV parse warnings:', parseResult.errors);
+          }
           
           // Import the department extraction function from the client library
           const { extractDepartmentPerformanceData } = require('../client/src/lib/department-utils-new');
@@ -157,39 +183,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
             [month]: {
               o: {
                 lineItems: parseResult.data,
-                entityColumns: Object.keys(parseResult.data[0] || {}).filter(key => key !== 'Line Item')
+                entityColumns: Object.keys(parseResult.data[0] || {})
+                  .filter(key => key !== 'Line Item' && key.trim() !== '')
               }
             }
           };
           
+          console.log(`Processing department data with entity columns:`, 
+            mockMonthlyData[month].o.entityColumns);
+          
           // Extract department data
           const departmentData = extractDepartmentPerformanceData(mockMonthlyData);
+          console.log(`Extracted ${departmentData.length} departments from CSV data`);
           
           // Store the data for future use
           if (departmentData.length > 0) {
-            await storage.storeDepartmentData(departmentData, month, upload.id);
+            console.log(`Storing ${departmentData.length} departments in database...`);
+            const success = await storage.storeDepartmentData(departmentData, month, upload.id);
+            console.log(`Database storage ${success ? 'successful' : 'failed'}`);
+            
+            // Double-check data was stored correctly
+            const storedDepts = await db.select().from(departmentPerformance)
+              .where(eq(departmentPerformance.month, month));
+            console.log(`Verified ${storedDepts.length} departments in database after storage`);
           }
           
           return res.status(200).json({ 
             source: 'csv',
             departments: departmentData
           });
+        } catch (parseError) {
+          console.error(`Error processing CSV for ${month}:`, parseError);
+          return res.status(500).json({ 
+            message: `Error processing CSV data for ${month}`,
+            error: parseError.message,
+            departments: [] 
+          });
         }
-        
-        return res.status(404).json({ 
-          message: `No department data found for ${month}`,
-          departments: [] 
-        });
       }
       
-      // Return department data from database
-      return res.status(200).json({ 
-        source: 'database',
-        departments 
+      return res.status(404).json({ 
+        message: `No department data found for ${month}`,
+        departments: [] 
       });
     } catch (error) {
       console.error(`Error fetching department data for ${req.params.month}:`, error);
-      res.status(500).json({ message: "Error retrieving department data", error: error.message });
+      res.status(500).json({ 
+        message: "Error retrieving department data", 
+        error: String(error),
+        departments: []
+      });
     }
   });
   

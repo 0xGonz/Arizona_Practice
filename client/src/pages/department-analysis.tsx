@@ -33,20 +33,31 @@ export default function DepartmentAnalysis() {
   }, [availableMonths, selectedMonth]);
   
   // Fetch department data from the API
-  const { data: departmentApiData, isLoading } = useQuery({
+  const { data: departmentApiData, isLoading, error } = useQuery({
     queryKey: ['departments', selectedMonth !== 'all' ? selectedMonth : null],
     queryFn: async () => {
       if (selectedMonth === 'all' || !selectedMonth) return { departments: [] };
       
       try {
+        console.log(`Fetching department data for ${selectedMonth}...`);
         const response = await fetch(`/api/departments/${selectedMonth}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch department data');
+        
+        if (response.status === 404) {
+          console.log(`No department data found for ${selectedMonth}`);
+          return { departments: [], source: 'none' };
         }
-        return await response.json();
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch department data: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Received department data from ${data.source || 'unknown source'}:`, 
+          data.departments ? `${data.departments.length} departments` : 'No departments');
+        return data;
       } catch (error) {
         console.error('Error fetching department data:', error);
-        return { departments: [] };
+        return { departments: [], error: String(error) };
       }
     },
     enabled: selectedMonth !== 'all' && selectedMonth !== '',
