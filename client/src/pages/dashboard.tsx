@@ -318,55 +318,42 @@ export default function Dashboard() {
                   stroke="#ef4444" 
                   strokeWidth={2}
                 />
-                {/* Using Area instead of Line for Net Income to fill in colors based on positive/negative values */}
-                <defs>
-                  <linearGradient id="colorNetIncomePositive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.2} />
-                  </linearGradient>
-                  <linearGradient id="colorNetIncomeNegative" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.2} />
-                  </linearGradient>
-                </defs>
+                {/* Split the net income into positive and negative areas */}
+                
+                {/* Horizontal zero line */}
+                <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
+                
+                {/* Positive net income area (above zero line) - green */}
+                <Area 
+                  type="monotone" 
+                  dataKey={(entry) => entry.netIncome > 0 ? entry.netIncome : 0}
+                  stroke="none"
+                  fill="#10b981"
+                  fillOpacity={0.4}
+                  name=""
+                  legendType="none"
+                />
+                
+                {/* Negative net income area (below zero line) - red */}
+                <Area 
+                  type="monotone" 
+                  dataKey={(entry) => entry.netIncome < 0 ? entry.netIncome : 0}
+                  stroke="none"
+                  fill="#ef4444"
+                  fillOpacity={0.4}
+                  name=""
+                  legendType="none"
+                />
+                
+                {/* Net Income line */}
                 <Line 
                   type="monotone" 
-                  dataKey="netIncome" 
+                  dataKey="netIncome"
                   name="Net Income"
                   stroke="#10b981"
                   strokeWidth={2}
-                />
-                {/* Zero reference line */}
-                <Line 
-                  dataKey={() => 0}
-                  stroke="#666"
-                  strokeDasharray="3 3"
-                  dot={false}
-                  activeDot={false}
-                  legendType="none"
-                />
-                {/* Area for filling above/below zero */}
-                {/* Positive values area (green) */}
-                <Area 
-                  type="monotone" 
-                  dataKey={(data) => data.netIncome > 0 ? data.netIncome : 0}
-                  stroke="none"
-                  fillOpacity={0.6}
-                  fill="url(#colorNetIncomePositive)"
-                  activeDot={false}
-                  legendType="none"
-                  baseValue={0}
-                />
-                {/* Negative values area (red) */}
-                <Area 
-                  type="monotone" 
-                  dataKey={(data) => data.netIncome < 0 ? data.netIncome : 0}
-                  stroke="none"
-                  fillOpacity={0.6}
-                  fill="url(#colorNetIncomeNegative)"
-                  activeDot={false}
-                  legendType="none"
-                  baseValue={0}
+                  dot={{ fill: "#10b981" }}
+                  activeDot={{ r: 8 }}
                 />
               </LineChart>
             </ResponsiveContainer>
