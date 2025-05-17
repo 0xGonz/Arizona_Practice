@@ -113,6 +113,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Monthly} />
         <Route path="/monthly" component={Monthly} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/doctor-performance" component={DoctorPerformance} />
         <Route path="/department-analysis" component={DepartmentAnalysis} />
         <Route path="/upload" component={Upload} />

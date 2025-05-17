@@ -1,15 +1,237 @@
-import { useEffect } from "react";
-import { useLocation } from "wouter";
+import React, { useMemo } from "react";
+import { useStore } from "@/store/data-store";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  TooltipProps
+} from "recharts";
+import { ArrowUpIcon, ArrowDownIcon, DollarSignIcon } from "lucide-react";
 
-// Redirect from dashboard page to monthly page
+// Format large numbers with commas and dollar sign
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+};
+
 export default function Dashboard() {
-  const [location, setLocation] = useLocation();
-  
-  useEffect(() => {
-    // Redirect to monthly page on component mount
-    setLocation("/monthly");
-  }, [setLocation]);
-  
-  // Return empty div, it will never be shown since we redirect immediately
-  return <div></div>;
+  const { monthlyData } = useStore();
+
+  // Aggregate monthly data across all months and both data types (employee and business)
+  const aggregatedData = useMemo(() => {
+    // Initialize counters
+    let totalRevenue = 0;
+    let totalExpenses = 0;
+    let netIncome = 0;
+    const monthlyTrends: any[] = [];
+    
+    // Sort months chronologically
+    const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+      const monthOrder = {
+        'january': 1, 'february': 2, 'march': 3, 'april': 4,
+        'may': 5, 'june': 6, 'july': 7, 'august': 8,
+        'september': 9, 'october': 10, 'november': 11, 'december': 12
+      };
+      return (monthOrder[a.toLowerCase()] || 0) - (monthOrder[b.toLowerCase()] || 0);
+    });
+
+    // Process each month's data
+    sortedMonths.forEach(month => {
+      const monthData = monthlyData[month];
+      let monthRevenue = 0;
+      let monthExpenses = 0;
+      
+      // Process employee (E) data if available
+      if (monthData?.e?.lineItems) {
+        const eRevenue = monthData.e.lineItems.find(item => 
+          item.name === "Total Revenue" || item.name === "Revenue"
+        )?.summaryValue || 0;
+        
+        const eExpenses = monthData.e.lineItems.find(item => 
+          item.name === "Total Operating Expenses" || item.name === "Operating Expense"
+        )?.summaryValue || 0;
+        
+        monthRevenue += eRevenue;
+        monthExpenses += eExpenses;
+      }
+      
+      // Process business (O) data if available
+      if (monthData?.o?.lineItems) {
+        const oRevenue = monthData.o.lineItems.find(item => 
+          item.name === "Total Revenue" || item.name === "Revenue"
+        )?.summaryValue || 0;
+        
+        const oExpenses = monthData.o.lineItems.find(item => 
+          item.name === "Total Operating Expenses" || item.name === "Operating Expense"
+        )?.summaryValue || 0;
+        
+        monthRevenue += oRevenue;
+        monthExpenses += eExpenses;
+      }
+      
+      // Calculate month's net income
+      const monthNetIncome = monthRevenue - monthExpenses;
+      
+      // Add to totals
+      totalRevenue += monthRevenue;
+      totalExpenses += monthExpenses;
+      
+      // Add month to trends data for chart
+      monthlyTrends.push({
+        month: month.charAt(0).toUpperCase() + month.slice(1, 3),
+        revenue: monthRevenue,
+        expenses: monthExpenses,
+        netIncome: monthNetIncome
+      });
+    });
+    
+    // Calculate overall net income
+    netIncome = totalRevenue - totalExpenses;
+    
+    return {
+      totalRevenue,
+      totalExpenses,
+      netIncome,
+      monthlyTrends
+    };
+  }, [monthlyData]);
+
+  // Format the tooltip for the line chart
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded shadow-md">
+          <p className="font-bold">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {formatCurrency(entry.value as number)}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-8">Financial Dashboard</h1>
+      
+      {/* KPI Cards */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-3 mb-8">
+        {/* Revenue Card */}
+        <Card className="bg-gradient-to-br from-blue-50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-blue-800 flex items-center text-lg">
+              <DollarSignIcon className="w-5 h-5 mr-2 text-blue-600" />
+              Total Revenue
+            </CardTitle>
+            <CardDescription>All months, combined businesses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-800">
+              {formatCurrency(aggregatedData.totalRevenue)}
+            </div>
+            <div className="mt-2 text-sm text-blue-600">
+              <ArrowUpIcon className="inline h-4 w-4 mr-1" />
+              From all employee and business sources
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Expenses Card */}
+        <Card className="bg-gradient-to-br from-red-50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-red-800 flex items-center text-lg">
+              <DollarSignIcon className="w-5 h-5 mr-2 text-red-600" />
+              Total Expenses
+            </CardTitle>
+            <CardDescription>All months, combined businesses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-red-800">
+              {formatCurrency(aggregatedData.totalExpenses)}
+            </div>
+            <div className="mt-2 text-sm text-red-600">
+              <ArrowUpIcon className="inline h-4 w-4 mr-1" />
+              Combined operating expenses
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Net Income Card */}
+        <Card className={`bg-gradient-to-br ${aggregatedData.netIncome >= 0 ? 'from-green-50 to-white' : 'from-amber-50 to-white'}`}>
+          <CardHeader className="pb-2">
+            <CardTitle className={`${aggregatedData.netIncome >= 0 ? 'text-green-800' : 'text-amber-800'} flex items-center text-lg`}>
+              <DollarSignIcon className={`w-5 h-5 mr-2 ${aggregatedData.netIncome >= 0 ? 'text-green-600' : 'text-amber-600'}`} />
+              Net Income
+            </CardTitle>
+            <CardDescription>Total profit/loss</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${aggregatedData.netIncome >= 0 ? 'text-green-800' : 'text-amber-800'}`}>
+              {formatCurrency(aggregatedData.netIncome)}
+            </div>
+            <div className={`mt-2 text-sm ${aggregatedData.netIncome >= 0 ? 'text-green-600' : 'text-amber-600'}`}>
+              {aggregatedData.netIncome >= 0 ? (
+                <ArrowUpIcon className="inline h-4 w-4 mr-1" />
+              ) : (
+                <ArrowDownIcon className="inline h-4 w-4 mr-1" />
+              )}
+              {aggregatedData.netIncome >= 0 ? 'Total profit' : 'Total loss'}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Monthly Trend Chart */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Monthly Financial Trends</CardTitle>
+          <CardDescription>Revenue, expenses, and net income by month</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={aggregatedData.monthlyTrends}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  name="Revenue"
+                  stroke="#3b82f6" 
+                  activeDot={{ r: 8 }} 
+                  strokeWidth={2}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="expenses" 
+                  name="Expenses"
+                  stroke="#ef4444" 
+                  strokeWidth={2}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="netIncome" 
+                  name="Net Income"
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
