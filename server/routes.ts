@@ -36,8 +36,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileContent = req.file.buffer.toString();
       const filename = req.file.originalname;
       
+      console.log(`Processing annual CSV upload: ${filename} (${fileContent.length} bytes)`);
+      
+      // Verify database connection
+      try {
+        const tables = await db.query.sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
+        console.log(`Database connection successful. Found ${tables.length} tables.`);
+      } catch (dbError) {
+        console.error('Database connection error:', dbError);
+      }
+      
       // Store the file in the database
       const uploadId = await storage.storeCSVFile('annual', fileContent, filename);
+      console.log(`Annual CSV stored with ID: ${uploadId}`);
+      
+      // Process the CSV data for immediate use
+      try {
+        const Papa = require('papaparse');
+        const parseResult = Papa.parse(fileContent, { 
+          header: true, 
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim()
+        });
+        
+        console.log(`Parsed annual CSV with ${parseResult.data.length} rows`);
+      } catch (parseError) {
+        console.error('Error processing annual CSV:', parseError);
+        // Continue even if processing fails
+      }
       
       res.status(200).json({ 
         message: "Annual CSV file uploaded successfully",
@@ -76,13 +102,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileContent = req.file.buffer.toString();
       const filename = req.file.originalname;
       
+      console.log(`Processing monthly ${type}-type CSV upload for ${month}: ${filename} (${fileContent.length} bytes)`);
+      
       // Store the file in the database
-      const uploadId = await storage.storeCSVFile(
-        type === 'e' ? 'monthly-e' : 'monthly-o', 
-        fileContent, 
-        filename, 
-        month
-      );
+      const csvType = type === 'e' ? 'monthly-e' : 'monthly-o';
+      const uploadId = await storage.storeCSVFile(csvType, fileContent, filename, month);
+      console.log(`Monthly ${type}-type CSV stored with ID: ${uploadId}`);
+      
+      // Process the CSV data right away
+      try {
+        const Papa = require('papaparse');
+        const parseResult = Papa.parse(fileContent, { 
+          header: true, 
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim()
+        });
+        
+        console.log(`Parsed ${month} ${type}-type CSV with ${parseResult.data.length} rows`);
+        
+        if (csvType === 'monthly-o') {
+          // Process department data for O-type files
+          try {
+            const { extractDepartmentPerformanceData } = require('../client/src/lib/department-utils-new');
+            
+            const mockMonthlyData = {
+              [month]: {
+                o: {
+                  lineItems: parseResult.data,
+                  entityColumns: Object.keys(parseResult.data[0] || {})
+                    .filter(key => key !== 'Line Item' && key.trim() !== '')
+                }
+              }
+            };
+            
+            const departmentData = extractDepartmentPerformanceData(mockMonthlyData);
+            console.log(`Extracted ${departmentData.length} departments from ${month} data`);
+            
+            if (departmentData.length > 0) {
+              const success = await storage.storeDepartmentData(departmentData, month, uploadId);
+              console.log(`Department data storage ${success ? 'successful' : 'failed'}`);
+            }
+          } catch (deptError) {
+            console.error(`Error processing department data for ${month}:`, deptError);
+          }
+        } else if (csvType === 'monthly-e') {
+          // Process doctor data for E-type files
+          try {
+            const { extractDoctorPerformanceData } = require('../client/src/lib/performance-utils');
+            
+            const mockMonthlyData = {
+              [month]: {
+                e: {
+                  lineItems: parseResult.data,
+                  entityColumns: Object.keys(parseResult.data[0] || {})
+                    .filter(key => key !== 'Line Item' && key.trim() !== '')
+                }
+              }
+            };
+            
+            const doctorData = extractDoctorPerformanceData(mockMonthlyData);
+            console.log(`Extracted ${doctorData.length} doctors from ${month} data`);
+            
+            if (doctorData.length > 0) {
+              const success = await storage.storeDoctorData(doctorData, month, uploadId);
+              console.log(`Doctor data storage ${success ? 'successful' : 'failed'}`);
+            }
+          } catch (doctorError) {
+            console.error(`Error processing doctor data for ${month}:`, doctorError);
+          }
+        }
+        
+        // Store monthly financial data for both types
+        try {
+          // Calculate basic financial metrics
+          let totalRevenue = 0;
+          let totalExpenses = 0;
+          
+          // Look for revenue and expense items
+          for (const row of parseResult.data) {
+            const lineItem = row['Line Item'] || '';
+            
+            if (lineItem.toLowerCase().includes('revenue') || 
+                lineItem.toLowerCase().includes('income') ||
+                lineItem.toLowerCase().includes('charges')) {
+              // Process values from entity columns
+              Object.keys(row).forEach(key => {
+                if (key !== 'Line Item') {
+                  const value = parseFloat(String(row[key]).replace(/[^0-9.-]+/g, ''));
+                  if (!isNaN(value)) {
+                    totalRevenue += value;
+                  }
+                }
+              });
+            }
+            
+            if (lineItem.toLowerCase().includes('expense') || 
+                lineItem.toLowerCase().includes('cost')) {
+              // Process values from entity columns
+              Object.keys(row).forEach(key => {
+                if (key !== 'Line Item') {
+                  const value = parseFloat(String(row[key]).replace(/[^0-9.-]+/g, ''));
+                  if (!isNaN(value)) {
+                    totalExpenses += value;
+                  }
+                }
+              });
+            }
+          }
+          
+          const netIncome = totalRevenue - totalExpenses;
+          console.log(`Calculated financial metrics for ${month}: Revenue=${totalRevenue}, Expenses=${totalExpenses}, Net=${netIncome}`);
+          
+          // Store monthly financial data
+          const success = await storage.storeMonthlyFinancialData(
+            month,
+            totalRevenue,
+            totalExpenses,
+            netIncome,
+            [], // Revenue mix - simplified for now
+            [], // Margin trend - simplified for now
+            uploadId
+          );
+          
+          console.log(`Monthly financial data storage ${success ? 'successful' : 'failed'}`);
+        } catch (finError) {
+          console.error(`Error storing monthly financial data for ${month}:`, finError);
+        }
+      } catch (parseError) {
+        console.error(`Error parsing ${month} ${type}-type CSV:`, parseError);
+      }
       
       res.status(200).json({ 
         message: `Monthly ${type.toUpperCase()} CSV file for ${month} uploaded successfully`,
