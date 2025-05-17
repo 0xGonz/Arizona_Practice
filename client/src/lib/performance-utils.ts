@@ -794,10 +794,48 @@ export function extractMonthlySummaryData(monthlyData: any) {
     'december': 'Dec'
   };
 
-  // Process each month for both E and O file types
-  // Make sure we process all months in order
+  // Create a consistent set of month names to ensure both E and O data
+  // shows all months from January to December, even if data isn't available
+  const completeMonthList = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december'
+  ];
+  
+  // Get available months from actual data
   const availableMonths = Object.keys(monthlyData || {});
   console.log("Processing all available months for monthly summary:", availableMonths);
+  
+  // Process all months in calendar order to ensure consistent display
+  completeMonthList.forEach(month => {
+    const isMonthAvailable = availableMonths.find(m => 
+      m.toLowerCase() === month.toLowerCase()
+    );
+    
+    if (!isMonthAvailable) {
+      console.log(`Adding empty placeholder for unavailable month: ${month}`);
+      // Add empty data to both E and O monthly breakdowns for missing months
+      // to ensure all 12 months appear in both cards
+      const displayMonth = monthAbbrev[month] || month.substring(0, 3);
+      
+      // Add to E file monthly breakdown
+      result.e.monthlyBreakdown.push({
+        month: displayMonth,
+        revenue: 0,
+        expenses: 0,
+        net: 0
+      });
+      
+      // Add to O file monthly breakdown
+      result.o.monthlyBreakdown.push({
+        month: displayMonth,
+        revenue: 0,
+        expenses: 0,
+        net: 0
+      });
+    }
+  });
+  
+  // Now process actual available months with real data
   
   availableMonths.forEach(month => {
     const lowerMonth = month.toLowerCase();
