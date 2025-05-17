@@ -103,7 +103,7 @@ export const financialValues = pgTable("financial_values", {
   originalValue: text("original_value").notNull(), // Raw value from CSV
   numericValue: numeric("numeric_value").notNull(), // Parsed numeric value
   month: text("month"), // Optional month for monthly data
-  year: integer("year").notNull().default(new Date().getFullYear()),
+  year: integer("year").notNull().default(2024),
   fileType: text("file_type").notNull(), // 'annual', 'monthly-e', 'monthly-o'
   uploadId: integer("upload_id").references(() => csvUploads.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadDataButton } from "@/components/upload/load-data-button";
 
 export default function UploadHistory() {
-  // Remove data-replit-metadata from component
+  // Access data from the store
   const { uploadHistory, uploadStatus, clearUploadedData, annualData, monthlyData, loadCSVContent } = useStore();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
