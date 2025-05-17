@@ -213,7 +213,6 @@ interface DataStore {
   setUploadStatus: (status: Partial<UploadStatus>) => void;
   
   // Raw Data Storage
-  annualData: any[] | null;
   monthlyData: {
     [month: string]: {
       e?: {
@@ -265,7 +264,6 @@ const loadFromLocalStorage = () => {
   if (typeof window === 'undefined') return null; // Skip on server-side
   
   try {
-    const annualData = localStorage.getItem('annualData');
     const revenueMix = localStorage.getItem('revenueMix');
     const marginTrend = localStorage.getItem('marginTrend');
     const topPerformers = localStorage.getItem('topPerformers');
@@ -276,14 +274,13 @@ const loadFromLocalStorage = () => {
     const uploadHistory = localStorage.getItem('uploadHistory');
     
     return {
-      annualData: annualData ? JSON.parse(annualData) : null,
       revenueMix: revenueMix ? JSON.parse(revenueMix) : [],
       marginTrend: marginTrend ? JSON.parse(marginTrend) : [],
       topPerformers: topPerformers ? JSON.parse(topPerformers) : [],
       bottomPerformers: bottomPerformers ? JSON.parse(bottomPerformers) : [],
       ancillaryComparison: ancillaryComparison ? JSON.parse(ancillaryComparison) : [],
       monthlyData: monthlyData ? JSON.parse(monthlyData) : {},
-      uploadStatus: uploadStatus ? JSON.parse(uploadStatus) : { annual: false, monthly: {} },
+      uploadStatus: uploadStatus ? JSON.parse(uploadStatus) : { monthly: {} },
       uploadHistory: uploadHistory ? JSON.parse(uploadHistory) : []
     };
   } catch (error) {
@@ -297,7 +294,6 @@ const saveToLocalStorage = (state: any) => {
   if (typeof window === 'undefined') return; // Skip on server-side
   
   try {
-    localStorage.setItem('annualData', JSON.stringify(state.annualData));
     localStorage.setItem('revenueMix', JSON.stringify(state.revenueMix));
     localStorage.setItem('marginTrend', JSON.stringify(state.marginTrend));
     localStorage.setItem('topPerformers', JSON.stringify(state.topPerformers));

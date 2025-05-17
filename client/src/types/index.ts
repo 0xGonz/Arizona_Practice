@@ -1,10 +1,5 @@
 // CSV Data Types
-export type CSVType = 'annual' | 'monthly-e' | 'monthly-o';
-
-export interface AnnualCSVRow {
-  'Line Item': string;
-  [key: string]: string; // Month columns (e.g., "2024(Jan)", "2024(Feb)") and "2024 Total"
-}
+export type CSVType = 'monthly-e' | 'monthly-o';
 
 export interface MonthlyCSVRow {
   'Line Item': string;
@@ -78,7 +73,6 @@ export interface MonthData {
 
 // Upload Status
 export interface UploadStatus {
-  annual: boolean;
   monthly: {
     [month: string]: {
       e: boolean;
