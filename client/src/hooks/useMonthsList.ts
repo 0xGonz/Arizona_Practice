@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { api } from '../lib/queryClient';
 
 /**
  * Hook to fetch list of available months that have data
@@ -6,14 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 export function useMonthsList() {
   return useQuery({
     queryKey: ['available-months'],
-    queryFn: () => 
-      fetch('/api/analytics/months')
-        .then(res => {
-          if (!res.ok) {
-            throw new Error('Failed to fetch available months');
-          }
-          return res.json();
-        }),
+    queryFn: () => api.get('/api/analytics/months'),
     staleTime: Infinity
   });
 }

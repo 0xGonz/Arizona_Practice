@@ -28,11 +28,7 @@ export interface EmployeeListItem {
 export function useEmployeeSummary(range: AnalyticsRange) {
   return useQuery({ 
     queryKey: ['emp-summary', range],
-    queryFn: () => apiRequest<EmployeeAnalyticsData[]>({
-      method: 'GET',
-      url: '/api/analytics/employee/summary',
-      params: range
-    }),
+    queryFn: () => api.get('/api/analytics/employee/summary', { params: range }),
     staleTime: HALF_DAY
   });
 }
