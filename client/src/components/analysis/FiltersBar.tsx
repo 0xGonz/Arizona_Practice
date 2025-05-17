@@ -20,6 +20,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { useAnalysisStore } from '../../store/analysis-store';
 import { useEmployeeList } from '../../hooks/useEmployeeAnalysis';
 import { useBusinessList } from '../../hooks/useBusinessAnalysis';
+import { useMonthsList } from '../../hooks/useMonthsList';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 
@@ -29,10 +30,10 @@ interface FiltersBarProps {
 
 export function FiltersBar({ mode }: FiltersBarProps) {
   const { 
-    period, 
-    setPeriod, 
-    selectedMonth, 
-    setSelectedMonth,
+    periodType, 
+    setPeriodFullYear, 
+    setPeriodMonth, 
+    monthSelected, 
     employeeId, 
     selectEmployee, 
     businessId, 
@@ -43,6 +44,7 @@ export function FiltersBar({ mode }: FiltersBarProps) {
   // Get entity lists based on the mode
   const { data: employees, isLoading: isLoadingEmployees } = useEmployeeList();
   const { data: businesses, isLoading: isLoadingBusinesses } = useBusinessList();
+  const { data: months } = useMonthsList();
 
   // Reset filters when mode changes
   useEffect(() => {
@@ -65,40 +67,47 @@ export function FiltersBar({ mode }: FiltersBarProps) {
           {/* Period selection */}
           <div className="flex flex-col space-y-1 w-full md:w-48">
             <label className="text-sm font-medium">Period</label>
-            <Select value={period} onValueChange={setPeriod}>
+            <Select
+              value={periodType}
+              onValueChange={(value) => value === 'FULL_YEAR' ? setPeriodFullYear() : undefined}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="full-year">Full Year</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="FULL_YEAR">Full Year</SelectItem>
+                <SelectItem value="MONTH">Monthly</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Month picker (shown only for monthly period) */}
-          {period === 'monthly' && (
+          {periodType === 'MONTH' && months && months.length > 0 && (
             <div className="flex flex-col space-y-1 w-full md:w-48">
               <label className="text-sm font-medium">Month</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedMonth ? format(new Date(selectedMonth), 'MMMM yyyy') : 'Pick a month'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={selectedMonth ? new Date(selectedMonth) : undefined}
-                    onSelect={(date) => setSelectedMonth(date ? format(date, 'yyyy-MM-dd') : null)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Select 
+                value={monthSelected || ''} 
+                onValueChange={setPeriodMonth}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => {
+                    // Convert date format: 2024-01-15 -> Jan 2024
+                    const date = new Date(month);
+                    const displayText = format(date, 'MMM yyyy');
+                    // Convert to yyyy-MM format for the value
+                    const monthValue = format(date, 'yyyy-MM');
+                    
+                    return (
+                      <SelectItem key={month} value={monthValue}>
+                        {displayText}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
           )}
 

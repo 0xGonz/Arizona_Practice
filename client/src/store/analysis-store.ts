@@ -1,78 +1,65 @@
 import { create } from 'zustand';
-import { format } from 'date-fns';
+import { format, subMonths, endOfMonth, startOfMonth } from 'date-fns';
 
 interface AnalysisState {
   // Filter states
-  period: 'full-year' | 'monthly';
-  selectedMonth: string | null;
+  periodType: 'FULL_YEAR' | 'MONTH';
+  monthSelected: string | null;  // ISO format '2024-01' for Jan 2024
   employeeId: string | null;
   businessId: string | null;
+  range: { from: string; to: string };  // ISO date strings
   
   // Actions
-  setPeriod: (period: 'full-year' | 'monthly') => void;
-  setSelectedMonth: (month: string | null) => void;
+  setPeriodFullYear: () => void;
+  setPeriodMonth: (month: string) => void;
   selectEmployee: (id: string | null) => void;
   selectBusiness: (id: string | null) => void;
   resetFilters: () => void;
-  
-  // Derived data
-  getDateRange: () => { from: string; to: string };
 }
 
-export const useAnalysisStore = create<AnalysisState>((set, get) => ({
+// Default range is last 12 months
+const defaultRange = {
+  from: format(subMonths(new Date(), 11), 'yyyy-MM-dd'),
+  to: format(new Date(), 'yyyy-MM-dd'),
+};
+
+export const useAnalysisStore = create<AnalysisState>((set) => ({
   // Initial state
-  period: 'full-year',
-  selectedMonth: null,
+  periodType: 'FULL_YEAR',
+  monthSelected: null,
   employeeId: null,
   businessId: null,
+  range: defaultRange,
   
   // Actions
-  setPeriod: (period) => set({ period }),
-  
-  setSelectedMonth: (month) => set({ 
-    selectedMonth: month,
-    // Auto-switch to monthly view when month is selected
-    period: month ? 'monthly' : get().period
+  setPeriodFullYear: () => set({ 
+    periodType: 'FULL_YEAR', 
+    monthSelected: null,
+    range: defaultRange 
   }),
+  
+  setPeriodMonth: (month) => {
+    // month format: '2024-01'
+    const dateObj = new Date(`${month}-01`); // Convert to date (e.g., 2024-01-01)
+    const from = format(startOfMonth(dateObj), 'yyyy-MM-dd');
+    const to = format(endOfMonth(dateObj), 'yyyy-MM-dd');
+    
+    set({ 
+      periodType: 'MONTH', 
+      monthSelected: month, 
+      range: { from, to } 
+    });
+  },
   
   selectEmployee: (id) => set({ employeeId: id }),
   
   selectBusiness: (id) => set({ businessId: id }),
   
   resetFilters: () => set({
-    period: 'full-year',
-    selectedMonth: null,
+    periodType: 'FULL_YEAR',
+    monthSelected: null,
     employeeId: null,
-    businessId: null
-  }),
-  
-  // Calculate date range based on current filters
-  getDateRange: () => {
-    const { period, selectedMonth } = get();
-    const currentYear = new Date().getFullYear();
-    
-    if (period === 'monthly' && selectedMonth) {
-      // Create date range for the selected month
-      const date = new Date(selectedMonth);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      
-      // First day of month
-      const startDate = new Date(year, month, 1);
-      
-      // Last day of month (first day of next month minus one day)
-      const endDate = new Date(year, month + 1, 0);
-      
-      return {
-        from: format(startDate, 'yyyy-MM-dd'),
-        to: format(endDate, 'yyyy-MM-dd')
-      };
-    } else {
-      // Full year range (Jan 1 to Dec 31 of current year)
-      return {
-        from: `${currentYear}-01-01`,
-        to: `${currentYear}-12-31`
-      };
-    }
-  }
+    businessId: null,
+    range: defaultRange
+  })
 }));
