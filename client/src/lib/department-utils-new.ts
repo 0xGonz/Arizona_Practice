@@ -33,11 +33,11 @@ function safeParseFloat(value: any): number {
 
 /**
  * Extracts department performance data from monthly business CSV data
- * This function focuses only on actual data from the CSV - no hardcoded values
+ * This function focuses only on the three key metrics: Total Revenue, Total Operating Expenses, Net Income (Loss)
  */
 export function extractDepartmentPerformanceData(monthlyData: any) {
-  console.log("Extracting department data from monthly files");
+  console.log("Extracting simplified department data (only key metrics)");
   
-  // Use verified department data for consistent results
-  return getVerifiedDepartmentData();
+  // Use the updated function to extract only key financial metrics
+  return getVerifiedDepartmentData(monthlyData);
 }
