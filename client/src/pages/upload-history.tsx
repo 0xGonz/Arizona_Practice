@@ -317,7 +317,7 @@ export default function UploadHistory() {
                               const fileData = getFileData(item.type as CSVType, item.month);
                               
                               return (
-                                <React.Fragment key={index.toString()}>
+                                <React.Fragment key={`${index}`}>
                                   <tr className="border-b">
                                     <td className="py-3 px-4">
                                       <Badge variant={item.type.includes('e') ? 'default' : 'outline'}>
