@@ -303,6 +303,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Mark an upload as processed
+  app.post("/api/uploads/:id/mark-processed", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid upload ID" });
+      }
+      
+      // Get the existing upload to verify it exists
+      const upload = await storage.getCSVUploadById(id);
+      if (!upload) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+      
+      // Update the processed flag in the database
+      try {
+        const result = await db.execute(
+          `UPDATE csv_uploads SET processed = true WHERE id = $1`,
+          [id]
+        );
+        console.log(`Marked upload ID ${id} as processed`);
+        res.status(200).json({ success: true });
+      } catch (dbError) {
+        console.error(`Database error marking upload ${id} as processed:`, dbError);
+        res.status(500).json({ message: "Database error" });
+      }
+    } catch (error) {
+      console.error("Error marking upload as processed:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
   // New advanced financial data query endpoint
   app.get("/api/finance/query", async (req, res) => {
     try {
