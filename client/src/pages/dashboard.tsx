@@ -3,7 +3,7 @@ import { useStore } from "@/store/data-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  TooltipProps
+  TooltipProps, Area, ReferenceLine
 } from "recharts";
 import { ArrowUpIcon, ArrowDownIcon, DollarSignIcon } from "lucide-react";
 
@@ -318,12 +318,55 @@ export default function Dashboard() {
                   stroke="#ef4444" 
                   strokeWidth={2}
                 />
+                {/* Using Area instead of Line for Net Income to fill in colors based on positive/negative values */}
+                <defs>
+                  <linearGradient id="colorNetIncomePositive" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.2} />
+                  </linearGradient>
+                  <linearGradient id="colorNetIncomeNegative" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.2} />
+                  </linearGradient>
+                </defs>
                 <Line 
                   type="monotone" 
                   dataKey="netIncome" 
                   name="Net Income"
-                  stroke="#10b981" 
+                  stroke="#10b981"
                   strokeWidth={2}
+                />
+                {/* Zero reference line */}
+                <Line 
+                  dataKey={() => 0}
+                  stroke="#666"
+                  strokeDasharray="3 3"
+                  dot={false}
+                  activeDot={false}
+                  legendType="none"
+                />
+                {/* Area for filling above/below zero */}
+                {/* Positive values area (green) */}
+                <Area 
+                  type="monotone" 
+                  dataKey={(data) => data.netIncome > 0 ? data.netIncome : 0}
+                  stroke="none"
+                  fillOpacity={0.6}
+                  fill="url(#colorNetIncomePositive)"
+                  activeDot={false}
+                  legendType="none"
+                  baseValue={0}
+                />
+                {/* Negative values area (red) */}
+                <Area 
+                  type="monotone" 
+                  dataKey={(data) => data.netIncome < 0 ? data.netIncome : 0}
+                  stroke="none"
+                  fillOpacity={0.6}
+                  fill="url(#colorNetIncomeNegative)"
+                  activeDot={false}
+                  legendType="none"
+                  baseValue={0}
                 />
               </LineChart>
             </ResponsiveContainer>
