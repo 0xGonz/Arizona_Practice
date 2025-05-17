@@ -1,15 +1,6 @@
 import React from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface MonthlyBarChartProps {
   data: {
@@ -18,76 +9,110 @@ interface MonthlyBarChartProps {
     expense: number;
     net: number;
   }[];
-  groupMode?: 'stack' | 'group';
-  title?: string;
   isLoading?: boolean;
 }
 
-export function MonthlyBarChart({ 
-  data, 
-  groupMode = 'group', 
-  title = 'Monthly Financial Performance',
-  isLoading = false
-}: MonthlyBarChartProps) {
+export function MonthlyBarChart({ data, isLoading = false }: MonthlyBarChartProps) {
+  // Transform month names for better display
+  const chartData = React.useMemo(() => {
+    return data.map(item => ({
+      ...item,
+      // Convert month to short name (Jan, Feb, etc.)
+      month: item.month.charAt(0).toUpperCase() + item.month.slice(1, 3)
+    }));
+  }, [data]);
   
-  // Format currency for tooltip
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Monthly Financial Performance</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80 animate-pulse">
+          <div className="h-full w-full bg-slate-200 rounded"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Format dollar values for tooltip
+  const formatDollar = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: 0 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
   
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded shadow-md">
+          <p className="text-sm font-medium">{
+            // Convert short month name back to full name
+            data.find(item => item.month.toLowerCase().startsWith(label.toLowerCase()))?.month
+          }</p>
+          <p className="text-sm text-emerald-600">
+            Revenue: {formatDollar(payload[0].value)}
+          </p>
+          <p className="text-sm text-amber-600">
+            Expenses: {formatDollar(payload[1].value)}
+          </p>
+          <p className="text-sm font-medium text-blue-600">
+            Net: {formatDollar(payload[2].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+  
   return (
-    <Card className="shadow-sm">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">{title}</CardTitle>
+        <CardTitle className="text-lg">Monthly Financial Performance</CardTitle>
       </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="h-[350px] w-full bg-gray-100 animate-pulse rounded-md flex items-center justify-center">
-            <p className="text-gray-400">Loading chart data...</p>
-          </div>
-        ) : data.length === 0 ? (
-          <div className="h-[350px] w-full bg-gray-50 rounded-md flex items-center justify-center">
-            <p className="text-gray-500">No data available for the selected period</p>
-          </div>
-        ) : (
-          <div className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={data}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis 
-                  tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? 
-                    `${(value / 1000).toFixed(0)}K` : value}`} 
-                />
-                <Tooltip 
-                  formatter={(value) => [formatCurrency(value as number), '']}
-                  labelFormatter={(label) => `Month: ${label}`}
-                />
-                <Legend />
-                {groupMode === 'stack' ? (
-                  <>
-                    <Bar dataKey="revenue" name="Revenue" stackId="a" fill="#4f46e5" />
-                    <Bar dataKey="expense" name="Expenses" stackId="a" fill="#ef4444" />
-                    <Bar dataKey="net" name="Net Income" fill="#10b981" />
-                  </>
-                ) : (
-                  <>
-                    <Bar dataKey="revenue" name="Revenue" fill="#4f46e5" />
-                    <Bar dataKey="expense" name="Expenses" fill="#ef4444" />
-                    <Bar dataKey="net" name="Net Income" fill="#10b981" />
-                  </>
-                )}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+      <CardContent className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis 
+              dataKey="month" 
+              tick={{ fontSize: 12 }}
+              tickLine={false}
+            />
+            <YAxis 
+              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tick={{ fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend wrapperStyle={{ paddingTop: 10 }} />
+            <Bar 
+              dataKey="revenue" 
+              name="Revenue" 
+              fill="#10b981" 
+              radius={[4, 4, 0, 0]} 
+            />
+            <Bar 
+              dataKey="expense" 
+              name="Expenses" 
+              fill="#f59e0b" 
+              radius={[4, 4, 0, 0]} 
+            />
+            <Bar 
+              dataKey="net" 
+              name="Net Income" 
+              fill="#3b82f6" 
+              radius={[4, 4, 0, 0]} 
+            />
+          </BarChart>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );

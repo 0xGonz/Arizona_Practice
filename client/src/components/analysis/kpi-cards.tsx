@@ -1,136 +1,108 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  BarChart3, 
+  PieChart,
+  Percent
+} from 'lucide-react';
 
-interface KpiCardsProps {
-  data: {
-    revenue: number;
-    expense: number;
-    net: number;
-  };
+interface KPICardProps {
+  revenue: number;
+  expenses: number;
+  profit: number;
+  margin: number;
   isLoading?: boolean;
 }
 
-export function KpiCards({ data, isLoading = false }: KpiCardsProps) {
-  // Format currency for display
+export function KPICards({ revenue, expenses, profit, margin, isLoading = false }: KPICardProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-4">
+              <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
+              <div className="h-6 bg-slate-200 rounded w-3/4 mb-1"></div>
+              <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+  
+  // Format currency values
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: 0 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
   
-  // Calculate margin percentage
-  const marginPct = data.revenue !== 0 
-    ? (data.net / data.revenue) * 100 
-    : 0;
+  // Format percentage values
+  const formatPercent = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(value / 100);
+  };
+  
+  // Determine profit trend icon
+  const renderTrendIcon = (value: number) => {
+    if (value > 0) {
+      return <TrendingUp className="w-5 h-5 text-emerald-500" />;
+    } else if (value < 0) {
+      return <TrendingDown className="w-5 h-5 text-red-500" />;
+    }
+    return null;
+  };
+  
+  const cards = [
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(revenue),
+      icon: <DollarSign className="w-5 h-5 text-emerald-500" />,
+      className: 'border-l-4 border-emerald-500'
+    },
+    {
+      title: 'Total Expenses',
+      value: formatCurrency(expenses),
+      icon: <BarChart3 className="w-5 h-5 text-amber-500" />,
+      className: 'border-l-4 border-amber-500'
+    },
+    {
+      title: 'Net Income',
+      value: formatCurrency(profit),
+      icon: renderTrendIcon(profit),
+      className: `border-l-4 ${profit >= 0 ? 'border-emerald-500' : 'border-red-500'}`
+    },
+    {
+      title: 'Profit Margin',
+      value: formatPercent(margin),
+      icon: <Percent className="w-5 h-5 text-blue-500" />,
+      className: `border-l-4 ${margin >= 0 ? 'border-blue-500' : 'border-red-500'}`
+    }
+  ];
   
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {/* Revenue Card */}
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="space-y-2">
-              <div className="h-5 w-24 bg-gray-100 animate-pulse rounded"></div>
-              <div className="h-8 w-32 bg-gray-100 animate-pulse rounded"></div>
+      {cards.map((card, index) => (
+        <Card key={index} className={card.className}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-neutral-dark">{card.title}</h3>
+              {card.icon}
             </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                <div className="p-1.5 rounded-full bg-blue-50">
-                  <DollarSign className="h-4 w-4 text-blue-500" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-blue-600">
-                {formatCurrency(data.revenue)}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Expenses Card */}
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="space-y-2">
-              <div className="h-5 w-24 bg-gray-100 animate-pulse rounded"></div>
-              <div className="h-8 w-32 bg-gray-100 animate-pulse rounded"></div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-500">Total Expenses</p>
-                <div className="p-1.5 rounded-full bg-red-50">
-                  <DollarSign className="h-4 w-4 text-red-500" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(data.expense)}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Net Income Card */}
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="space-y-2">
-              <div className="h-5 w-24 bg-gray-100 animate-pulse rounded"></div>
-              <div className="h-8 w-32 bg-gray-100 animate-pulse rounded"></div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-500">Net Income</p>
-                <div className={`p-1.5 rounded-full ${data.net >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                  {data.net >= 0 ? (
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-              </div>
-              <div className={`text-2xl font-bold ${data.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(data.net)}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Profit Margin Card */}
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="space-y-2">
-              <div className="h-5 w-24 bg-gray-100 animate-pulse rounded"></div>
-              <div className="h-8 w-32 bg-gray-100 animate-pulse rounded"></div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-500">Profit Margin</p>
-                <div className={`p-1.5 rounded-full ${marginPct >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                  {marginPct >= 0 ? (
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-              </div>
-              <div className={`text-2xl font-bold ${marginPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {marginPct.toFixed(1)}%
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            <p className="text-2xl font-bold">{card.value}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
