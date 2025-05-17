@@ -460,7 +460,7 @@ export default function DataAnalysis() {
           
           {/* Overview Tab Content */}
           <TabsContent value="overview">
-            <SimpleFinancialOverview monthlyData={monthlyData} selectedMonth={selectedMonth} />
+            <NewFinancialOverview monthlyData={monthlyData} selectedMonth={selectedMonth} />
           </TabsContent>
           
           {/* Details Tab Content */}
