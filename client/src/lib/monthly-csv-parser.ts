@@ -154,6 +154,7 @@ export function processMonthlyCSV(
     entityColumns,
     summaryColumn,
     type,
-    raw: data // Include the raw data for debugging purposes
+    raw: data, // Include the raw data for debugging purposes
+    lineItemCount: lineItems.length // Add a count for easy verification
   };
 }

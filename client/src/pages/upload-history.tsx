@@ -375,7 +375,7 @@ export default function UploadHistory() {
                                           
                                           <div className="overflow-x-auto max-h-80 overflow-y-auto">
                                             {fileData && fileData.raw && fileData.raw.length > 0 ? (
-                                              <>
+                                              <React.Fragment>
                                                 <table className="w-full border-collapse text-sm">
                                                   <thead>
                                                     <tr className="bg-slate-100">
@@ -400,7 +400,7 @@ export default function UploadHistory() {
                                                     Showing 10 of {fileData.raw.length} rows. Visit the Monthly view to see full analysis.
                                                   </div>
                                                 )}
-                                              </>
+                                              </React.Fragment>
                                             ) : (
                                               <div className="text-center py-4 text-neutral-500">
                                                 No data available for preview.

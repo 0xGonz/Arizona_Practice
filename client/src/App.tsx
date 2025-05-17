@@ -59,10 +59,15 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
           for (const month of monthKeys) {
             const monthUploads = monthlyByMonth[month];
             
-            // Load E-type upload for this month if available
-            const eUpload = monthUploads.find((u: any) => u.type === 'monthly-e');
+            // Load E-type upload for this month if available - use the most recent one
+            // Sort by ID in descending order to get the most recent upload first
+            const eUploads = monthUploads
+              .filter((u: any) => u.type === 'monthly-e')
+              .sort((a: any, b: any) => b.id - a.id);
+              
+            const eUpload = eUploads.length > 0 ? eUploads[0] : null;
             if (eUpload) {
-              console.log(`Loading monthly-e data for ${month} from upload ID ${eUpload.id}`);
+              console.log(`Loading monthly-e data for ${month} from upload ID ${eUpload.id} (most recent of ${eUploads.length})`);
               try {
                 await loadCSVContent(eUpload.id);
               } catch (e) {
@@ -70,10 +75,15 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
               }
             }
             
-            // Load O-type upload for this month if available
-            const oUpload = monthUploads.find((u: any) => u.type === 'monthly-o');
+            // Load O-type upload for this month if available - use the most recent one
+            // Sort by ID in descending order to get the most recent upload first
+            const oUploads = monthUploads
+              .filter((u: any) => u.type === 'monthly-o')
+              .sort((a: any, b: any) => b.id - a.id);
+              
+            const oUpload = oUploads.length > 0 ? oUploads[0] : null;
             if (oUpload) {
-              console.log(`Loading monthly-o data for ${month} from upload ID ${oUpload.id}`);
+              console.log(`Loading monthly-o data for ${month} from upload ID ${oUpload.id} (most recent of ${oUploads.length})`);
               try {
                 await loadCSVContent(oUpload.id);
               } catch (e) {
