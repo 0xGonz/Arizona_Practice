@@ -10,6 +10,7 @@ import DoctorPerformance from "@/pages/doctor-performance";
 import DepartmentAnalysis from "@/pages/department-analysis";
 import Upload from "@/pages/upload";
 import UploadHistory from "@/pages/upload-history";
+import FinancialQuery from "@/pages/financial-query";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/department-analysis" component={DepartmentAnalysis} />
         <Route path="/upload" component={Upload} />
         <Route path="/upload-history" component={UploadHistory} />
+        <Route path="/financial-query" component={FinancialQuery} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

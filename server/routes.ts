@@ -16,6 +16,7 @@ import {
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { FinancialDataManager } from "./financial-data-manager";
+import Papa from "papaparse";
 
 // Configure multer storage for file uploads
 const upload = multer({ 
@@ -144,7 +145,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process the CSV data right away
       try {
-        const Papa = require('papaparse');
         const parseResult = Papa.parse(fileContent, { 
           header: true, 
           skipEmptyLines: true,

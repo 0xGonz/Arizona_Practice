@@ -8,7 +8,9 @@ import {
   History, 
   FileText, 
   LineChart, 
-  Stethoscope 
+  Stethoscope,
+  Search,
+  Database
 } from "lucide-react";
 
 interface NavItem {
@@ -31,7 +33,8 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
     section: "Data Management",
     items: [
       { name: "Upload Data", path: "/upload", icon: <Upload className="w-5 h-5" /> },
-      { name: "Upload History", path: "/upload-history", icon: <History className="w-5 h-5" /> }
+      { name: "Upload History", path: "/upload-history", icon: <History className="w-5 h-5" /> },
+      { name: "Financial Query", path: "/financial-query", icon: <Database className="w-5 h-5" /> }
     ]
   },
   {
