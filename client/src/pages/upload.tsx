@@ -8,12 +8,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useStore } from "@/store/data-store";
 
 export default function Upload() {
-  const { uploadStatus, uploadHistory, annualData, monthlyData } = useStore();
+  const { uploadStatus, uploadHistory, monthlyData } = useStore();
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [selectedEMonth, setSelectedEMonth] = useState<string>("january");
   const [selectedOMonth, setSelectedOMonth] = useState<string>("january");
   const [showProcessedData, setShowProcessedData] = useState(false);
-  const [processedDataType, setProcessedDataType] = useState<string>("annual");
+  const [processedDataType, setProcessedDataType] = useState<string>("monthly-e");
   
   // Check if we're coming from a specific upload redirect
   useEffect(() => {
@@ -56,26 +56,24 @@ export default function Upload() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <Select
-                    className="w-full"
-                    placeholder="Select Month..."
+                  <select 
+                    className="w-full p-2 border border-input rounded-md"
                     value={selectedEMonth}
                     onChange={(e) => setSelectedEMonth(e.target.value)}
-                    options={[
-                      { label: "January", value: "january" },
-                      { label: "February", value: "february" },
-                      { label: "March", value: "march" },
-                      { label: "April", value: "april" },
-                      { label: "May", value: "may" },
-                      { label: "June", value: "june" },
-                      { label: "July", value: "july" },
-                      { label: "August", value: "august" },
-                      { label: "September", value: "september" },
-                      { label: "October", value: "october" },
-                      { label: "November", value: "november" },
-                      { label: "December", value: "december" }
-                    ]}
-                  />
+                  >
+                    <option value="january">January</option>
+                    <option value="february">February</option>
+                    <option value="march">March</option>
+                    <option value="april">April</option>
+                    <option value="may">May</option>
+                    <option value="june">June</option>
+                    <option value="july">July</option>
+                    <option value="august">August</option>
+                    <option value="september">September</option>
+                    <option value="october">October</option>
+                    <option value="november">November</option>
+                    <option value="december">December</option>
+                  </select>
                   
                   <CSVUpload
                     type="monthly-e"
@@ -90,31 +88,29 @@ export default function Upload() {
             {/* Monthly O File Upload */}
             <Card>
               <CardHeader>
-                <CardTitle>Monthly Other Business (O) Files</CardTitle>
+                <CardTitle>Monthly Business (O) Files</CardTitle>
                 <CardDescription>Upload monthly Other Business CSV files</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <Select
-                    className="w-full"
-                    placeholder="Select Month..."
+                  <select 
+                    className="w-full p-2 border border-input rounded-md"
                     value={selectedOMonth}
                     onChange={(e) => setSelectedOMonth(e.target.value)}
-                    options={[
-                      { label: "January", value: "january" },
-                      { label: "February", value: "february" },
-                      { label: "March", value: "march" },
-                      { label: "April", value: "april" },
-                      { label: "May", value: "may" },
-                      { label: "June", value: "june" },
-                      { label: "July", value: "july" },
-                      { label: "August", value: "august" },
-                      { label: "September", value: "september" },
-                      { label: "October", value: "october" },
-                      { label: "November", value: "november" },
-                      { label: "December", value: "december" }
-                    ]}
-                  />
+                  >
+                    <option value="january">January</option>
+                    <option value="february">February</option>
+                    <option value="march">March</option>
+                    <option value="april">April</option>
+                    <option value="may">May</option>
+                    <option value="june">June</option>
+                    <option value="july">July</option>
+                    <option value="august">August</option>
+                    <option value="september">September</option>
+                    <option value="october">October</option>
+                    <option value="november">November</option>
+                    <option value="december">December</option>
+                  </select>
                   
                   <CSVUpload
                     type="monthly-o"
@@ -131,7 +127,6 @@ export default function Upload() {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>CSV Format Guidelines</AlertTitle>
             <AlertDescription>
-              Please ensure your CSV files follow the expected format. Annual files should have columns for Line Item, monthly data, and annual total. 
               Monthly E and O files should have Line Item column followed by employee/entity columns.
             </AlertDescription>
           </Alert>
@@ -188,8 +183,12 @@ export default function Upload() {
                     );
                   })
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No uploads yet. Start by uploading your financial data files.</p>
+                  <div className="text-center py-10">
+                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Upload History</h3>
+                    <p className="text-muted-foreground">
+                      You haven't uploaded any files yet. Start by uploading your CSV files.
+                    </p>
                   </div>
                 )}
               </div>
@@ -201,7 +200,7 @@ export default function Upload() {
           <Card>
             <CardHeader>
               <CardTitle>Process & Validate Uploaded Data</CardTitle>
-              <CardDescription>Verify data is processed correctly before viewing on dashboard</CardDescription>
+              <CardDescription>Verify data is processed correctly</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -248,7 +247,6 @@ export default function Upload() {
                             <option value="december">December</option>
                           </select>
                         </div>
-                      )}
                     </div>
                   </div>
                   
@@ -259,7 +257,6 @@ export default function Upload() {
                         className="w-full"
                         onClick={() => setShowProcessedData(true)}
                         disabled={
-                          (processedDataType === "annual" && !uploadStatus.annual) ||
                           (processedDataType === "monthly-e" && !uploadStatus.monthly[selectedEMonth]?.e) ||
                           (processedDataType === "monthly-o" && !uploadStatus.monthly[selectedOMonth]?.o)
                         }
@@ -282,123 +279,97 @@ export default function Upload() {
                   <div className="mt-6 border rounded-md p-4">
                     <h3 className="text-lg font-medium mb-4">Processed Data Preview</h3>
                     
-                    {processedDataType === "annual" && uploadStatus.annual ? (
+                    {processedDataType === "monthly-e" ? (
                       <div className="space-y-4">
-                        <h4 className="font-medium">Annual Data</h4>
+                        <h4 className="font-medium">{selectedEMonth.charAt(0).toUpperCase() + selectedEMonth.slice(1)} Employee Data</h4>
                         <div className="overflow-auto max-h-[70vh]">
-                          {annualData && Array.isArray(annualData) && annualData.length > 0 ? (
+                          {monthlyData[selectedEMonth]?.e?.lineItems && monthlyData[selectedEMonth].e.lineItems.length > 0 ? (
                             <table className="min-w-full border-collapse">
                               <thead>
                                 <tr className="bg-muted">
                                   <th className="border p-2 text-left">Line Item</th>
-                                  {Object.keys(annualData[0])
-                                    .filter(key => key !== 'Line Item')
-                                    .map((column, idx) => (
-                                      <th key={idx} className="border p-2 text-right">{column}</th>
+                                  {monthlyData[selectedEMonth].e.lineItems[0]?.entityValues && 
+                                    Object.keys(monthlyData[selectedEMonth].e.lineItems[0].entityValues).map((entity, idx) => (
+                                      <th key={idx} className="border p-2 text-right">{entity}</th>
                                     ))
                                   }
+                                  <th className="border p-2 text-right">Total</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {annualData.map((row, index) => (
+                                {monthlyData[selectedEMonth].e.lineItems.map((item, index) => (
                                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                    {Object.keys(row)
-                                      .filter(key => key !== 'Line Item')
-                                      .map((column, idx) => (
-                                        <td key={idx} className="border p-2 text-right">{row[column] || ''}</td>
-                                      ))
-                                    }
+                                    <td className={`border p-2 pl-${item.depth * 4}`} style={{paddingLeft: `${item.depth * 0.5}rem`}}>
+                                      {item.name || 'N/A'}
+                                    </td>
+                                    {item.entityValues && Object.values(item.entityValues).map((value, idx) => (
+                                      <td key={idx} className="border p-2 text-right">
+                                        {typeof value === 'number' 
+                                          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value) 
+                                          : value}
+                                      </td>
+                                    ))}
+                                    <td className="border p-2 text-right font-medium">
+                                      {typeof item.summaryValue === 'number' 
+                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(item.summaryValue) 
+                                        : item.summaryValue}
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
                             </table>
                           ) : (
                             <div className="text-center py-8">
-                              <p className="text-muted-foreground">No data available</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : processedDataType === "monthly-e" && uploadStatus.monthly[selectedEMonth]?.e ? (
-                      <div className="space-y-4">
-                        <h4 className="font-medium">Monthly Employee Data ({selectedEMonth.charAt(0).toUpperCase() + selectedEMonth.slice(1)})</h4>
-                        <div className="overflow-auto max-h-[70vh]">
-                          {monthlyData[selectedEMonth]?.e && Array.isArray(monthlyData[selectedEMonth]?.e) && monthlyData[selectedEMonth]?.e.length > 0 ? (
-                            <table className="min-w-full border-collapse">
-                              <thead>
-                                <tr className="bg-muted">
-                                  <th className="border p-2 text-left">Line Item</th>
-                                  {Object.keys(monthlyData[selectedEMonth].e[0])
-                                    .filter(key => key !== 'Line Item')
-                                    .map((column, idx) => (
-                                      <th key={idx} className="border p-2 text-right">{column}</th>
-                                    ))
-                                  }
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {monthlyData[selectedEMonth].e.map((row, index) => (
-                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                    {Object.keys(row)
-                                      .filter(key => key !== 'Line Item')
-                                      .map((column, idx) => (
-                                        <td key={idx} className="border p-2 text-right">{row[column] || ''}</td>
-                                      ))
-                                    }
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          ) : (
-                            <div className="text-center py-8">
-                              <p className="text-muted-foreground">No data available</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : processedDataType === "monthly-o" && uploadStatus.monthly[selectedOMonth]?.o ? (
-                      <div className="space-y-4">
-                        <h4 className="font-medium">Monthly Other Business Data ({selectedOMonth.charAt(0).toUpperCase() + selectedOMonth.slice(1)})</h4>
-                        <div className="overflow-auto max-h-[70vh]">
-                          {monthlyData[selectedOMonth]?.o && Array.isArray(monthlyData[selectedOMonth]?.o) && monthlyData[selectedOMonth]?.o.length > 0 ? (
-                            <table className="min-w-full border-collapse">
-                              <thead>
-                                <tr className="bg-muted">
-                                  <th className="border p-2 text-left">Line Item</th>
-                                  {Object.keys(monthlyData[selectedOMonth].o[0])
-                                    .filter(key => key !== 'Line Item')
-                                    .map((column, idx) => (
-                                      <th key={idx} className="border p-2 text-right">{column}</th>
-                                    ))
-                                  }
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {monthlyData[selectedOMonth].o.map((row, index) => (
-                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                    <td className="border p-2">{row['Line Item'] || 'N/A'}</td>
-                                    {Object.keys(row)
-                                      .filter(key => key !== 'Line Item')
-                                      .map((column, idx) => (
-                                        <td key={idx} className="border p-2 text-right">{row[column] || ''}</td>
-                                      ))
-                                    }
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          ) : (
-                            <div className="text-center py-8">
-                              <p className="text-muted-foreground">No data available</p>
+                              <p className="text-muted-foreground">No data available for {selectedEMonth} Employee CSV</p>
                             </div>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">No data available for selected type. Please upload data first.</p>
+                      <div className="space-y-4">
+                        <h4 className="font-medium">{selectedOMonth.charAt(0).toUpperCase() + selectedOMonth.slice(1)} Business Data</h4>
+                        <div className="overflow-auto max-h-[70vh]">
+                          {monthlyData[selectedOMonth]?.o?.lineItems && monthlyData[selectedOMonth].o.lineItems.length > 0 ? (
+                            <table className="min-w-full border-collapse">
+                              <thead>
+                                <tr className="bg-muted">
+                                  <th className="border p-2 text-left">Line Item</th>
+                                  {monthlyData[selectedOMonth].o.lineItems[0]?.entityValues && 
+                                    Object.keys(monthlyData[selectedOMonth].o.lineItems[0].entityValues).map((entity, idx) => (
+                                      <th key={idx} className="border p-2 text-right">{entity}</th>
+                                    ))
+                                  }
+                                  <th className="border p-2 text-right">Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {monthlyData[selectedOMonth].o.lineItems.map((item, index) => (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className={`border p-2`} style={{paddingLeft: `${item.depth * 0.5}rem`}}>
+                                      {item.name || 'N/A'}
+                                    </td>
+                                    {item.entityValues && Object.values(item.entityValues).map((value, idx) => (
+                                      <td key={idx} className="border p-2 text-right">
+                                        {typeof value === 'number' 
+                                          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value) 
+                                          : value}
+                                      </td>
+                                    ))}
+                                    <td className="border p-2 text-right font-medium">
+                                      {typeof item.summaryValue === 'number' 
+                                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(item.summaryValue) 
+                                        : item.summaryValue}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-muted-foreground">No data available for {selectedOMonth} Business CSV</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -411,72 +382,37 @@ export default function Upload() {
         <TabsContent value="help">
           <Card>
             <CardHeader>
-              <CardTitle>Help & Guidelines</CardTitle>
-              <CardDescription>Learn how to prepare and upload your financial data</CardDescription>
+              <CardTitle>CSV Upload Guidelines</CardTitle>
+              <CardDescription>Learn how to prepare and upload your financial data files</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-2">CSV File Requirements</h3>
-                <div className="space-y-4">
-                  <div className="bg-muted p-4 rounded-md">
-                    <h4 className="font-medium mb-2">Annual CSV Format</h4>
-                    <p className="mb-2">Your annual CSV file should include:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>First column labeled "Line Item" containing expense/revenue categories</li>
-                      <li>Columns for each month (e.g., "2024(Jan)", "2024(Feb)", etc.)</li>
-                      <li>A "Total" column with yearly totals</li>
-                      <li>Numbers formatted as currency with commas and decimal places</li>
-                      <li>Negative values in parentheses, e.g., "(1,234.56)"</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-muted p-4 rounded-md">
-                    <h4 className="font-medium mb-2">Monthly Employee (E) CSV Format</h4>
-                    <p className="mb-2">Your monthly E CSV files should include:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>First column labeled "Line Item" with expense/revenue categories</li>
-                      <li>Columns for each employee or department</li>
-                      <li>An "All Employees" column with totals</li>
-                      <li>Numbers formatted as currency with commas and decimal places</li>
-                      <li>Negative values in parentheses, e.g., "(1,234.56)"</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-muted p-4 rounded-md">
-                    <h4 className="font-medium mb-2">Monthly Other Business (O) CSV Format</h4>
-                    <p className="mb-2">Your monthly O CSV files should include:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>First column labeled "Line Item" with expense/revenue categories</li>
-                      <li>Columns for each business entity</li>
-                      <li>An "All Entities" column with totals</li>
-                      <li>Numbers formatted as currency with commas and decimal places</li>
-                      <li>Negative values in parentheses, e.g., "(1,234.56)"</li>
-                    </ul>
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Employee (E) CSV Format</h3>
+                <p className="mb-2 text-sm">Monthly Employee CSV files should contain the following:</p>
+                <ul className="list-disc pl-5 text-sm space-y-1">
+                  <li><strong>Line Item column</strong>: Lists expense categories with proper indentation</li>
+                  <li><strong>Employee columns</strong>: One column per employee showing their data</li>
+                  <li><strong>Summary column</strong>: Contains totals for each line item</li>
+                </ul>
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-2">Upload Process</h3>
-                <ol className="list-decimal pl-5 space-y-2">
-                  <li>Prepare your CSV files according to the formats above</li>
-                  <li>Navigate to the "Upload Data" tab</li>
-                  <li>Select the appropriate file type (Annual, Monthly E, or Monthly O)</li>
-                  <li>For monthly files, select the month from the dropdown</li>
-                  <li>Click "Choose File" and select your CSV file</li>
-                  <li>Click "Upload" to process the file</li>
-                  <li>Verify your data in the "Process & Validate" tab</li>
-                  <li>View results in the Dashboard</li>
-                </ol>
+                <h3 className="text-lg font-medium mb-2">Other Business (O) CSV Format</h3>
+                <p className="mb-2 text-sm">Monthly Other Business CSV files should contain the following:</p>
+                <ul className="list-disc pl-5 text-sm space-y-1">
+                  <li><strong>Line Item column</strong>: Lists expense categories with proper indentation</li>
+                  <li><strong>Department columns</strong>: Columns for CBD, DME, Pharmacy, etc.</li>
+                  <li><strong>Summary column</strong>: Contains totals for each line item</li>
+                </ul>
               </div>
               
-              <div>
-                <h3 className="text-lg font-medium mb-2">Troubleshooting</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li><span className="font-medium">Upload fails:</span> Ensure your CSV follows the required format</li>
-                  <li><span className="font-medium">Missing data:</span> Check that all required columns are present</li>
-                  <li><span className="font-medium">Incorrect values:</span> Verify number formatting in your CSV</li>
-                  <li><span className="font-medium">Dashboard not updating:</span> Confirm your data is properly processed in the "Process & Validate" tab</li>
+              <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
+                <h3 className="text-md font-medium text-amber-800 mb-2">Important Notes</h3>
+                <ul className="list-disc pl-5 text-sm space-y-1 text-amber-700">
+                  <li>Ensure all cells with monetary values are formatted consistently</li>
+                  <li>Maintain proper indentation in the Line Item column to preserve hierarchy</li>
+                  <li>Make sure totals are calculated correctly before uploading</li>
+                  <li>Upload files for each month separately using the dropdown selector</li>
                 </ul>
               </div>
             </CardContent>
@@ -484,35 +420,5 @@ export default function Upload() {
         </TabsContent>
       </Tabs>
     </div>
-  );
-}
-
-// Simple Select component for the dropdowns
-function Select({ 
-  className, 
-  placeholder, 
-  value, 
-  onChange, 
-  options 
-}: { 
-  className?: string;
-  placeholder?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: { label: string; value: string; }[];
-}) {
-  return (
-    <select 
-      className={`p-2 border border-input rounded-md ${className}`}
-      value={value}
-      onChange={onChange}
-    >
-      {placeholder && <option value="" disabled>{placeholder}</option>}
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
   );
 }
