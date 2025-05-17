@@ -3,7 +3,7 @@ import { useStore } from "@/store/data-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  TooltipProps, BarChart, Bar
+  TooltipProps, BarChart, Bar, ComposedChart
 } from "recharts";
 import { ArrowUpIcon, ArrowDownIcon, DollarSignIcon } from "lucide-react";
 
@@ -554,7 +554,7 @@ export default function Dashboard() {
         <CardContent className="p-4">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
+              <BarChart
                 data={aggregatedData.monthlyTrends.map(trend => ({
                   month: trend.month,
                   payroll: trend.payrollExpenses || 0,
@@ -566,14 +566,7 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis 
-                  yAxisId="left"
                   tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} 
-                />
-                <YAxis 
-                  yAxisId="right" 
-                  orientation="right" 
-                  domain={[0, 100]}
-                  tickFormatter={(value) => `${value}%`}
                 />
                 <Tooltip 
                   formatter={(value, name) => {
@@ -597,16 +590,32 @@ export default function Dashboard() {
                   fill="#f97316" 
                   radius={[4, 4, 0, 0]}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="percentage"
-                  name="Payroll as % of Revenue"
-                  stroke="#dc2626"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                  yAxisId="percentage"
+                <Tooltip 
+                  formatter={(value, name) => {
+                    if (name === 'payroll') return [formatCurrency(value as number), 'Payroll & Related Expenses'];
+                    if (name === 'revenue') return [formatCurrency(value as number), 'Revenue'];
+                    return [value, name];
+                  }}
+                  labelFormatter={(label) => `Month: ${label}`}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const revenue = payload.find(p => p.name === 'revenue')?.value as number || 0;
+                      const payroll = payload.find(p => p.name === 'payroll')?.value as number || 0;
+                      const percentage = revenue ? Math.round((payroll / revenue) * 100) : 0;
+                      
+                      return (
+                        <div className="bg-white p-2 border shadow-sm rounded-md">
+                          <p className="font-semibold">{label}</p>
+                          <p className="text-blue-600">Revenue: {formatCurrency(revenue)}</p>
+                          <p className="text-orange-500">Payroll: {formatCurrency(payroll)}</p>
+                          <p className="text-gray-700 font-medium">Payroll is {percentage}% of Revenue</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
+                <Legend verticalAlign="top" height={36} />
               </BarChart>
             </ResponsiveContainer>
           </div>
