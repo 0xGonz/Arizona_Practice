@@ -65,34 +65,46 @@ function generateMarginTrend(data: any[]): MarginTrendPoint[] {
   const trendPoints: MarginTrendPoint[] = [];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   
-  // Find the rows with monthly data (typically has all the month columns)
+  console.log("Generating margin trend from annual data");
+  
+  // First, look for rows that have monthly data directly in columns
   const netIncomeRow = data.find(row => 
     row['Line Item'] && 
-    row['Line Item'].includes('Net Income') &&
+    (row['Line Item'].includes('Net Income') || row['Line Item'].includes('Net Profit') || row['Line Item'].includes('Net Income (Loss)')) &&
     Object.keys(row).some(key => months.includes(key))
   );
   
   const revenueRow = data.find(row => 
     row['Line Item'] && 
-    row['Line Item'].includes('Total Revenue') &&
+    (row['Line Item'].includes('Total Revenue') || row['Line Item'].includes('Revenue Total')) &&
     Object.keys(row).some(key => months.includes(key))
   );
   
   if (netIncomeRow && revenueRow) {
+    console.log("Found monthly data rows in annual CSV for net margin trend");
+    console.log("Net income row:", netIncomeRow['Line Item']);
+    console.log("Revenue row:", revenueRow['Line Item']);
+    
     months.forEach((month, index) => {
       if (netIncomeRow[month] && revenueRow[month]) {
         const netIncome = parseFinancialValue(netIncomeRow[month]);
         const revenue = parseFinancialValue(revenueRow[month]);
         const margin = revenue !== 0 ? (netIncome / revenue) * 100 : 0;
         
+        console.log(`${month} margin: ${margin.toFixed(2)}% (Revenue: ${revenue}, Net Income: ${netIncome})`);
+        
         trendPoints.push({
           month,
           value: parseFloat(margin.toFixed(2))
         });
+      } else {
+        console.log(`Missing data for ${month} in annual CSV`);
       }
     });
+  } else {
+    console.log("Could not find monthly data rows in annual CSV for margin trend");
+    console.log("Available rows:", data.map(row => row['Line Item']).filter(Boolean).slice(0, 10));
   }
-  // Return only what we have - no synthetic data
   
   return trendPoints;
 }
