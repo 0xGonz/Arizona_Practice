@@ -576,7 +576,7 @@ export default function Dashboard() {
                 <Bar 
                   dataKey="revenue" 
                   name="Revenue" 
-                  fill="#3b82f6" 
+                  fill="#2563eb" 
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar 
