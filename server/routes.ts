@@ -9,9 +9,13 @@ import {
   departmentPerformance, 
   doctorPerformance, 
   monthlyFinancialData,
-  uploadStatus 
+  uploadStatus,
+  financialLineItems,
+  financialValues,
+  financialCategories
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
+import { FinancialDataManager } from "./financial-data-manager";
 
 // Configure multer storage for file uploads
 const upload = multer({ 
@@ -49,6 +53,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store the file in the database
       const uploadId = await storage.storeCSVFile('annual', fileContent, filename);
       console.log(`Annual CSV stored with ID: ${uploadId}`);
+      
+      // Process and store the data in the new structured format
+      console.log(`Using FinancialDataManager to store structured annual data for upload ${uploadId}`);
+      try {
+        const success = await FinancialDataManager.storeStructuredFinancialData(
+          uploadId, 
+          fileContent, 
+          'annual'
+        );
+        console.log(`Structured annual data storage ${success ? 'successful' : 'failed'}`);
+      } catch (structError) {
+        console.error('Error storing structured annual financial data:', structError);
+        // Continue even if structured storage fails
+      }
       
       // Process the CSV data for immediate use
       try {
@@ -108,6 +126,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const csvType = type === 'e' ? 'monthly-e' : 'monthly-o';
       const uploadId = await storage.storeCSVFile(csvType, fileContent, filename, month);
       console.log(`Monthly ${type}-type CSV stored with ID: ${uploadId}`);
+      
+      // Process and store the data in the new structured format
+      console.log(`Using FinancialDataManager to store structured data for upload ${uploadId}`);
+      try {
+        const success = await FinancialDataManager.storeStructuredFinancialData(
+          uploadId, 
+          fileContent, 
+          csvType, 
+          month
+        );
+        console.log(`Structured data storage ${success ? 'successful' : 'failed'}`);
+      } catch (structError) {
+        console.error('Error storing structured financial data:', structError);
+        // Continue even if structured storage fails
+      }
       
       // Process the CSV data right away
       try {
@@ -267,6 +300,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error retrieving upload:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // New advanced financial data query endpoint
+  app.get("/api/finance/query", async (req, res) => {
+    try {
+      const { 
+        month, 
+        year, 
+        category, 
+        lineItemPattern, 
+        entityNames, 
+        minDepth, 
+        maxDepth,
+        fileType,
+        limit = "100"
+      } = req.query;
+      
+      console.log("Financial data query:", req.query);
+      
+      // Validate and convert parameters
+      const queryParams: any = {};
+      
+      if (month && typeof month === 'string') {
+        queryParams.month = month;
+      }
+      
+      if (year && typeof year === 'string') {
+        queryParams.year = parseInt(year);
+      }
+      
+      if (category && typeof category === 'string') {
+        queryParams.category = category;
+      }
+      
+      if (lineItemPattern && typeof lineItemPattern === 'string') {
+        queryParams.lineItemPattern = lineItemPattern;
+      }
+      
+      if (entityNames && typeof entityNames === 'string') {
+        queryParams.entityNames = entityNames.split(',');
+      }
+      
+      if (minDepth && typeof minDepth === 'string') {
+        queryParams.minDepth = parseInt(minDepth);
+      }
+      
+      if (maxDepth && typeof maxDepth === 'string') {
+        queryParams.maxDepth = parseInt(maxDepth);
+      }
+      
+      if (fileType && (fileType === 'annual' || fileType === 'monthly-e' || fileType === 'monthly-o')) {
+        queryParams.fileType = fileType as CSVFileType;
+      }
+      
+      if (limit && typeof limit === 'string') {
+        queryParams.limit = parseInt(limit);
+      }
+      
+      // Query the financial data
+      const results = await FinancialDataManager.queryFinancialData(queryParams);
+      
+      res.status(200).json({
+        query: queryParams,
+        count: results.length,
+        results
+      });
+    } catch (error) {
+      console.error("Error querying financial data:", error);
+      res.status(500).json({ 
+        message: "Error querying financial data", 
+        error: String(error)
+      });
     }
   });
   
