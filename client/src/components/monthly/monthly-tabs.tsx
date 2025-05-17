@@ -41,63 +41,7 @@ export default function MonthlyTabs() {
         </div>
       </div>
       
-      <div className="p-6">
-        {(() => {
-          const monthlyStatus = uploadStatus.monthly[activeMonth.toLowerCase()];
-          const eUploaded = !!monthlyStatus?.e;
-          const oUploaded = !!monthlyStatus?.o;
-          const allUploaded = eUploaded && oUploaded;
-          
-          if (!allUploaded) {
-            return (
-              <UploadBanner
-                title={`${activeMonth} Data Upload Required`}
-                message={`Please upload both the Employee (E) and Other Businesses (O) CSV files for ${activeMonth} to view detailed performance metrics.`}
-                buttonText=""
-                uploadType="monthly"
-                month={activeMonth.toLowerCase()}
-                showEOButtons={true}
-                eUploaded={eUploaded}
-                oUploaded={oUploaded}
-              />
-            );
-          }
-          
-          // If both files are uploaded, show links to performance pages
-          return (
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <h3 className="text-lg font-medium text-neutral-dark mb-4">Available {activeMonth} Reports</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a 
-                  href="/doctor-performance" 
-                  className="flex items-center p-4 border rounded-lg hover:bg-blue-50 transition-colors"
-                >
-                  <div className="bg-blue-100 p-2 rounded-full mr-3">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Doctor Performance</div>
-                    <div className="text-sm text-gray-500">View provider metrics</div>
-                  </div>
-                </a>
-                
-                <a 
-                  href="/department-analysis" 
-                  className="flex items-center p-4 border rounded-lg hover:bg-blue-50 transition-colors"
-                >
-                  <div className="bg-blue-100 p-2 rounded-full mr-3">
-                    <Building className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Department Analysis</div>
-                    <div className="text-sm text-gray-500">View department metrics</div>
-                  </div>
-                </a>
-              </div>
-            </div>
-          );
-        })()}
-      </div>
+
     </Card>
   );
 }
