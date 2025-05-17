@@ -5,7 +5,9 @@ import {
   Upload, 
   History, 
   Stethoscope,
-  Menu
+  Menu,
+  User,
+  Building
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -19,6 +21,8 @@ interface NavItem {
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
   { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-4 h-4" /> },
+  { name: "Employee Analysis", path: "/employee-analysis", icon: <User className="w-4 h-4" /> },
+  { name: "Business Analysis", path: "/business-analysis", icon: <Building className="w-4 h-4" /> },
   { name: "Upload Data", path: "/upload", icon: <Upload className="w-4 h-4" /> },
   { name: "Upload History", path: "/upload-history", icon: <History className="w-4 h-4" /> }
 ];
