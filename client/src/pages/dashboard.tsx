@@ -444,7 +444,11 @@ export default function Dashboard() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={aggregatedData.monthlyTrends}
+                  data={aggregatedData.monthlyTrends.map(trend => ({
+                    month: trend.month,
+                    "eData.netIncome": trend.eNetIncome,
+                    "oData.netIncome": trend.oNetIncome
+                  }))}
                   margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -456,13 +460,13 @@ export default function Dashboard() {
                   />
                   <Legend />
                   <Bar 
-                    dataKey="eNetIncome" 
+                    dataKey="eData.netIncome" 
                     name="Employee Net Income" 
                     fill="#8884d8"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
-                    dataKey="oNetIncome" 
+                    dataKey="oData.netIncome" 
                     name="Business Net Income" 
                     fill="#82ca9d"
                     radius={[4, 4, 0, 0]}
