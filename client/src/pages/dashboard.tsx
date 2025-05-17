@@ -3,7 +3,7 @@ import { useStore } from "@/store/data-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  TooltipProps
+  TooltipProps, BarChart, Bar
 } from "recharts";
 import { ArrowUpIcon, ArrowDownIcon, DollarSignIcon } from "lucide-react";
 
@@ -308,11 +308,11 @@ export default function Dashboard() {
             <div className="text-sm text-gray-600 flex flex-col mt-2">
               <span className="flex items-center">
                 <span className="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
-                E-Files: {formatCurrency(aggregatedData.totalERevenue)}
+                E-Files: {formatCurrency(aggregatedData.eData.revenue)}
               </span>
               <span className="flex items-center">
                 <span className="w-2 h-2 bg-indigo-400 rounded-full mr-1"></span>
-                O-Files: {formatCurrency(aggregatedData.totalORevenue)}
+                O-Files: {formatCurrency(aggregatedData.oData.revenue)}
               </span>
             </div>
           </CardContent>
@@ -339,11 +339,11 @@ export default function Dashboard() {
             <div className="text-sm text-gray-600 flex flex-col mt-2">
               <span className="flex items-center">
                 <span className="w-2 h-2 bg-red-400 rounded-full mr-1"></span>
-                E-Files: {formatCurrency(aggregatedData.totalEExpenses)}
+                E-Files: {formatCurrency(aggregatedData.eData.expenses)}
               </span>
               <span className="flex items-center">
                 <span className="w-2 h-2 bg-rose-400 rounded-full mr-1"></span>
-                O-Files: {formatCurrency(aggregatedData.totalOExpenses)}
+                O-Files: {formatCurrency(aggregatedData.oData.expenses)}
               </span>
             </div>
           </CardContent>
@@ -432,40 +432,42 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Quarterly Performance Analysis */}
+      {/* Financial Performance Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Quarterly Revenue Breakdown */}
+        {/* Employee vs Business Net Income Comparison */}
         <Card className="shadow-md border-t-4 border-blue-400">
           <CardHeader className="bg-gray-50 p-4">
-            <CardTitle className="text-lg font-semibold">Quarterly Revenue Breakdown</CardTitle>
-            <CardDescription>Revenue by quarter for 2024</CardDescription>
+            <CardTitle className="text-lg font-semibold">Employee vs Business Net Income</CardTitle>
+            <CardDescription>Comparing employee and business monthly performance</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={[
-                    { quarter: 'Q1', value: aggregatedData.quarterlyRevenue?.q1 || 0 },
-                    { quarter: 'Q2', value: aggregatedData.quarterlyRevenue?.q2 || 0 },
-                    { quarter: 'Q3', value: aggregatedData.quarterlyRevenue?.q3 || 0 },
-                    { quarter: 'Q4', value: aggregatedData.quarterlyRevenue?.q4 || 0 },
-                  ]}
+                <BarChart
+                  data={aggregatedData.monthlyTrends}
                   margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="quarter" />
+                  <XAxis dataKey="month" />
                   <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
-                  <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, 'Revenue']} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    name="Revenue"
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    dot={{ r: 6, strokeWidth: 2 }}
-                    activeDot={{ r: 8 }}
+                  <Tooltip 
+                    formatter={(value) => [`${formatCurrency(value as number)}`, '']}
+                    labelFormatter={(label) => `Month: ${label}`}
                   />
-                </LineChart>
+                  <Legend />
+                  <Bar 
+                    dataKey="eNetIncome" 
+                    name="Employee Net Income" 
+                    fill="#8884d8"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="oNetIncome" 
+                    name="Business Net Income" 
+                    fill="#82ca9d"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
