@@ -17,7 +17,7 @@ const rangeSchema = z.object({
 });
 
 // Get available months with data
-router.get('/months', async (_req, res) => {
+router.get('/analytics/months', async (_req, res) => {
   try {
     // Pull distinct months that exist in financial_values
     const months = await db
@@ -34,7 +34,7 @@ router.get('/months', async (_req, res) => {
 });
 
 // Employee Summary - aggregated data across all employees
-router.get('/employee/summary', async (req, res) => {
+router.get('/analytics/employee/summary', async (req, res) => {
   try {
     const { from, to } = rangeSchema.parse(req.query);
     
@@ -64,7 +64,7 @@ router.get('/employee/summary', async (req, res) => {
 });
 
 // Employee Detail - data for a specific employee
-router.get('/employee/detail', async (req, res) => {
+router.get('/analytics/employee/detail', async (req, res) => {
   try {
     const queryParams = rangeSchema.extend({ 
       employeeId: z.string() 
