@@ -140,7 +140,7 @@ export default function DoctorPerformance() {
       {hasData && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Trend View */}
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Monthly Performance Trend</CardTitle>
             </CardHeader>

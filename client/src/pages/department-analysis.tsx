@@ -142,7 +142,7 @@ export default function DepartmentAnalysis() {
       {hasData && (
         <div className="grid grid-cols-1 gap-6">
           {/* Monthly Trend View */}
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Monthly Performance Trend</CardTitle>
             </CardHeader>
