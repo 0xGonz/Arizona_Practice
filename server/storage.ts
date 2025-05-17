@@ -474,7 +474,9 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Choose storage implementation based on environment
-export const storage = process.env.DATABASE_URL 
-  ? new DatabaseStorage() 
-  : new MemStorage();
+// Always use database storage since we have a database available
+export const storage = new DatabaseStorage();
+
+// Log database status for debugging
+console.log("Database URL available:", !!process.env.DATABASE_URL);
+console.log("Using DatabaseStorage for persistence");
