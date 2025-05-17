@@ -91,18 +91,8 @@ function generateMarginTrend(data: any[]): MarginTrendPoint[] {
         });
       }
     });
-  } else {
-    // If we can't find monthly data, use dummy data for visualization
-    const baseValue = Math.random() * 5 + 15; // Random base value between 15-20%
-    
-    months.forEach((month, index) => {
-      const randomVariation = Math.random() * 4 - 2; // Random variation between -2 and 2
-      trendPoints.push({
-        month,
-        value: parseFloat((baseValue + randomVariation).toFixed(2))
-      });
-    });
   }
+  // Return only what we have - no synthetic data
   
   return trendPoints;
 }
@@ -132,7 +122,8 @@ function generateTopPerformers(data: any[]): PerformerData[] {
       id: index.toString(),
       name: row['Line Item'].trim(),
       revenue: parseFinancialValue(row['Total']),
-      growth: Math.random() * 30 - 5 // Random growth between -5% and 25%
+      // Using a fixed value for growth until we have historical data to calculate actual growth
+      growth: 0
     });
   });
   
@@ -164,7 +155,8 @@ function generateBottomPerformers(data: any[]): PerformerData[] {
       id: index.toString(),
       name: row['Line Item'].trim(),
       revenue: parseFinancialValue(row['Total']),
-      growth: Math.random() * 10 - 15 // Random growth between -15% and -5%
+      // Using a fixed value for growth until we have historical data to calculate actual growth
+      growth: 0
     });
   });
   
@@ -195,15 +187,9 @@ function generateAncillaryComparison(data: any[]): ComparisonData[] {
         value: sum,
         color: colors[index]
       });
-    } else {
-      // If no match found, use random value for visualization
-      const randomValue = Math.floor(Math.random() * 100000) + 50000;
-      comparison.push({
-        name: category,
-        value: randomValue,
-        color: colors[index]
-      });
     }
+    // Skip categories with no matching data
+    // This ensures we only display real data
   });
   
   return comparison;

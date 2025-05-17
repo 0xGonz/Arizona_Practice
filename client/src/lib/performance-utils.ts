@@ -493,7 +493,7 @@ export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' |
     'july', 'august', 'september', 'october', 'november', 'december'
   ];
   
-  // We'll only use actual data from uploaded CSV files
+  // We'll only use actual data from uploaded CSV files - no hardcoded values
   const KNOWN_MONTH_VALUES: Record<string, Record<string, any>> = {};
   
   // Short month names for display
