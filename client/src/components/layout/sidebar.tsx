@@ -6,11 +6,8 @@ import {
   Building, 
   Upload, 
   History, 
-  FileText, 
-  LineChart, 
-  Stethoscope,
-  Search,
-  Database
+  Database,
+  Stethoscope
 } from "lucide-react";
 
 interface NavItem {
@@ -35,13 +32,6 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
       { name: "Upload Data", path: "/upload", icon: <Upload className="w-5 h-5" /> },
       { name: "Upload History", path: "/upload-history", icon: <History className="w-5 h-5" /> },
       { name: "Financial Query", path: "/financial-query", icon: <Database className="w-5 h-5" /> }
-    ]
-  },
-  {
-    section: "Reports",
-    items: [
-      { name: "Generate Reports", path: "/reports", icon: <FileText className="w-5 h-5" /> },
-      { name: "Financial Insights", path: "/insights", icon: <LineChart className="w-5 h-5" /> }
     ]
   }
 ];
