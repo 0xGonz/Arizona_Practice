@@ -349,7 +349,7 @@ export class DatabaseStorage implements IStorage {
   
   async storeDepartmentData(departmentData: any[], month: string, uploadId: number): Promise<boolean> {
     try {
-      console.log(`Storing department data for ${month}, uploadId ${uploadId}`);
+      console.log(`Storing ${departmentData.length} department records for ${month}, uploadId ${uploadId}`);
       
       // First clear existing data for this month/uploadId
       await db.delete(departmentPerformance)
@@ -363,12 +363,15 @@ export class DatabaseStorage implements IStorage {
         await db.insert(departmentPerformance).values({
           name: dept.name,
           month: month,
-          revenue: dept.revenue,
-          expenses: dept.expenses,
-          netIncome: dept.net,
+          year: new Date().getFullYear(),
+          revenue: dept.revenue || 0,
+          expenses: dept.expenses || 0,
+          netIncome: dept.netIncome || 0,
+          percentageOfTotal: 0, // Calculate later if needed
           uploadId: uploadId,
           createdAt: new Date()
         });
+        console.log(`Inserted department: ${dept.name} for ${month}`);
       }
       
       return true;
@@ -380,7 +383,7 @@ export class DatabaseStorage implements IStorage {
   
   async storeDoctorData(doctorData: any[], month: string, uploadId: number): Promise<boolean> {
     try {
-      console.log(`Storing doctor data for ${month}, uploadId ${uploadId}`);
+      console.log(`Storing ${doctorData.length} doctor records for ${month}, uploadId ${uploadId}`);
       
       // First clear existing data for this month/uploadId
       await db.delete(doctorPerformance)
@@ -394,12 +397,15 @@ export class DatabaseStorage implements IStorage {
         await db.insert(doctorPerformance).values({
           name: doctor.name,
           month: month,
-          revenue: doctor.revenue,
-          expenses: doctor.expenses,
-          netIncome: doctor.net,
+          year: new Date().getFullYear(),
+          revenue: doctor.revenue || 0,
+          expenses: doctor.expenses || 0,
+          netIncome: doctor.netIncome || 0,
+          percentageOfTotal: 0, // Calculate later if needed
           uploadId: uploadId,
           createdAt: new Date()
         });
+        console.log(`Inserted doctor: ${doctor.name} for ${month}`);
       }
       
       return true;
