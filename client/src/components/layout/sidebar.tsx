@@ -4,7 +4,9 @@ import {
   CalendarDays, 
   Upload, 
   History, 
-  Stethoscope
+  Stethoscope,
+  FileBarChart,
+  FileSearch
 } from "lucide-react";
 
 interface NavItem {
@@ -19,6 +21,13 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
     items: [
       { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
       { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-5 h-5" /> }
+    ]
+  },
+  {
+    section: "Data Analysis",
+    items: [
+      { name: "Data Explorer", path: "/data-analysis", icon: <FileBarChart className="w-5 h-5" /> },
+      { name: "Financial Query", path: "/financial-query", icon: <FileSearch className="w-5 h-5" /> }
     ]
   },
   {
