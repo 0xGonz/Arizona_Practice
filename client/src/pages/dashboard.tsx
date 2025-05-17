@@ -287,7 +287,7 @@ export default function Dashboard() {
           <CardTitle className="text-xl font-semibold flex items-center justify-between">
             <span>Monthly Financial Trends</span>
             <span className="text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              All Months {new Date().getFullYear()}
+              All Months 2024
             </span>
           </CardTitle>
         </CardHeader>

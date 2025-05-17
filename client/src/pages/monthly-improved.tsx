@@ -312,7 +312,7 @@ export default function MonthlyImproved() {
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-xl md:text-2xl font-semibold">
-                  {month} {new Date().getFullYear()} - 
+                  {month} 2024 - 
                   {viewType === 'e' ? ' Employee Expenses' : ' Other Business Expenses'}
                 </h2>
                 <p className="text-muted-foreground">
@@ -403,7 +403,7 @@ export default function MonthlyImproved() {
                 <CardTitle className="text-xl font-semibold flex items-center justify-between">
                   <span>{viewType === 'e' ? 'Employee' : 'Other Business'} Financial Details</span>
                   <span className="text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                    {month} {new Date().getFullYear()}
+                    {month} 2024
                   </span>
                 </CardTitle>
               </CardHeader>
