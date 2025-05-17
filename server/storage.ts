@@ -139,19 +139,22 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`DatabaseStorage: Storing ${type} CSV file in database: ${filename}`);
       
-      // Use direct SQL insert for better logging and troubleshooting
-      const result = await db.execute(`
-        INSERT INTO csv_uploads (type, filename, content, month, uploaded_at, processed)
-        VALUES ($1, $2, $3, $4, NOW(), false)
-        RETURNING id
-      `, [type, filename, content, month || null]);
+      // Use Drizzle ORM to insert the CSV file
+      const [result] = await db.insert(csvUploads).values({
+        type: type,
+        filename: filename,
+        content: content,
+        month: month || null,
+        uploadedAt: new Date(),
+        processed: false
+      }).returning();
       
-      if (!result.rows || result.rows.length === 0) {
-        console.error("Failed to insert CSV file: No rows returned");
+      if (!result) {
+        console.error("Failed to insert CSV file: No result returned");
         throw new Error("Database insert failed");
       }
       
-      const uploadId = result.rows[0].id;
+      const uploadId = result.id;
       console.log(`DatabaseStorage: CSV upload successful. ID: ${uploadId}`);
       
       // Update upload status
@@ -159,10 +162,11 @@ export class DatabaseStorage implements IStorage {
         // For monthly CSV files
         try {
           // Check if we already have a record for this month/year
-          const statusResult = await db.execute(`
-            SELECT * FROM upload_status 
-            WHERE month = $1 AND year = $2
-          `, [month, currentYear]);
+          const statusResult = await db.select().from(uploadStatus)
+            .where(and(
+              eq(uploadStatus.month, month),
+              eq(uploadStatus.year, currentYear)
+            ));
           
           if (statusResult.rows && statusResult.rows.length > 0) {
             // Update existing record
