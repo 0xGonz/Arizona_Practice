@@ -25,7 +25,7 @@ export default function CSVUpload({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
@@ -39,6 +39,47 @@ export default function CSVUpload({
       return;
     }
 
+    try {
+      // Upload file to server first
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Determine the API endpoint based on the CSV type
+      let apiEndpoint = '';
+      if (type === 'annual') {
+        apiEndpoint = '/api/upload/annual';
+      } else if (type === 'monthly-e' && month) {
+        apiEndpoint = `/api/upload/monthly/e?month=${encodeURIComponent(month)}`;
+      } else if (type === 'monthly-o' && month) {
+        apiEndpoint = `/api/upload/monthly/o?month=${encodeURIComponent(month)}`;
+      } else {
+        throw new Error('Invalid upload type or missing month parameter');
+      }
+
+      console.log(`Uploading file to server at ${apiEndpoint}`);
+      
+      // Send the file to the server
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Server error during upload');
+      }
+
+      // Continue with client-side parsing for UI updates
+      const uploadResult = await response.json();
+      console.log('Server upload successful:', uploadResult);
+    } catch (uploadError) {
+      console.error("File upload error:", uploadError);
+      setError(`Error uploading file to server: ${uploadError.message}`);
+      setIsUploading(false);
+      return;
+    }
+
+    // Now parse the file in the browser for immediate UI updates
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -205,7 +246,7 @@ export default function CSVUpload({
           // Success notification
           toast({
             title: "CSV Uploaded Successfully",
-            description: `Your ${type} CSV file has been processed.`,
+            description: `Your ${type} CSV file has been processed and saved to the database.`,
           });
 
           onUploadComplete();
