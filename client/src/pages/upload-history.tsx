@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useStore } from "@/store/data-store";
 import { Button } from "@/components/ui/button";
@@ -279,7 +279,7 @@ export default function UploadHistory() {
                                     </td>
                                   </tr>
                                 )}
-                              </Fragment>
+                              </React.Fragment>
                             );
                           })}
                         </tbody>
