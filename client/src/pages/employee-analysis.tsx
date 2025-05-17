@@ -8,6 +8,7 @@ import { KpiCards } from '@/components/analysis/kpi-cards';
 import { MonthlyBarChart } from '@/components/analysis/monthly-bar-chart';
 import { ProfitabilityChart } from '@/components/analysis/profitability-chart';
 import { AnalysisTable } from '@/components/analysis/analysis-table';
+import { AnalysisTabs } from '@/components/analysis/analysis-tabs';
 import { useAnalysisStore } from '@/store/analysis-store';
 
 export default function EmployeeAnalysis() {
@@ -89,9 +90,12 @@ export default function EmployeeAnalysis() {
         <meta name="description" content="Analyze financial performance of clinic employees with interactive charts and filters" />
       </Helmet>
       
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Employee Analysis</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Financial Analysis</h1>
       </div>
+      
+      {/* Analysis Tabs */}
+      <AnalysisTabs />
       
       {/* Filters */}
       <FiltersBar entityType="employee" />
