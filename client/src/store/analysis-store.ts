@@ -1,35 +1,30 @@
 import { create } from 'zustand';
-import { DateRange } from 'react-day-picker';
-import { getCurrentYearDateRange } from '@/lib/data-utils';
 
 interface AnalysisFilters {
-  range: DateRange;
+  selectedMonth: string;
   selectedEmployee: string;
   selectedBusiness: string;
 }
 
 interface AnalysisStore {
   filters: AnalysisFilters;
-  setDateRange: (range: DateRange) => void;
+  setSelectedMonth: (month: string) => void;
   selectEntity: (id: string, entityType?: 'employee' | 'business') => void;
   clearFilters: () => void;
 }
 
-// Initialize with current year date range by default
-const currentYearRange = getCurrentYearDateRange();
-
 export const useAnalysisStore = create<AnalysisStore>((set) => ({
   filters: {
-    range: currentYearRange,
+    selectedMonth: '',  // Empty means all months (or most recent available)
     selectedEmployee: '',
     selectedBusiness: '',
   },
   
-  // Set the date range
-  setDateRange: (range: DateRange) => set((state) => ({
+  // Set the selected month
+  setSelectedMonth: (month: string) => set((state) => ({
     filters: {
       ...state.filters,
-      range
+      selectedMonth: month
     }
   })),
   
@@ -52,7 +47,7 @@ export const useAnalysisStore = create<AnalysisStore>((set) => ({
   // Clear all filters
   clearFilters: () => set({
     filters: {
-      range: currentYearRange, // Reset to current year instead of undefined
+      selectedMonth: '',  // Reset to all months
       selectedEmployee: '',
       selectedBusiness: '',
     }

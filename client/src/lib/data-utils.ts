@@ -1,26 +1,20 @@
-import { addMonths, startOfYear, endOfYear, format } from 'date-fns';
+import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 /**
- * Get a date range for the current year
+ * Available months for selection
  */
-export function getCurrentYearDateRange(): DateRange {
-  const now = new Date();
-  return {
-    from: startOfYear(now),
-    to: endOfYear(now)
-  };
-}
+export const months = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december'
+];
 
 /**
- * Get a date range for the past 12 months
+ * Format a month name with proper capitalization
  */
-export function getPast12MonthsDateRange(): DateRange {
-  const now = new Date();
-  return {
-    from: addMonths(now, -12),
-    to: now
-  };
+export function formatMonthName(month: string): string {
+  if (!month) return 'All Months';
+  return month.charAt(0).toUpperCase() + month.slice(1);
 }
 
 /**

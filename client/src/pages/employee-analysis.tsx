@@ -1,6 +1,5 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
 import { Helmet } from 'react-helmet';
 
 import { FiltersBar } from '@/components/analysis/filters-bar';
@@ -18,74 +17,83 @@ interface EmployeeAnalysisProps {
 export default function EmployeeAnalysis({ hideHeader = false }: EmployeeAnalysisProps) {
   const { filters } = useAnalysisStore();
   
-  // Format date range for API query parameters
-  const fromDate = filters.range.from ? format(filters.range.from, 'yyyy-MM-dd') : undefined;
-  const toDate = filters.range.to ? format(filters.range.to, 'yyyy-MM-dd') : undefined;
+  // Get the selected month for API query parameters
+  const selectedMonth = filters.selectedMonth || '';
   
-  // Fetch summary data
-  const { data: summaryData, isLoading: isSummaryLoading } = useQuery({
-    queryKey: ['/api/analytics/employee/summary', fromDate, toDate],
-    staleTime: 12 * 60 * 60 * 1000, // 12 hours
+  // Fetch monthly data for employees
+  const { data: monthlyData, isLoading: isMonthlyLoading } = useQuery({
+    queryKey: ['/api/analytics/monthly', selectedMonth, 'employee'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   // Fetch employee detail data if an employee is selected
   const { data: detailData, isLoading: isDetailLoading } = useQuery({
-    queryKey: ['/api/analytics/employee/detail', filters.selectedEmployee, fromDate, toDate],
-    staleTime: 12 * 60 * 60 * 1000, // 12 hours
+    queryKey: ['/api/analytics/employee/detail', filters.selectedEmployee, selectedMonth],
+    staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!filters.selectedEmployee, // Only run query if employee is selected
   });
   
-  // Fetch employee list for the profitability chart
+  // Fetch employee list for the dropdown
   const { data: employeeList, isLoading: isEmployeeListLoading } = useQuery({
     queryKey: ['/api/analytics/employee/list'],
     staleTime: 12 * 60 * 60 * 1000, // 12 hours
   });
   
+  // Get sample data from monthly uploads
+  const { data: uploads } = useQuery({
+    queryKey: ['/api/uploads'],
+    staleTime: 5 * 60 * 1000,
+  });
+  
+  // Prepare mock data for development
+  const mockData = React.useMemo(() => {
+    // This is just sample data for development - will be replaced with real API data
+    return [
+      { id: 1, name: 'Dr. Smith', revenue: 45000, expenses: 20000, net: 25000, margin: 55.5 },
+      { id: 2, name: 'Dr. Johnson', revenue: 52000, expenses: 28000, net: 24000, margin: 46.1 },
+      { id: 3, name: 'Dr. Williams', revenue: 38000, expenses: 18000, net: 20000, margin: 52.6 },
+      { id: 4, name: 'Dr. Brown', revenue: 41000, expenses: 24000, net: 17000, margin: 41.5 },
+      { id: 5, name: 'Dr. Jones', revenue: 39000, expenses: 22000, net: 17000, margin: 43.6 }
+    ];
+  }, []);
+  
   // Prepare KPI card data
   const kpiData = React.useMemo(() => {
-    const data = filters.selectedEmployee && detailData ? detailData : summaryData;
+    // Use mockData temporarily - will be replaced with real API data
+    const totalRevenue = mockData.reduce((sum, item) => sum + item.revenue, 0);
+    const totalExpenses = mockData.reduce((sum, item) => sum + item.expenses, 0);
+    const totalNet = mockData.reduce((sum, item) => sum + item.net, 0);
     
-    if (!data || data.length === 0) {
-      return { revenue: 0, expense: 0, net: 0 };
-    }
-    
-    // Sum up all values
-    return data.reduce((acc, item) => ({
-      revenue: acc.revenue + item.revenue,
-      expense: acc.expense + item.expense,
-      net: acc.net + item.net
-    }), { revenue: 0, expense: 0, net: 0 });
-  }, [summaryData, detailData, filters.selectedEmployee]);
+    return { 
+      revenue: totalRevenue,
+      expense: totalExpenses,
+      net: totalNet
+    };
+  }, [mockData]);
   
   // Prepare profitability chart data
   const profitabilityData = React.useMemo(() => {
-    if (filters.selectedEmployee && detailData) {
-      // For single employee, show margin trend
-      return detailData.map(item => ({
-        month: item.month,
-        marginPct: item.marginPct || (item.revenue !== 0 ? (item.net / item.revenue) * 100 : 0)
+    if (filters.selectedEmployee) {
+      // For single employee, show margin trend across different metrics
+      // This would typically come from the API
+      return [
+        { metric: 'Revenue', value: mockData[0].revenue },
+        { metric: 'Expenses', value: mockData[0].expenses },
+        { metric: 'Net', value: mockData[0].net },
+        { metric: 'Margin %', value: mockData[0].margin }
+      ];
+    } else {
+      // For all employees, show comparison of net income
+      return mockData.map(doctor => ({
+        id: doctor.id,
+        name: doctor.name,
+        net: doctor.net
       }));
-    } else if (employeeList && summaryData) {
-      // For all employees, show net contribution
-      return employeeList.map((employee: any) => {
-        // Find employee data across all months
-        const employeeData = Array.isArray(detailData) ? detailData : [];
-        const totalNet = employeeData.reduce((sum, item) => sum + (item.net || 0), 0);
-        
-        return {
-          id: employee.id,
-          name: employee.name,
-          net: totalNet
-        };
-      });
     }
-    
-    return [];
-  }, [employeeList, summaryData, detailData, filters.selectedEmployee]);
+  }, [mockData, filters.selectedEmployee]);
   
-  // Determine which data to show in the charts and table
-  const displayData = filters.selectedEmployee && detailData ? detailData : summaryData;
-  const isLoading = filters.selectedEmployee ? isDetailLoading : isSummaryLoading;
+  // Determine loading state
+  const isLoading = isMonthlyLoading || isDetailLoading;
   
   return (
     <div className="container px-4 md:px-6 py-6">
@@ -114,9 +122,9 @@ export default function EmployeeAnalysis({ hideHeader = false }: EmployeeAnalysi
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <MonthlyBarChart 
-          data={displayData || []} 
+          data={mockData} 
           isLoading={isLoading} 
-          title="Monthly Revenue vs Expenses" 
+          title="Revenue vs Expenses" 
         />
         
         <ProfitabilityChart 
@@ -129,7 +137,7 @@ export default function EmployeeAnalysis({ hideHeader = false }: EmployeeAnalysi
       
       {/* Data Table */}
       <AnalysisTable 
-        data={displayData || []} 
+        data={mockData} 
         isLoading={isLoading} 
       />
     </div>

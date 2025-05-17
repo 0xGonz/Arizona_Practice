@@ -2,12 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, RefreshCw } from 'lucide-react';
-import { formatDateRange, extractEntitiesFromMonthlyData } from '@/lib/data-utils';
-import { DateRange } from 'react-day-picker';
+import { months, formatMonthName, extractEntitiesFromMonthlyData } from '@/lib/data-utils';
 import { useQuery } from '@tanstack/react-query';
 import { useAnalysisStore } from '@/store/analysis-store';
 import { useToast } from '@/hooks/use-toast';
@@ -22,21 +19,20 @@ interface FiltersBarProps {
 }
 
 export function FiltersBar({ entityType }: FiltersBarProps) {
-  const { filters, setDateRange, clearFilters, selectEntity } = useAnalysisStore();
+  const { filters, setSelectedMonth, clearFilters, selectEntity } = useAnalysisStore();
   const { toast } = useToast();
   const [entities, setEntities] = useState<Entity[]>([]);
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   
-  // Get the data for each month
+  // Get the data for all uploads
   const { data: monthlyData } = useQuery({
     queryKey: ['/api/uploads'],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  // Fetch the monthly data files that we need for entity lists
+  // Extract available months and map upload IDs
   useEffect(() => {
     if (monthlyData && Array.isArray(monthlyData)) {
-      // Find the most recent month with both E and O files
-      const months: string[] = [];
       const monthMap = new Map<string, { e?: number; o?: number }>();
       
       monthlyData.forEach((upload: any) => {
@@ -45,7 +41,6 @@ export function FiltersBar({ entityType }: FiltersBarProps) {
           if (month) {
             if (!monthMap.has(month)) {
               monthMap.set(month, { e: undefined, o: undefined });
-              months.push(month);
             }
             
             const monthData = monthMap.get(month);
@@ -58,25 +53,31 @@ export function FiltersBar({ entityType }: FiltersBarProps) {
         }
       });
       
-      // Choose the most recent month that has the type we need
-      let latestMonth = '';
-      for (let i = 0; i < months.length; i++) {
-        const month = months[i];
-        const monthData = monthMap.get(month);
-        
-        if (entityType === 'employee' && monthData?.e) {
-          latestMonth = month;
-          break;
-        } else if (entityType === 'business' && monthData?.o) {
-          latestMonth = month;
-          break;
-        }
+      // Get valid months with uploads of the correct type
+      const validMonths = Array.from(monthMap.entries())
+        .filter(([_, data]) => {
+          return entityType === 'employee' ? data.e !== undefined : data.o !== undefined;
+        })
+        .map(([month]) => month);
+      
+      // Sort months in chronological order
+      const sortedMonths = validMonths.sort((a, b) => {
+        return months.indexOf(a) - months.indexOf(b);
+      });
+      
+      setAvailableMonths(sortedMonths);
+      
+      // Set most recent month as default if no month is selected
+      if (sortedMonths.length > 0 && !filters.selectedMonth) {
+        setSelectedMonth(sortedMonths[0]);
       }
       
-      if (latestMonth && monthMap.has(latestMonth)) {
+      // Load entity data for the selected month
+      const selectedMonth = filters.selectedMonth || (sortedMonths.length > 0 ? sortedMonths[0] : '');
+      if (selectedMonth && monthMap.has(selectedMonth)) {
         const uploadId = entityType === 'employee' 
-          ? monthMap.get(latestMonth)?.e 
-          : monthMap.get(latestMonth)?.o;
+          ? monthMap.get(selectedMonth)?.e 
+          : monthMap.get(selectedMonth)?.o;
         
         if (uploadId) {
           // Fetch the upload data
@@ -112,14 +113,14 @@ export function FiltersBar({ entityType }: FiltersBarProps) {
             });
         }
       } else {
-        console.warn(`No ${entityType === 'employee' ? 'E' : 'O'}-type files found.`);
+        console.warn(`No ${entityType === 'employee' ? 'E' : 'O'}-type files found for ${selectedMonth}`);
       }
     }
-  }, [monthlyData, entityType, toast]);
+  }, [monthlyData, entityType, filters.selectedMonth, setSelectedMonth, toast]);
   
-  // Handle date range selection
-  const handleDateRangeSelect = (range: DateRange) => {
-    setDateRange(range);
+  // Handle month selection
+  const handleMonthSelect = (month: string) => {
+    setSelectedMonth(month);
   };
   
   // Handle entity selection
@@ -147,30 +148,25 @@ export function FiltersBar({ entityType }: FiltersBarProps) {
     <Card className="mb-6">
       <CardContent className="p-4">
         <div className="flex flex-wrap gap-4 items-end">
-          {/* Date Range Filter */}
+          {/* Month Filter */}
           <div className="flex-1 min-w-[200px]">
-            <Label className="mb-2 block text-sm">Date Range</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formatDateRange(filters.range)}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={filters.range.from}
-                  selected={filters.range}
-                  onSelect={handleDateRangeSelect}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
+            <Label className="mb-2 block text-sm">Month</Label>
+            <Select 
+              value={filters.selectedMonth || (availableMonths.length > 0 ? availableMonths[0] : '')} 
+              onValueChange={handleMonthSelect}
+              disabled={availableMonths.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a month" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMonths.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {formatMonthName(month)} 2024
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           {/* Entity Selection Filter */}
