@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
 export default function DepartmentAnalysis() {
-  const { uploadStatus } = useStore();
+  const { monthlyData, uploadStatus } = useStore();
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [viewType, setViewType] = useState<string>("performance");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
@@ -32,14 +32,53 @@ export default function DepartmentAnalysis() {
     }
   }, [availableMonths, selectedMonth]);
   
-  // Fetch department data from the API
-  const { data: departmentApiData, isLoading, error } = useQuery({
+  // Extract department data from the client side (similar to doctor performance)
+  const departmentData = useMemo(() => {
+    console.log(`Extracting department data for month: ${selectedMonth}`);
+    
+    if (selectedMonth === 'all') {
+      // For "all" months view, we combine data from all available months
+      return [];
+    }
+    
+    // Process one specific month
+    if (monthlyData && monthlyData[selectedMonth]?.o) {
+      // Extract department data from the O-type file for this month
+      console.log(`Processing department data from month: ${selectedMonth}`);
+      const monthData = {
+        [selectedMonth]: {
+          o: monthlyData[selectedMonth].o
+        }
+      };
+      
+      try {
+        // Use our utility to extract department data
+        const departments = extractDepartmentPerformanceData(monthData);
+        console.log(`Extracted ${departments.length} departments for ${selectedMonth}`);
+        return departments;
+      } catch (error) {
+        console.error(`Error extracting department data for ${selectedMonth}:`, error);
+        return [];
+      }
+    }
+    
+    // Try fetching from API as fallback if client-side data is not available
+    return [];
+  }, [selectedMonth, monthlyData]);
+  
+  // Use API data as a fallback when client-side processing fails
+  const { data: departmentApiData, isLoading } = useQuery({
     queryKey: ['departments', selectedMonth !== 'all' ? selectedMonth : null],
     queryFn: async () => {
       if (selectedMonth === 'all' || !selectedMonth) return { departments: [] };
       
+      // If we already have client-side data, no need to fetch from API
+      if (departmentData && departmentData.length > 0) {
+        return { departments: departmentData, source: 'client' };
+      }
+      
       try {
-        console.log(`Fetching department data for ${selectedMonth}...`);
+        console.log(`Fetching department data from API for ${selectedMonth}...`);
         const response = await fetch(`/api/departments/${selectedMonth}`);
         
         if (response.status === 404) {
@@ -60,24 +99,8 @@ export default function DepartmentAnalysis() {
         return { departments: [], error: String(error) };
       }
     },
-    enabled: selectedMonth !== 'all' && selectedMonth !== '',
+    enabled: selectedMonth !== 'all' && selectedMonth !== '' && (!departmentData || departmentData.length === 0),
   });
-  
-  // Extract department data based on selected month
-  const departmentData = useMemo(() => {
-    if (selectedMonth === 'all') {
-      // For "all" months, we still use the client-side extraction
-      // This is because we don't have an API endpoint for all months combined
-      return [];
-    } else if (departmentApiData?.departments) {
-      // Use data from the API for a specific month
-      console.log(`Using API data for department analysis month: ${selectedMonth}`);
-      return departmentApiData.departments;
-    }
-    
-    // Fallback if nothing else works
-    return [];
-  }, [selectedMonth, departmentApiData]);
   
   // Create a simplified monthly trend based on the department data
   const monthlyTrend = useMemo(() => {
