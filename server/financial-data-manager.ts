@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, sql, inArray, like, gt, gte, lt, lte, or } from "drizzle-orm";
 import {
   csvData,
   csvUploads,
@@ -16,6 +16,164 @@ import Papa from 'papaparse';
  * Provides structured storage and querying capabilities for financial line items
  */
 export class FinancialDataManager {
+
+  /**
+   * Delete financial data based on various filter criteria
+   */
+  static async deleteFinancialData({
+    uploadId,
+    lineItemIds,
+    month,
+    year,
+    category,
+    fileType,
+    deleteAll = false
+  }: {
+    uploadId?: number;
+    lineItemIds?: number[];
+    month?: string;
+    year?: number;
+    category?: string;
+    fileType?: CSVFileType;
+    deleteAll?: boolean;
+  }) {
+    try {
+      console.log("Deleting financial data with params:", {
+        uploadId, lineItemIds, month, year, category, fileType, deleteAll
+      });
+      
+      // Determine which line items to delete
+      let lineItemsToDelete: { id: number }[] = [];
+      
+      // Case 1: Delete by specific uploadId
+      if (uploadId) {
+        lineItemsToDelete = await db
+          .select({ id: financialLineItems.id })
+          .from(financialLineItems)
+          .where(eq(financialLineItems.uploadId, uploadId));
+      }
+      // Case 2: Delete specific line items
+      else if (lineItemIds && lineItemIds.length > 0) {
+        lineItemsToDelete = lineItemIds.map(id => ({ id }));
+      }
+      // Case 3: Delete by filters
+      else {
+        const whereConditions: SQL<unknown>[] = [];
+        
+        if (category) {
+          const categories = await db
+            .select({ id: financialCategories.id })
+            .from(financialCategories)
+            .where(eq(financialCategories.name, category));
+            
+          if (categories.length > 0) {
+            whereConditions.push(eq(financialLineItems.categoryId, categories[0].id));
+          }
+        }
+        
+        // Add the fileType filter via join to csvUploads
+        if (fileType) {
+          const uploadsWithType = await db
+            .select({ id: csvUploads.id })
+            .from(csvUploads)
+            .where(eq(csvUploads.type, fileType));
+          
+          const uploadIds = uploadsWithType.map(u => u.id);
+          
+          if (uploadIds.length > 0) {
+            whereConditions.push(inArray(financialLineItems.uploadId, uploadIds));
+          } else {
+            // No uploads of this type, return empty result
+            return { count: 0 };
+          }
+        }
+        
+        // Apply month and year filters via subquery for values
+        if (month || year) {
+          const valueFilters: SQL<unknown>[] = [];
+          
+          if (month) {
+            valueFilters.push(eq(financialValues.month, month));
+          }
+          
+          if (year) {
+            valueFilters.push(eq(financialValues.year, year));
+          }
+          
+          // Get the IDs of line items that have values matching the filters
+          const matchingLineItemIds = await db
+            .select({ id: financialValues.lineItemId })
+            .from(financialValues)
+            .where(and(...valueFilters));
+          
+          const lineItemIdSet = new Set(matchingLineItemIds.map(item => item.id));
+          
+          if (lineItemIdSet.size > 0) {
+            whereConditions.push(inArray(
+              financialLineItems.id, 
+              Array.from(lineItemIdSet)
+            ));
+          } else {
+            // No matching values, return empty result
+            return { count: 0 };
+          }
+        }
+        
+        // Delete all data if explicitly requested or if there are no filters
+        if (deleteAll || whereConditions.length === 0) {
+          // Get all line items (potentially limited by the above filters)
+          if (whereConditions.length > 0) {
+            lineItemsToDelete = await db
+              .select({ id: financialLineItems.id })
+              .from(financialLineItems)
+              .where(and(...whereConditions));
+          } else if (deleteAll) {
+            lineItemsToDelete = await db
+              .select({ id: financialLineItems.id })
+              .from(financialLineItems);
+          }
+        } else {
+          // Get line items matching the filters
+          lineItemsToDelete = await db
+            .select({ id: financialLineItems.id })
+            .from(financialLineItems)
+            .where(and(...whereConditions));
+        }
+      }
+      
+      // If no line items to delete, return early
+      if (lineItemsToDelete.length === 0) {
+        return { count: 0 };
+      }
+      
+      const lineItemIds = lineItemsToDelete.map(item => item.id);
+      
+      // Step 1: Delete all values associated with these line items
+      const deletedValues = await db
+        .delete(financialValues)
+        .where(inArray(financialValues.lineItemId, lineItemIds))
+        .returning();
+      
+      // Step 2: Delete the line items themselves
+      const deletedLineItems = await db
+        .delete(financialLineItems)
+        .where(inArray(financialLineItems.id, lineItemIds))
+        .returning();
+      
+      // Optionally, also clean up orphaned categories and uploads
+      // This would be a more advanced feature - for now, we're keeping it simple
+      
+      return {
+        count: deletedLineItems.length,
+        deletedValues: deletedValues.length,
+        deletedLineItems: deletedLineItems.length
+      };
+      
+    } catch (error) {
+      console.error("Error deleting financial data:", error);
+      throw new Error(`Failed to delete financial data: ${error}`);
+    }
+  }
   /**
    * Store structured financial data from a CSV upload
    */

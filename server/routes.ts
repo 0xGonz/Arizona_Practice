@@ -376,6 +376,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete financial data endpoint
+  app.delete("/api/finance/delete", async (req, res) => {
+    try {
+      const { 
+        uploadId,
+        lineItemIds,
+        month, 
+        year, 
+        category,
+        fileType,
+        deleteAll = false
+      } = req.body;
+      
+      console.log("Delete financial data request:", req.body);
+      
+      if (!uploadId && !lineItemIds && !month && !year && !category && !fileType && !deleteAll) {
+        return res.status(400).json({ 
+          message: "Delete requires at least one filter parameter or deleteAll=true" 
+        });
+      }
+      
+      // For safety, require confirmation for delete all operations
+      if (deleteAll && req.body.confirmDeleteAll !== "CONFIRM_DELETE_ALL") {
+        return res.status(400).json({ 
+          message: "Delete all operations require explicit confirmation" 
+        });
+      }
+      
+      // Handle deleting by parameters
+      let deletedCount = 0;
+      
+      if (uploadId) {
+        // Delete specific upload and related data
+        const result = await FinancialDataManager.deleteFinancialData({ uploadId: Number(uploadId) });
+        deletedCount = result.count;
+      } else if (lineItemIds && Array.isArray(lineItemIds)) {
+        // Delete specific line items
+        const result = await FinancialDataManager.deleteFinancialData({ lineItemIds });
+        deletedCount = result.count;
+      } else {
+        // Delete by filters
+        const deleteParams: any = {};
+        
+        if (month) deleteParams.month = month;
+        if (year) deleteParams.year = parseInt(year);
+        if (category) deleteParams.category = category;
+        if (fileType) deleteParams.fileType = fileType;
+        if (deleteAll) deleteParams.deleteAll = true;
+        
+        const result = await FinancialDataManager.deleteFinancialData(deleteParams);
+        deletedCount = result.count;
+      }
+      
+      res.status(200).json({
+        message: `Successfully deleted ${deletedCount} financial data entries`,
+        deletedCount
+      });
+    } catch (error) {
+      console.error("Error deleting financial data:", error);
+      res.status(500).json({ 
+        message: "Error deleting financial data", 
+        error: String(error)
+      });
+    }
+  });
+  
   // API route to get department data
   app.get("/api/departments/:month", async (req, res) => {
     try {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,9 +8,21 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } fr
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2, Trash2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Separator } from '@/components/ui/separator';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   month: z.string().optional(),
@@ -27,6 +39,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function FinancialQueryPage() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -44,6 +59,7 @@ export default function FinancialQueryPage() {
 
   const [queryParams, setQueryParams] = useState<Record<string, string>>({});
   const [hasQueried, setHasQueried] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['/api/finance/query', queryParams],
@@ -55,6 +71,42 @@ export default function FinancialQueryPage() {
     },
     enabled: hasQueried,
     staleTime: 1000 * 60 * 5 // 5 minutes
+  });
+  
+  // Delete mutation
+  const { mutate: deleteData, isPending: isDeleting } = useMutation({
+    mutationFn: async () => {
+      // Apply the same filters as the query
+      return apiRequest('/api/finance/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...queryParams,
+          // If we have specific IDs selected, use those instead
+          // lineItemIds: selectedItems.map(item => item.id)
+        }),
+      });
+    },
+    onSuccess: (response) => {
+      toast({
+        title: "Data deleted successfully",
+        description: `Removed ${response.deletedCount} financial data entries`,
+      });
+      
+      // Refresh all queries
+      queryClient.invalidateQueries();
+      setHasQueried(false);
+      setShowDeleteDialog(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to delete data",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
   });
 
   const onSubmit = (values: FormValues) => {
@@ -68,6 +120,10 @@ export default function FinancialQueryPage() {
     
     setQueryParams(filteredParams);
     setHasQueried(true);
+  };
+  
+  const handleDelete = () => {
+    deleteData();
   };
 
   return (
