@@ -51,7 +51,7 @@ export function FiltersBar({ mode }: FiltersBarProps) {
     resetFilters();
   }, [mode, resetFilters]);
 
-  // Entity selection
+  // Handle entity selection
   const handleEntityChange = (value: string) => {
     if (mode === 'employee') {
       selectEmployee(value === 'all' ? null : value);
