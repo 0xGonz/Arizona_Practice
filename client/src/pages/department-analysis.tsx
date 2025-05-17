@@ -29,12 +29,8 @@ export default function DepartmentAnalysis() {
     return months;
   }, [monthlyData]);
   
-  // Set default month if none selected yet
-  useEffect(() => {
-    if (selectedMonth === "all" && availableMonths.length > 0) {
-      setSelectedMonth(availableMonths[0]);
-    }
-  }, [availableMonths, selectedMonth]);
+  // Keep "all" as the default view, don't auto-select first month
+  // This comment left to document the change from previous behavior
   
   // Extract department data from the monthly CSV files based on selected month
   const departmentData = useMemo(() => {
