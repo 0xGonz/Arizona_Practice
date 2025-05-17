@@ -18,7 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 
 // This component will fetch data from server before rendering the app
 function DataInitializer({ children }: { children: React.ReactNode }) {
-  const { setUploadsFromServer } = useStore();
+  const { setUploadsFromServer, processCSVData, loadCSVContent } = useStore();
   
   // Fetch upload history from server
   const { data: uploadData, isSuccess } = useQuery({
@@ -26,12 +26,74 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
+  // First load upload metadata
   useEffect(() => {
     if (isSuccess && uploadData) {
       console.log("Loading data from server:", uploadData.length, "uploads");
       setUploadsFromServer(uploadData);
+      
+      // Find the most recent uploads of each type to load their data
+      const loadMostRecentData = async () => {
+        try {
+          // Get most recent annual upload
+          const annualUploads = uploadData.filter((u: any) => u.type === 'annual')
+            .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
+          // Get most recent monthly uploads by month
+          const monthlyUploads = uploadData.filter((u: any) => 
+            u.type === 'monthly-e' || u.type === 'monthly-o'
+          );
+          
+          // Group monthly uploads by month
+          const monthlyByMonth: Record<string, any[]> = {};
+          monthlyUploads.forEach((upload: any) => {
+            if (upload.month) {
+              if (!monthlyByMonth[upload.month]) {
+                monthlyByMonth[upload.month] = [];
+              }
+              monthlyByMonth[upload.month].push(upload);
+            }
+          });
+          
+          // Load annual data if available
+          if (annualUploads.length > 0) {
+            const latestAnnual = annualUploads[0];
+            console.log(`Loading annual data from upload ID ${latestAnnual.id}`);
+            await loadCSVContent(latestAnnual.id);
+          }
+          
+          // Load one month's data to have something displayed
+          const monthKeys = Object.keys(monthlyByMonth);
+          if (monthKeys.length > 0) {
+            const firstMonth = monthKeys[0];
+            const monthUploads = monthlyByMonth[firstMonth];
+            
+            // Load E-type upload for this month if available
+            const eUpload = monthUploads.find((u: any) => u.type === 'monthly-e');
+            if (eUpload) {
+              console.log(`Loading monthly-e data for ${firstMonth} from upload ID ${eUpload.id}`);
+              await loadCSVContent(eUpload.id);
+            }
+            
+            // Load O-type upload for this month if available
+            const oUpload = monthUploads.find((u: any) => u.type === 'monthly-o');
+            if (oUpload) {
+              console.log(`Loading monthly-o data for ${firstMonth} from upload ID ${oUpload.id}`);
+              await loadCSVContent(oUpload.id);
+            }
+          }
+          
+          console.log("Completed initial data load from server");
+          
+        } catch (error) {
+          console.error("Error loading initial data:", error);
+        }
+      };
+      
+      // Start loading the actual data
+      loadMostRecentData();
     }
-  }, [isSuccess, uploadData, setUploadsFromServer]);
+  }, [isSuccess, uploadData, setUploadsFromServer, loadCSVContent]);
   
   return <>{children}</>;
 }

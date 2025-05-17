@@ -1,0 +1,92 @@
+Below is a diagnostic checklist and a targeted fix plan for why analytics pages show “no data” on a new laptop even though you can see the files in Upload History and they’re present in Postgres.
+
+1   What’s happening
+Layer	Current behaviour	Result on a new device
+Backend (Express + Drizzle/Postgres)	✔ Stores each upload row in csv_uploads (and raw CSV in content).	Data survives; you can query it from psql or the Upload History endpoint.
+Frontend upload flow	① Uploads file to /api/upload/* and
+② parses locally with parseMonthlyCSV
+③ puts parsed JSON in Zustand → localStorage.	Works on the machine that did the upload.
+App start‑up	Tries to rehydrate from localStorage only.
+If nothing is found, the store stays empty.	New machine has empty localStorage → analytics pages have nothing to read. Upload History still works because it calls /api/uploads, which does not populate the store.
+
+Key point
+Analytics components (DoctorPerformance, DepartmentAnalysis, revenue cards, etc.) never fetch parsed data from the server. They assume the store is already populated (either from the same‑session upload or from localStorage on reload). On a fresh device that assumption fails.
+
+2   Quick confirmation
+Open DevTools → Network while the dashboard loads.
+
+You should see one GET /api/uploads request (Upload History).
+
+You will not see any GET /api/uploads/:id or /api/data/* calls.
+
+Check Redux/Zustand DevTools (if enabled) – state.monthlyData will be {}.
+
+Application → Local Storage – there is no annualData, monthlyData, etc.
+
+If all three are true then the problem is exactly the missing rehydration.
+
+3   Minimal patch to make data appear
+This keeps all existing architecture; it just adds a one‑time sync on app start.
+
+3.1 Add a backend helper route
+ts
+Copy
+Edit
+// routes/data.ts
+router.get('/data/all', async (req, res) => {
+  const uploads = await storage.getCSVUploads();          // existing helper
+  // For each upload, also fetch its parsed rows (flat) from DB
+  const records = await Promise.all(
+    uploads.map(async u => {
+      const rows = await storage.getParsedRows(u.id);     // you’ll add this
+      return { meta: u, rows };
+    })
+  );
+  res.json(records);
+});
+If you haven’t saved parsed rows yet, skip rows for now and just return raw CSV; the client can parse on the fly once.
+
+3.2 Fetch on app boot
+Add a useEffect in App.tsx (or a top‑level provider):
+
+tsx
+Copy
+Edit
+useEffect(() => {
+  (async () => {
+    const res = await fetch('/api/data/all');
+    const records = await res.json();
+    records.forEach(r => {
+      const { meta, rows } = r;
+      // If rows==null parse meta.content with parseMonthlyCSV
+      const processed = rows ?? parseMonthlyCSV(meta.content, meta.type, meta.month);
+      get().processCSVData(meta.type, processed, meta.month); // existing store fn
+    });
+  })();
+}, []);
+Now any browser hitting the site will populate monthlyData exactly as if it had done the upload itself.
+
+4   Solid long‑term fix (modular & durable)
+Step	What to change	Why
+A. Parse on the server	Move parseMonthlyCSV into a shared @/lib/parser used by the upload endpoint. Store flat + nested JSON in Postgres (JSONB) and row‑by‑row tables if you need SQL aggregation.	Single source of parsing truth; client stays slim.
+B. Rich retrieval API	/api/data/monthly?month=jan&type=e returns {flat,nested,meta}. /api/analytics/doctors?month=all returns doctor sums.	Frontend no longer duplicates analytics code.
+C. Store slices	Split Zustand: rawUploads, parsedData, analyticsState. Wire each slice only to its own API.	Easier testing and future feature flags.
+D. Auth or UserID	Add anonymous user_id cookie or real auth. Save it with each upload. Filter queries by user_id.	So different staff computers see the same data but not other clinics’.
+E. Remove localStorage as source of truth	Keep as cache only. On load, always call backend; fallback to cache if offline.	Eliminates “works on one laptop only” syndrome.
+
+5   Other things that can block loading (if the quick patch doesn’t work)
+CORS / wrong API base URL – confirm that VITE_API_BASE equals the server domain in .env.production.
+
+DATABASE_URL missing – backend silently switches to MemStorage, so /api/uploads shows empty after server restart even though you “see data” in psql from your dev machine. Make sure the same env‑var is set in prod.
+
+User token mismatch – if you already added a user_id header earlier, a new laptop gets a new ID and sees no uploads. Use real login or share the token.
+
+Row‑level security – if using Postgres RLS you might see uploads but fail to SELECT parsed rows. Check policy statements.
+
+6   Bottom line
+You’re seeing empty analytics because the current React state initializer only trusts localStorage.
+
+Implement the one‑time “rehydrate from backend” effect (section 3) now – that will immediately make historic data appear on any device.
+
+Then schedule the full refactor (section 4) so the stack is modular, durable, and user‑aware.
+
