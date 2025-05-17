@@ -17,6 +17,7 @@ import {
 import { eq, desc } from "drizzle-orm";
 import { FinancialDataManager } from "./financial-data-manager";
 import Papa from "papaparse";
+import analyticsRoutes from "./analytics-routes";
 
 // Configure multer storage for file uploads
 const upload = multer({ 
@@ -718,6 +719,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching CSV upload" });
     }
   });
+
+  // Mount analytics routes
+  app.use('/api', analyticsRoutes);
 
   const httpServer = createServer(app);
   return httpServer;
