@@ -25,6 +25,13 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
     ]
   },
   {
+    section: "Analysis",
+    items: [
+      { name: "Employee Analysis", path: "/employee-analysis", icon: <User className="w-5 h-5" /> },
+      { name: "Business Analysis", path: "/business-analysis", icon: <Building className="w-5 h-5" /> }
+    ]
+  },
+  {
     section: "Data Management",
     items: [
       { name: "Upload Data", path: "/upload", icon: <Upload className="w-5 h-5" /> },
