@@ -39,66 +39,60 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private uploads: Map<number, CSVUpload>;
-  currentId: number;
-
+  private currentId: number;
+  
   constructor() {
-    this.uploads = new Map();
+    this.uploads = new Map<number, CSVUpload>();
     this.currentId = 1;
   }
-
+  
   async storeCSVFile(
     type: CSVFileType,
     content: string,
     filename: string,
     month?: string
   ): Promise<number> {
-    const id = this.currentId++;
-    const timestamp = new Date();
-    
     const upload: CSVUpload = {
-      id,
+      id: this.currentId,
       type,
       filename,
       content,
       month: month || null,
-      uploadedAt: timestamp,
+      uploadedAt: new Date(),
       processed: false
     };
     
-    this.uploads.set(id, upload);
-    return id;
+    this.uploads.set(this.currentId, upload);
+    return this.currentId++;
   }
-
+  
   async getCSVUploads(): Promise<CSVUpload[]> {
-    return Array.from(this.uploads.values()).map(upload => ({
-      ...upload,
-      // Don't return the content in the list view to reduce payload size
-      content: ''
-    }));
+    return Array.from(this.uploads.values()).sort((a, b) => b.id - a.id);
   }
-
+  
   async getCSVUploadById(id: number): Promise<CSVUpload | undefined> {
     return this.uploads.get(id);
   }
   
   async getMostRecentUploadByType(type: CSVFileType, month?: string): Promise<CSVUpload | undefined> {
-    const uploads = Array.from(this.uploads.values())
-      .filter(upload => upload.type === type && (!month || upload.month === month))
-      .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime());
+    const uploads = Array.from(this.uploads.values()).filter(upload => {
+      if (upload.type !== type) return false;
+      if (month && upload.month !== month) return false;
+      return true;
+    });
     
-    return uploads.length > 0 ? uploads[0] : undefined;
+    return uploads.sort((a, b) => {
+      return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
+    })[0];
   }
-  
-  // Stub implementations for in-memory storage
+
   async storeDepartmentData(_departmentData: any[], _month: string, _uploadId: number): Promise<boolean> {
-    // In-memory storage doesn't persist this data between restarts
-    console.log('Storing department data (memory only)');
+    // Mem storage doesn't persist this data
     return true;
   }
   
   async storeDoctorData(_doctorData: any[], _month: string, _uploadId: number): Promise<boolean> {
-    // In-memory storage doesn't persist this data between restarts
-    console.log('Storing doctor data (memory only)');
+    // Mem storage doesn't persist this data
     return true;
   }
   
@@ -109,23 +103,13 @@ export class MemStorage implements IStorage {
     _netIncome: number,
     _revenueMix: any[],
     _marginTrend: any[],
-    uploadId: number
+    _uploadId: number
   ): Promise<boolean> {
-    // In-memory storage doesn't persist this data between restarts
-    console.log('Storing monthly financial data (memory only)');
-    
-    // Mark the upload as processed
-    const upload = this.uploads.get(uploadId);
-    if (upload) {
-      upload.processed = true;
-      this.uploads.set(uploadId, upload);
-    }
-    
+    // Mem storage doesn't persist this data
     return true;
   }
 }
 
-// Database storage implementation
 export class DatabaseStorage implements IStorage {
   async storeCSVFile(
     type: CSVFileType,
@@ -162,80 +146,54 @@ export class DatabaseStorage implements IStorage {
         // For monthly CSV files
         try {
           // Check if we already have a record for this month/year
-          const statusResult = await db.select().from(uploadStatus)
+          const statusResults = await db.select().from(uploadStatus)
             .where(and(
               eq(uploadStatus.month, month),
               eq(uploadStatus.year, currentYear)
             ));
           
-          if (statusResult.rows && statusResult.rows.length > 0) {
+          if (statusResults && statusResults.length > 0) {
             // Update existing record
             if (type === 'monthly-e') {
-              await db.execute(`
-                UPDATE upload_status 
-                SET monthly_e_uploaded = true, updated_at = NOW() 
-                WHERE month = $1 AND year = $2
-              `, [month, currentYear]);
+              await db.update(uploadStatus)
+                .set({ 
+                  eFile: true,
+                  eFileUploadId: uploadId,
+                  lastUpdated: new Date()
+                })
+                .where(and(
+                  eq(uploadStatus.month, month),
+                  eq(uploadStatus.year, currentYear)
+                ));
             } else if (type === 'monthly-o') {
-              await db.execute(`
-                UPDATE upload_status 
-                SET monthly_o_uploaded = true, updated_at = NOW() 
-                WHERE month = $1 AND year = $2
-              `, [month, currentYear]);
+              await db.update(uploadStatus)
+                .set({ 
+                  oFile: true,
+                  oFileUploadId: uploadId,
+                  lastUpdated: new Date()
+                })
+                .where(and(
+                  eq(uploadStatus.month, month),
+                  eq(uploadStatus.year, currentYear)
+                ));
             }
           } else {
             // Create new record
-            await db.execute(`
-              INSERT INTO upload_status 
-              (month, year, annual_uploaded, monthly_e_uploaded, monthly_o_uploaded, updated_at)
-              VALUES ($1, $2, false, $3, $4, NOW())
-            `, [
-              month, 
-              currentYear, 
-              type === 'monthly-e', 
-              type === 'monthly-o'
-            ]);
-          }
-          console.log(`DatabaseStorage: Upload status updated for ${month}`);
-        } catch (statusError) {
-          console.error('Error updating upload status:', statusError);
-          // Continue even if status update fails
-        }
-      } else if (type === 'annual') {
-        // For annual uploads, update all months in the current year
-        try {
-          const months = [
-            'january', 'february', 'march', 'april', 'may', 'june',
-            'july', 'august', 'september', 'october', 'november', 'december'
-          ];
-          
-          for (const monthName of months) {
-            // Check if status record exists
-            const statusResult = await db.execute(`
-              SELECT * FROM upload_status 
-              WHERE month = $1 AND year = $2
-            `, [monthName, currentYear]);
+            const newStatus = {
+              month,
+              year: currentYear,
+              eFile: type === 'monthly-e',
+              oFile: type === 'monthly-o',
+              eFileUploadId: type === 'monthly-e' ? uploadId : null,
+              oFileUploadId: type === 'monthly-o' ? uploadId : null,
+              lastUpdated: new Date()
+            };
             
-            if (statusResult.rows && statusResult.rows.length > 0) {
-              // Update existing record
-              await db.execute(`
-                UPDATE upload_status 
-                SET annual_uploaded = true, updated_at = NOW() 
-                WHERE month = $1 AND year = $2
-              `, [monthName, currentYear]);
-            } else {
-              // Create new record
-              await db.execute(`
-                INSERT INTO upload_status 
-                (month, year, annual_uploaded, monthly_e_uploaded, monthly_o_uploaded, updated_at)
-                VALUES ($1, $2, true, false, false, NOW())
-              `, [monthName, currentYear]);
-            }
+            await db.insert(uploadStatus).values(newStatus);
           }
-          console.log(`DatabaseStorage: Annual upload status updated for all months`);
-        } catch (statusError) {
-          console.error('Error updating annual upload status:', statusError);
-          // Continue even if status update fails
+        } catch (error) {
+          console.error('Error updating upload status:', error);
+          // Don't fail the whole operation if status update fails
         }
       }
       
@@ -245,90 +203,88 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
-
+  
   async getCSVUploads(): Promise<CSVUpload[]> {
     try {
-      // Get all uploads but exclude content to reduce payload size
-      const uploads = await db.select({
-        id: csvUploads.id,
-        type: csvUploads.type,
-        filename: csvUploads.filename,
-        month: csvUploads.month,
-        uploadedAt: csvUploads.uploadedAt,
-        processed: csvUploads.processed,
-        // Return empty content
-        content: sql<string>`''`
-      }).from(csvUploads)
-        .orderBy(desc(csvUploads.uploadedAt));
-      
-      return uploads as CSVUpload[];
+      return await db.select().from(csvUploads).orderBy(desc(csvUploads.uploadedAt));
     } catch (error) {
-      console.error('Error fetching CSV uploads from database:', error);
+      console.error('Error fetching CSV uploads:', error);
       return [];
     }
   }
-
+  
   async getCSVUploadById(id: number): Promise<CSVUpload | undefined> {
     try {
-      const [upload] = await db.select().from(csvUploads).where(eq(csvUploads.id, id));
-      return upload;
+      const results = await db.select().from(csvUploads).where(eq(csvUploads.id, id));
+      return results[0];
     } catch (error) {
-      console.error(`Error fetching CSV upload ${id} from database:`, error);
+      console.error(`Error fetching CSV upload with ID ${id}:`, error);
       return undefined;
     }
   }
-
-  // Store department performance data
+  
   async storeDepartmentData(departmentData: any[], month: string, uploadId: number): Promise<boolean> {
     try {
-      const currentYear = new Date().getFullYear();
+      console.log(`Storing department data for ${month}, uploadId ${uploadId}`);
       
+      // First clear existing data for this month/uploadId
+      await db.delete(departmentPerformance)
+        .where(and(
+          eq(departmentPerformance.month, month),
+          eq(departmentPerformance.uploadId, uploadId)
+        ));
+      
+      // Insert new data
       for (const dept of departmentData) {
         await db.insert(departmentPerformance).values({
           name: dept.name,
           month: month,
-          year: currentYear,
-          revenue: String(dept.revenue),
-          expenses: String(dept.expenses),
-          netIncome: String(dept.net || 0),
-          profitMargin: String((dept.net / dept.revenue) || 0),
-          uploadId: uploadId
+          revenue: dept.revenue,
+          expenses: dept.expenses,
+          netIncome: dept.net,
+          uploadId: uploadId,
+          createdAt: new Date()
         });
       }
       
       return true;
     } catch (error) {
-      console.error('Error storing department data:', error);
+      console.error(`Error storing department data for ${month}:`, error);
       return false;
     }
   }
-
-  // Store doctor performance data
+  
   async storeDoctorData(doctorData: any[], month: string, uploadId: number): Promise<boolean> {
     try {
-      const currentYear = new Date().getFullYear();
+      console.log(`Storing doctor data for ${month}, uploadId ${uploadId}`);
       
-      for (const doc of doctorData) {
+      // First clear existing data for this month/uploadId
+      await db.delete(doctorPerformance)
+        .where(and(
+          eq(doctorPerformance.month, month),
+          eq(doctorPerformance.uploadId, uploadId)
+        ));
+      
+      // Insert new data
+      for (const doctor of doctorData) {
         await db.insert(doctorPerformance).values({
-          name: doc.name,
+          name: doctor.name,
           month: month,
-          year: currentYear,
-          revenue: String(doc.revenue),
-          expenses: String(doc.expenses),
-          netIncome: String(doc.netIncome || 0),
-          percentageOfTotal: String(doc.percentage || 0),
-          uploadId: uploadId
+          revenue: doctor.revenue,
+          expenses: doctor.expenses,
+          netIncome: doctor.net,
+          uploadId: uploadId,
+          createdAt: new Date()
         });
       }
       
       return true;
     } catch (error) {
-      console.error('Error storing doctor data:', error);
+      console.error(`Error storing doctor data for ${month}:`, error);
       return false;
     }
   }
-
-  // Store monthly financial summary data
+  
   async storeMonthlyFinancialData(
     month: string, 
     totalRevenue: number,
@@ -339,43 +295,43 @@ export class DatabaseStorage implements IStorage {
     uploadId: number
   ): Promise<boolean> {
     try {
-      const currentYear = new Date().getFullYear();
+      console.log(`Storing monthly financial data for ${month}, uploadId ${uploadId}`);
       
+      // First clear existing data for this month/uploadId
+      await db.delete(monthlyFinancialData)
+        .where(and(
+          eq(monthlyFinancialData.month, month),
+          eq(monthlyFinancialData.uploadId, uploadId)
+        ));
+      
+      // Insert new data
       await db.insert(monthlyFinancialData).values({
         month: month,
-        year: currentYear,
-        totalRevenue: String(totalRevenue),
-        totalExpenses: String(totalExpenses),
-        netIncome: String(netIncome),
-        revenueMix: revenueMix ? JSON.stringify(revenueMix) : null,
-        marginTrend: marginTrend ? JSON.stringify(marginTrend) : null,
-        uploadId: uploadId
+        revenue: totalRevenue,
+        expenses: totalExpenses,
+        netIncome: netIncome,
+        revenueMix: JSON.stringify(revenueMix),
+        marginTrend: JSON.stringify(marginTrend),
+        uploadId: uploadId,
+        createdAt: new Date()
       });
-      
-      // Mark the upload as processed
-      await db.update(csvUploads)
-        .set({ processed: true })
-        .where(eq(csvUploads.id, uploadId));
       
       return true;
     } catch (error) {
-      console.error('Error storing monthly financial data:', error);
+      console.error(`Error storing monthly financial data for ${month}:`, error);
       return false;
     }
   }
-
-  // New method to retrieve the most recent upload of a specific type
+  
   async getMostRecentUploadByType(type: CSVFileType, month?: string): Promise<CSVUpload | undefined> {
     try {
-      let query = db.select()
-        .from(csvUploads)
+      let query = db.select().from(csvUploads)
         .where(eq(csvUploads.type, type))
         .orderBy(desc(csvUploads.uploadedAt))
         .limit(1);
       
-      if (month && (type === 'monthly-e' || type === 'monthly-o')) {
-        query = db.select()
-          .from(csvUploads)
+      if (month) {
+        query = db.select().from(csvUploads)
           .where(and(
             eq(csvUploads.type, type),
             eq(csvUploads.month, month)
@@ -384,16 +340,16 @@ export class DatabaseStorage implements IStorage {
           .limit(1);
       }
       
-      const [upload] = await query;
-      return upload;
+      const results = await query;
+      return results[0];
     } catch (error) {
-      console.error(`Error fetching most recent ${type} upload from database:`, error);
+      console.error(`Error fetching most recent ${type} upload:`, error);
       return undefined;
     }
   }
 }
 
-// Use memory storage if database is not available, otherwise use database storage
+// Choose storage implementation based on environment
 export const storage = process.env.DATABASE_URL 
   ? new DatabaseStorage() 
   : new MemStorage();
