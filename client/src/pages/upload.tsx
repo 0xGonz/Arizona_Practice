@@ -47,22 +47,7 @@ export default function Upload() {
         </TabsList>
         
         <TabsContent value="upload">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Annual Dashboard Upload */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Annual Dashboard Upload</CardTitle>
-                <CardDescription>Upload the Annual Consolidated CSV file</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CSVUpload
-                  type="annual"
-                  onUploadComplete={() => {}}
-                  isUploaded={uploadStatus.annual}
-                />
-              </CardContent>
-            </Card>
-            
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Monthly E File Upload */}
             <Card>
               <CardHeader>
@@ -183,9 +168,7 @@ export default function Upload() {
                     
                     // Format file type for display
                     let displayType = '';
-                    if (upload.type === 'annual') {
-                      displayType = 'Annual Consolidated CSV';
-                    } else if (upload.type === 'monthly-e') {
+                    if (upload.type === 'monthly-e') {
                       displayType = `${upload.month?.charAt(0).toUpperCase()}${upload.month?.slice(1)} Employee (E) CSV`;
                     } else if (upload.type === 'monthly-o') {
                       displayType = `${upload.month?.charAt(0).toUpperCase()}${upload.month?.slice(1)} Other Business (O) CSV`;
@@ -233,16 +216,14 @@ export default function Upload() {
                           value={processedDataType}
                           onChange={(e) => setProcessedDataType(e.target.value)}
                         >
-                          <option value="annual">Annual Data</option>
                           <option value="monthly-e">Monthly Employee (E) Data</option>
                           <option value="monthly-o">Monthly Other Business (O) Data</option>
                         </select>
                       </div>
                       
-                      {(processedDataType === "monthly-e" || processedDataType === "monthly-o") && (
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Month</label>
-                          <select
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Month</label>
+                        <select
                             className="w-full p-2 border border-input rounded-md"
                             value={processedDataType === "monthly-e" ? selectedEMonth : selectedOMonth}
                             onChange={(e) => {

@@ -32,14 +32,10 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
       console.log("Loading data from server:", uploadData.length, "uploads");
       setUploadsFromServer(uploadData);
       
-      // Find the most recent uploads of each type to load their data
+      // Find the most recent uploads to load their data
       const loadMostRecentData = async () => {
         try {
-          // Get most recent annual upload
-          const annualUploads = uploadData.filter((u: any) => u.type === 'annual')
-            .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          
-          // Get most recent monthly uploads by month
+          // Get monthly uploads only - no annual data
           const monthlyUploads = uploadData.filter((u: any) => 
             u.type === 'monthly-e' || u.type === 'monthly-o'
           );
@@ -55,13 +51,6 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
               monthlyByMonth[cleanMonth].push(upload);
             }
           });
-          
-          // Load annual data if available
-          if (annualUploads.length > 0) {
-            const latestAnnual = annualUploads[0];
-            console.log(`Loading annual data from upload ID ${latestAnnual.id}`);
-            await loadCSVContent(latestAnnual.id);
-          }
           
           // Load ALL months to ensure complete data visibility
           const monthKeys = Object.keys(monthlyByMonth);
