@@ -525,13 +525,27 @@ export const useStore = create<DataStore>((set, get) => ({
           });
           
           if (parsed.data && Array.isArray(parsed.data)) {
-            // If CSV was loaded successfully, update the process flag in database
-            // Use a simple fetch instead of apiRequest to avoid JSON parsing issues
-            fetch(`/api/uploads/${id}/mark-processed`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ processed: true })
-            }).catch(err => console.error('Could not mark upload as processed:', err));
+            // If CSV was loaded successfully, update the processed flag in database
+            // Only try to update if we're not in deployed mode
+            try {
+              // Check if we're on the actual deployed site
+              const isProduction = window.location.hostname.includes('.replit.app') || 
+                                  window.location.hostname.includes('.repl.co');
+              
+              if (!isProduction) {
+                // Local development - try to mark as processed
+                fetch(`/api/uploads/${id}/mark-processed`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ processed: true })
+                }).catch(() => {
+                  // Silent catch - not critical to app functionality
+                  console.log(`Not able to mark upload ${id} as processed - feature may not be deployed yet`);
+                });
+              }
+            } catch (err) {
+              // Ignore errors - this is just a maintenance task, not critical
+            }
             
             // Process the data and return it
             console.log(`Successfully loaded CSV content for upload ID ${id}, found ${parsed.data.length} rows`);

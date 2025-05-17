@@ -1,0 +1,1060 @@
+Available months in data store: []
+index-B_j80jjh.js:260 No data found for month: January
+index-B_j80jjh.js:311 Loading data from server: 26 uploads
+index-B_j80jjh.js:311 Available months in uploads: july, december, november, october, september, august, june, may, april, march, february, january
+index-B_j80jjh.js:311 Loading monthly-e data for july from upload ID 16 (most recent of 1)
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 16, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for july from upload ID 28 (most recent of 2)
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 28, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for december from upload ID 26 (most recent of 1)
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 26, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for december from upload ID 27 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/26/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/28/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 27, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for november from upload ID 24 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/27/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/16/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 24, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for november from upload ID 25 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/24/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 25, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for october from upload ID 22 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/25/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 22, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for october from upload ID 23 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/22/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 23, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for september from upload ID 20 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/23/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 20, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for september from upload ID 21 (most recent of 1)
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 21, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for august from upload ID 18 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/21/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/20/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 18, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for august from upload ID 19 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/18/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 19, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for june from upload ID 14 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/19/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 14, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for june from upload ID 15 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/14/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 15, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for may from upload ID 12 (most recent of 1)
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 12, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for may from upload ID 13 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/12/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/15/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 13, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for april from upload ID 10 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/13/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 10, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for april from upload ID 11 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/10/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 11, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for march from upload ID 8 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/11/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 8, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for march from upload ID 9 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/8/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 9, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for february from upload ID 6 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/9/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 6, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for february from upload ID 7 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/6/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 7, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-e data for january from upload ID 5 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/7/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 5, found 205 rows
+index-B_j80jjh.js:311 Loading monthly-o data for january from upload ID 4 (most recent of 1)
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/5/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
+index-B_j80jjh.js:192 Successfully loaded CSV content for upload ID 4, found 205 rows
+index-B_j80jjh.js:311 Completed initial data load from server
+index-B_j80jjh.js:192 
+            
+            
+           POST https://pet-adoption-platform-bgonzalez9.replit.app/api/uploads/4/mark-processed 500 (Internal Server Error)
+loadCSVContent @ index-B_j80jjh.js:192
+await in loadCSVContent
+(anonymous) @ index-B_j80jjh.js:311
+await in (anonymous)
+(anonymous) @ index-B_j80jjh.js:311
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+(anonymous) @ index-B_j80jjh.js:40
+setTimeout
+i @ index-B_j80jjh.js:48
+a @ index-B_j80jjh.js:48
+batch @ index-B_j80jjh.js:48
+hi @ index-B_j80jjh.js:48
+setData @ index-B_j80jjh.js:48
+onSuccess @ index-B_j80jjh.js:48
+f @ index-B_j80jjh.js:48
+Promise.then
+b @ index-B_j80jjh.js:48
+start @ index-B_j80jjh.js:48
+fetch @ index-B_j80jjh.js:48
+Tu @ index-B_j80jjh.js:48
+onSubscribe @ index-B_j80jjh.js:48
+subscribe @ index-B_j80jjh.js:48
+(anonymous) @ index-B_j80jjh.js:48
+zC @ index-B_j80jjh.js:38
+rm @ index-B_j80jjh.js:40
+ks @ index-B_j80jjh.js:40
+WS @ index-B_j80jjh.js:40
+Vo @ index-B_j80jjh.js:38
+o4 @ index-B_j80jjh.js:40
+ta @ index-B_j80jjh.js:40
+xT @ index-B_j80jjh.js:40
+w @ index-B_j80jjh.js:25
+C @ index-B_j80jjh.js:25Understand this error
