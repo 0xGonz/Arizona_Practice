@@ -67,13 +67,19 @@ export default function MonthlySummaryCard({
             <div className="bg-white rounded-lg p-3 shadow-sm border">
               <div className="text-sm text-neutral-text">Total Revenue</div>
               <div className="text-xl font-semibold text-blue-600">{formatCurrency(totalRevenue)}</div>
-              <Progress value={(totalRevenue / (totalRevenue + totalExpenses)) * 100} className="h-2 mt-2" />
+              <Progress 
+                value={totalRevenue > 0 ? 100 : 0} 
+                className="h-2 mt-2 bg-blue-100" 
+              />
             </div>
             
             <div className="bg-white rounded-lg p-3 shadow-sm border">
               <div className="text-sm text-neutral-text">Total Expenses</div>
               <div className="text-xl font-semibold text-red-600">{formatCurrency(totalExpenses)}</div>
-              <Progress value={(totalExpenses / (totalRevenue + totalExpenses)) * 100} className="h-2 mt-2" />
+              <Progress 
+                value={totalExpenses > 0 ? 100 : 0} 
+                className="h-2 mt-2 bg-red-100" 
+              />
             </div>
             
             <div className="bg-white rounded-lg p-3 shadow-sm border">
@@ -90,9 +96,14 @@ export default function MonthlySummaryCard({
                   ) : (
                     <ArrowDownIcon className="w-3 h-3 mr-1" />
                   )}
-                  {Math.abs(Math.round((netIncome / totalRevenue) * 100))}% margin
+                  {totalRevenue > 0 ? Math.abs(Math.round((netIncome / totalRevenue) * 100)) : 0}% margin
                 </div>
               </div>
+              
+              <Progress 
+                value={Math.abs(netIncome) > 0 ? 100 : 0} 
+                className={`h-2 mt-2 ${netIncome >= 0 ? 'bg-green-100' : 'bg-red-100'}`}
+              />
             </div>
           </div>
         )}
