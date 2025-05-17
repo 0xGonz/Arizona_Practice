@@ -9,6 +9,7 @@ import Monthly from "@/pages/monthly-improved";
 import Upload from "@/pages/upload";
 import UploadHistory from "@/pages/upload-history";
 import FinancialQuery from "@/pages/financial-query";
+import FinancialAnalysis from "@/pages/financial-analysis";
 import EmployeeAnalysis from "@/pages/employee-analysis";
 import BusinessAnalysis from "@/pages/business-analysis";
 import NotFound from "@/pages/not-found";
@@ -117,6 +118,7 @@ function Router() {
         <Route path="/upload" component={Upload} />
         <Route path="/upload-history" component={UploadHistory} />
         <Route path="/financial-query" component={FinancialQuery} />
+        <Route path="/financial-analysis" component={FinancialAnalysis} />
         <Route path="/employee-analysis" component={EmployeeAnalysis} />
         <Route path="/business-analysis" component={BusinessAnalysis} />
         <Route component={NotFound} />
