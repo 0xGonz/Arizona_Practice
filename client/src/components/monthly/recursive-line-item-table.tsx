@@ -31,11 +31,10 @@ interface RecursiveLineItemTableProps {
   summaryColumn?: string;
 }
 
-// Key financial metrics we want to show in simplified view
+// Key financial metrics we want to show in simplified view - exact matches only
 const KEY_FINANCIAL_METRICS = [
   'Total Revenue',
   'Total Operating Expenses',
-  'Net Income',
   'Net Income (Loss)'
 ];
 
@@ -73,8 +72,9 @@ export default function RecursiveLineItemTable({
     // Check if it matches the simplified view filter
     let simplifiedMatch = true;
     if (showSimplified) {
+      // Use exact matches for the key financial metrics
       const isKeyMetric = KEY_FINANCIAL_METRICS.some(metric => 
-        item.name.toLowerCase().includes(metric.toLowerCase())
+        item.name === metric
       );
       simplifiedMatch = isKeyMetric;
     }
