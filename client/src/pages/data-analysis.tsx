@@ -151,12 +151,45 @@ export default function DataAnalysis() {
 
   // Get unique line items for filtering based on active tab
   const availableLineItems = useMemo(() => {
+    let items = [];
+    
     if (activeTab === "employee" && employeeData.lineItems) {
-      return employeeData.lineItems;
+      // Create a Set to ensure uniqueness by name
+      const uniqueNames = new Set<string>();
+      
+      items = employeeData.lineItems
+        .filter((item: any) => {
+          if (item.name && !uniqueNames.has(item.name)) {
+            uniqueNames.add(item.name);
+            return true;
+          }
+          return false;
+        })
+        .map((item: any, index: number) => ({
+          ...item,
+          // Create a unique id for each item
+          id: `employee-${index}-${Math.random().toString(36).substr(2, 5)}`
+        }));
     } else if (activeTab === "business" && businessData.lineItems) {
-      return businessData.lineItems;
+      // Create a Set to ensure uniqueness by name
+      const uniqueNames = new Set<string>();
+      
+      items = businessData.lineItems
+        .filter((item: any) => {
+          if (item.name && !uniqueNames.has(item.name)) {
+            uniqueNames.add(item.name);
+            return true;
+          }
+          return false;
+        })
+        .map((item: any, index: number) => ({
+          ...item,
+          // Create a unique id for each item
+          id: `business-${index}-${Math.random().toString(36).substr(2, 5)}`
+        }));
     }
-    return [];
+    
+    return items;
   }, [activeTab, employeeData, businessData]);
 
   // Filter line items data based on search term and selected line item
@@ -169,10 +202,18 @@ export default function DataAnalysis() {
       data = businessData.lineItemsData;
     }
     
-    return data.filter((item: any) => {
+    // Add a unique identifier to each item if it doesn't have one
+    const dataWithIds = data.map((item: any, index: number) => {
+      if (!item.id) {
+        return { ...item, id: `item-${index}-${Math.random().toString(36).substr(2, 9)}` };
+      }
+      return item;
+    });
+    
+    return dataWithIds.filter((item: any) => {
       // Filter by search term
       const matchesSearch = searchTerm === "" || 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase());
+        (item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase()));
       
       // Filter by selected line item
       const matchesLineItem = selectedLineItem === "all" || 
@@ -259,7 +300,7 @@ export default function DataAnalysis() {
                   {availableLineItems
                     .filter((item: any) => item.name && item.name.trim() !== "")
                     .map((item: any) => (
-                      <SelectItem key={item.name} value={item.name || `item-${Math.random()}`}>
+                      <SelectItem key={item.id} value={item.name}>
                         {item.name}
                       </SelectItem>
                     ))}
