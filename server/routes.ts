@@ -4,6 +4,14 @@ import { storage } from "./storage";
 import multer from "multer";
 import * as fs from "fs";
 import * as path from "path";
+import { db } from "./db";
+import { 
+  departmentPerformance, 
+  doctorPerformance, 
+  monthlyFinancialData,
+  uploadStatus 
+} from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
 
 // Configure multer storage for file uploads
 const upload = multer({ 

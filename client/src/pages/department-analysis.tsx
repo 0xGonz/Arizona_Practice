@@ -6,6 +6,7 @@ import { useStore } from "@/store/data-store";
 import { extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
 import { extractDepartmentPerformanceData } from "@/lib/department-utils-new";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DepartmentAnalysis() {
   const { monthlyData } = useStore();

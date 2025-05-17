@@ -251,11 +251,11 @@ export class DatabaseStorage implements IStorage {
         uploadedAt: csvUploads.uploadedAt,
         processed: csvUploads.processed,
         // Return empty content
-        content: sql`''`
+        content: sql<string>`''`
       }).from(csvUploads)
         .orderBy(desc(csvUploads.uploadedAt));
       
-      return uploads;
+      return uploads as CSVUpload[];
     } catch (error) {
       console.error('Error fetching CSV uploads from database:', error);
       return [];
@@ -282,10 +282,10 @@ export class DatabaseStorage implements IStorage {
           name: dept.name,
           month: month,
           year: currentYear,
-          revenue: dept.revenue,
-          expenses: dept.expenses,
-          netIncome: dept.net,
-          profitMargin: dept.net / dept.revenue,
+          revenue: String(dept.revenue),
+          expenses: String(dept.expenses),
+          netIncome: String(dept.net || 0),
+          profitMargin: String((dept.net / dept.revenue) || 0),
           uploadId: uploadId
         });
       }
@@ -307,10 +307,10 @@ export class DatabaseStorage implements IStorage {
           name: doc.name,
           month: month,
           year: currentYear,
-          revenue: doc.revenue,
-          expenses: doc.expenses,
-          netIncome: doc.netIncome,
-          percentageOfTotal: doc.percentage,
+          revenue: String(doc.revenue),
+          expenses: String(doc.expenses),
+          netIncome: String(doc.netIncome || 0),
+          percentageOfTotal: String(doc.percentage || 0),
           uploadId: uploadId
         });
       }
@@ -338,9 +338,9 @@ export class DatabaseStorage implements IStorage {
       await db.insert(monthlyFinancialData).values({
         month: month,
         year: currentYear,
-        totalRevenue: totalRevenue,
-        totalExpenses: totalExpenses,
-        netIncome: netIncome,
+        totalRevenue: String(totalRevenue),
+        totalExpenses: String(totalExpenses),
+        netIncome: String(netIncome),
         revenueMix: revenueMix ? JSON.stringify(revenueMix) : null,
         marginTrend: marginTrend ? JSON.stringify(marginTrend) : null,
         uploadId: uploadId
