@@ -73,6 +73,46 @@ export const doctorPerformance = pgTable("doctor_performance", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Financial categories for organizing line items
+export const financialCategories = pgTable("financial_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  parentId: integer("parent_id").references(() => financialCategories.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Financial line items with proper hierarchy
+export const financialLineItems = pgTable("financial_line_items", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  path: text("path").notNull(), // Full path with spaces for hierarchy
+  depth: integer("depth").default(0).notNull(),
+  parentId: integer("parent_id").references(() => financialLineItems.id),
+  categoryId: integer("category_id").references(() => financialCategories.id),
+  rowType: text("row_type").notNull(), // 'header', 'data', 'total'
+  uploadId: integer("upload_id").references(() => csvUploads.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Financial values associated with line items
+export const financialValues = pgTable("financial_values", {
+  id: serial("id").primaryKey(),
+  lineItemId: integer("line_item_id").references(() => financialLineItems.id).notNull(),
+  entityName: text("entity_name").notNull(), // Employee name, department, or "All Employees"
+  originalValue: text("original_value").notNull(), // Raw value from CSV
+  numericValue: numeric("numeric_value").notNull(), // Parsed numeric value
+  month: text("month"), // Optional month for monthly data
+  year: integer("year").notNull().default(new Date().getFullYear()),
+  fileType: text("file_type").notNull(), // 'annual', 'monthly-e', 'monthly-o'
+  uploadId: integer("upload_id").references(() => csvUploads.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    itemEntityIdx: primaryKey({ columns: [table.lineItemId, table.entityName, table.month, table.year, table.fileType] }),
+  }
+});
+
 // Table for tracking upload status by month
 export const uploadStatus = pgTable("upload_status", {
   id: serial("id").primaryKey(),
@@ -91,6 +131,33 @@ export const uploadStatus = pgTable("upload_status", {
 });
 
 // Define insert schemas for each table
+export const insertFinancialCategorySchema = createInsertSchema(financialCategories).pick({
+  name: true,
+  description: true,
+  parentId: true,
+});
+
+export const insertFinancialLineItemSchema = createInsertSchema(financialLineItems).pick({
+  name: true,
+  path: true,
+  depth: true,
+  parentId: true,
+  categoryId: true,
+  rowType: true,
+  uploadId: true,
+});
+
+export const insertFinancialValueSchema = createInsertSchema(financialValues).pick({
+  lineItemId: true,
+  entityName: true,
+  originalValue: true,
+  numericValue: true, 
+  month: true,
+  year: true,
+  fileType: true,
+  uploadId: true,
+});
+
 export const insertCSVUploadSchema = createInsertSchema(csvUploads).pick({
   type: true,
   filename: true,
@@ -150,6 +217,15 @@ export const insertUploadStatusSchema = createInsertSchema(uploadStatus).pick({
 });
 
 // Export types for each table
+export type InsertFinancialCategory = z.infer<typeof insertFinancialCategorySchema>;
+export type FinancialCategory = typeof financialCategories.$inferSelect;
+
+export type InsertFinancialLineItem = z.infer<typeof insertFinancialLineItemSchema>;
+export type FinancialLineItem = typeof financialLineItems.$inferSelect;
+
+export type InsertFinancialValue = z.infer<typeof insertFinancialValueSchema>;
+export type FinancialValue = typeof financialValues.$inferSelect;
+
 export type InsertCSVUpload = z.infer<typeof insertCSVUploadSchema>;
 export type CSVUpload = typeof csvUploads.$inferSelect;
 
