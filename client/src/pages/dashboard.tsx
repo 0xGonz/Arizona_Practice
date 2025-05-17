@@ -25,11 +25,13 @@ export default function Dashboard() {
     // Initialize counters
     let totalERevenue = 0;
     let totalEExpenses = 0;
+    let totalENetIncome = 0;
     let totalORevenue = 0;
     let totalOExpenses = 0;
+    let totalONetIncome = 0;
     let totalRevenue = 0;
     let totalExpenses = 0;
-    let netIncome = 0;
+    let totalNetIncome = 0;
     const monthlyTrends: any[] = [];
     
     // Sort months chronologically
@@ -47,8 +49,10 @@ export default function Dashboard() {
       const monthData = monthlyData[month];
       let monthERevenue = 0;
       let monthEExpenses = 0;
+      let monthENetIncome = 0;
       let monthORevenue = 0;
       let monthOExpenses = 0;
+      let monthONetIncome = 0;
       
       // Process employee (E) data if available
       if (monthData?.e?.lineItems) {
@@ -66,12 +70,23 @@ export default function Dashboard() {
           item.name === "Operating Expense" && item.depth === 1
         );
         
+        // Look for Net Income line directly from the CSV
+        const netIncomeLine = monthData.e.lineItems.find(item => 
+          (item.name === "Net Income (Loss)" || item.name === "Net Income") && 
+          (item.isTotal || item.depth === 1)
+        );
+        
         monthERevenue = revenueLine?.summaryValue || 0;
         monthEExpenses = expenseLine?.summaryValue || 0;
+        monthENetIncome = netIncomeLine?.summaryValue || 0;
+        
+        // If no Net Income line was found, don't try to calculate it
+        console.log(`Found Net Income for E data in ${month}: ${monthENetIncome}`);
         
         // Add to E totals
         totalERevenue += monthERevenue;
         totalEExpenses += monthEExpenses;
+        totalENetIncome += monthENetIncome;
       }
       
       // Process business (O) data if available
@@ -90,18 +105,29 @@ export default function Dashboard() {
           item.name === "Operating Expense" && item.depth === 1
         );
         
+        // Look for Net Income line directly from the CSV
+        const netIncomeLine = monthData.o.lineItems.find(item => 
+          (item.name === "Net Income (Loss)" || item.name === "Net Income") && 
+          (item.isTotal || item.depth === 1)
+        );
+        
         monthORevenue = revenueLine?.summaryValue || 0;
         monthOExpenses = expenseLine?.summaryValue || 0;
+        monthONetIncome = netIncomeLine?.summaryValue || 0;
+        
+        // If no Net Income line was found, don't try to calculate it
+        console.log(`Found Net Income for O data in ${month}: ${monthONetIncome}`);
         
         // Add to O totals
         totalORevenue += monthORevenue;
         totalOExpenses += monthOExpenses;
+        totalONetIncome += monthONetIncome;
       }
       
-      // Calculate month's combined values
+      // Calculate month's combined values from the direct line item values
       const monthRevenue = monthERevenue + monthORevenue;
       const monthExpenses = monthEExpenses + monthOExpenses;
-      const monthNetIncome = monthRevenue - monthExpenses;
+      const monthNetIncome = monthENetIncome + monthONetIncome;
       
       // Add month to trends data for chart
       monthlyTrends.push({
@@ -112,7 +138,9 @@ export default function Dashboard() {
         expenses: monthExpenses,
         eExpenses: monthEExpenses,
         oExpenses: monthOExpenses,
-        netIncome: monthNetIncome
+        netIncome: monthNetIncome,
+        eNetIncome: monthENetIncome,
+        oNetIncome: monthONetIncome
       });
     });
     
@@ -120,21 +148,19 @@ export default function Dashboard() {
     totalRevenue = totalERevenue + totalORevenue;
     totalExpenses = totalEExpenses + totalOExpenses;
     
-    // Calculate overall net income
-    const eNetIncome = totalERevenue - totalEExpenses;
-    const oNetIncome = totalORevenue - totalOExpenses;
-    netIncome = totalRevenue - totalExpenses;
+    // Total net income is sum of all monthly net incomes (not calculated from revenue - expenses)
+    totalNetIncome = totalENetIncome + totalONetIncome;
     
     return {
       totalERevenue,
       totalEExpenses,
-      eNetIncome,
+      eNetIncome: totalENetIncome,
       totalORevenue,
       totalOExpenses,
-      oNetIncome,
+      oNetIncome: totalONetIncome,
       totalRevenue,
       totalExpenses,
-      netIncome,
+      netIncome: totalNetIncome,
       monthlyTrends
     };
   }, [monthlyData]);
