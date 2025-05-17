@@ -18,7 +18,7 @@ export default function FinancialAnalysis() {
   };
   
   return (
-    <div className="container p-6">
+    <div className="container px-4 md:px-6 py-6">
       <Helmet>
         <title>Financial Analysis - Clinic Financial Dashboard</title>
         <meta name="description" content="Analyze financial performance of providers and business lines with interactive charts and filters" />
