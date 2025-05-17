@@ -115,7 +115,6 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/upload" component={Upload} />
         <Route path="/upload-history" component={UploadHistory} />
-        <Route path="/financial-query" component={FinancialQuery} />
         <Route path="/data-analysis" component={DataAnalysis} />
         <Route component={NotFound} />
       </Switch>

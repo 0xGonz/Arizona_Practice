@@ -21,6 +21,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Select,
@@ -33,7 +34,37 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { FileBarChart, Users, Building2, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { 
+  FileBarChart, 
+  Users, 
+  Building2, 
+  FileText, 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Clipboard,
+  BarChart,
+  PieChart,
+  ArrowUp,
+  ArrowDown
+} from "lucide-react";
+import {
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line
+} from "recharts";
 
 // Navigation tabs for the top of the page
 const navigationTabs = [
@@ -434,57 +465,259 @@ export default function DataAnalysis() {
                   Financial Overview
                 </CardTitle>
                 <CardDescription>
-                  High-level summary of key financial metrics
+                  High-level summary of key financial metrics for {selectedMonth !== "all" ? selectedMonth : "all months"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="rounded-lg border p-4">
-                    <h3 className="text-lg font-medium mb-2">Employee Data Summary</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Key financial metrics for doctors and employees
-                    </p>
-                    {selectedMonth !== "all" && employeeData.employees && employeeData.employees.length > 0 ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Number of Employees:</span>
-                          <span className="font-medium">{employeeData.employees.length}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Total Line Items:</span>
-                          <span className="font-medium">{employeeData.lineItemsData.length}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center p-4 text-muted-foreground">
-                        Select a month to view summary data
-                      </div>
-                    )}
+                {selectedMonth === "all" ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-center">
+                      <FileBarChart className="w-12 h-12 mx-auto text-muted-foreground" />
+                      <h3 className="mt-4 text-lg font-medium">Select a Month for Detailed Analysis</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Choose a specific month from the dropdown above to view financial metrics and visualizations.
+                      </p>
+                    </div>
                   </div>
-                  
-                  <div className="rounded-lg border p-4">
-                    <h3 className="text-lg font-medium mb-2">Business Data Summary</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Key financial metrics for business departments
-                    </p>
-                    {selectedMonth !== "all" && businessData.departments && businessData.departments.length > 0 ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Number of Departments:</span>
-                          <span className="font-medium">{businessData.departments.length}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Total Line Items:</span>
-                          <span className="font-medium">{businessData.lineItemsData.length}</span>
-                        </div>
+                ) : (
+                  <>
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                      <Card className="bg-blue-50 border-blue-200">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-blue-700">Total Revenue</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center">
+                            <DollarSign className="h-4 w-4 text-blue-600 mr-1" />
+                            <span className="text-2xl font-bold text-blue-800">
+                              {formatCurrency(
+                                employeeData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[employeeData.employees?.[0]] || 0
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-xs mt-1 flex items-center text-blue-600">
+                            <TrendingUp className="w-3 h-3 mr-1" /> From Employee Data
+                          </p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-red-50 border-red-200">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-red-700">Total Expenses</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center">
+                            <DollarSign className="h-4 w-4 text-red-600 mr-1" />
+                            <span className="text-2xl font-bold text-red-800">
+                              {formatCurrency(
+                                businessData.lineItemsData?.find((i: any) => i.name === "Total Operating Expenses")?.[businessData.departments?.[0]] || 0
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-xs mt-1 flex items-center text-red-600">
+                            <TrendingDown className="w-3 h-3 mr-1" /> Business Operations
+                          </p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-green-50 border-green-200">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-green-700">Net Income</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center">
+                            <DollarSign className="h-4 w-4 text-green-600 mr-1" />
+                            <span className="text-2xl font-bold text-green-800">
+                              {formatCurrency(
+                                employeeData.lineItemsData?.find((i: any) => i.name === "Net Income (Loss)")?.[employeeData.employees?.[0]] || 0
+                              )}
+                            </span>
+                          </div>
+                          {(employeeData.lineItemsData?.find((i: any) => i.name === "Net Income (Loss)")?.[employeeData.employees?.[0]] || 0) >= 0 ? (
+                            <p className="text-xs mt-1 flex items-center text-green-600">
+                              <ArrowUp className="w-3 h-3 mr-1" /> Positive Earnings
+                            </p>
+                          ) : (
+                            <p className="text-xs mt-1 flex items-center text-red-600">
+                              <ArrowDown className="w-3 h-3 mr-1" /> Loss Reported
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-purple-50 border-purple-200">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-purple-700">Departments</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center">
+                            <Building2 className="h-4 w-4 text-purple-600 mr-1" />
+                            <span className="text-2xl font-bold text-purple-800">
+                              {businessData.departments?.length || 0}
+                            </span>
+                          </div>
+                          <p className="text-xs mt-1 flex items-center text-purple-600">
+                            <Users className="w-3 h-3 mr-1" /> Active Business Units
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      {/* Revenue Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm flex items-center">
+                            <BarChart className="w-4 h-4 mr-2" />
+                            Revenue by Department
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-64">
+                          {businessData.departments && businessData.departments.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <RechartsBarChart
+                                data={businessData.departments.map((dept: string) => ({
+                                  name: dept,
+                                  revenue: businessData.lineItemsData?.find((i: any) => 
+                                    i.name === "Total Revenue" || i.name === "Total Income" || i.name.includes("Revenue")
+                                  )?.[dept] || 0
+                                }))}
+                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
+                                <RechartsTooltip formatter={(value) => formatCurrency(value as number)} />
+                                <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
+                              </RechartsBarChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <p className="text-muted-foreground">No department data available</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Employee Chart */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm flex items-center">
+                            <PieChart className="w-4 h-4 mr-2" />
+                            Employee Revenue Distribution
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-64">
+                          {employeeData.employees && employeeData.employees.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <RechartsPieChart>
+                                <Pie
+                                  data={employeeData.employees.map((emp: string) => ({
+                                    name: emp,
+                                    value: employeeData.lineItemsData?.find((i: any) => 
+                                      i.name === "Total Revenue" || i.name === "Collections" || i.name.includes("Revenue")
+                                    )?.[emp] || 0
+                                  }))}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={80}
+                                  fill="#8884d8"
+                                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                >
+                                  {employeeData.employees.map((entry: any, index: number) => (
+                                    <Cell key={`cell-${index}`} fill={`hsl(${index * 30}, 70%, 50%)`} />
+                                  ))}
+                                </Pie>
+                                <RechartsTooltip formatter={(value) => formatCurrency(value as number)} />
+                              </RechartsPieChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <p className="text-muted-foreground">No employee data available</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="rounded-lg border p-4">
+                        <h3 className="text-lg font-medium mb-2 flex items-center">
+                          <Users className="w-5 h-5 mr-2" />
+                          Employee Data Summary
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Key financial metrics for doctors and employees
+                        </p>
+                        {employeeData.employees && employeeData.employees.length > 0 ? (
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span>Number of Employees:</span>
+                              <span className="font-medium">{employeeData.employees.length}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Total Line Items:</span>
+                              <span className="font-medium">{employeeData.lineItemsData?.length || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Average Revenue:</span>
+                              <span className="font-medium">
+                                {formatCurrency(
+                                  employeeData.employees.reduce((total, emp) => 
+                                    total + (employeeData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[emp] || 0), 0
+                                  ) / (employeeData.employees.length || 1)
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center p-4 text-muted-foreground">
+                            No employee data available for this month
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <div className="text-center p-4 text-muted-foreground">
-                        Select a month to view summary data
+                      
+                      <div className="rounded-lg border p-4">
+                        <h3 className="text-lg font-medium mb-2 flex items-center">
+                          <Building2 className="w-5 h-5 mr-2" />
+                          Business Data Summary
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          Key financial metrics for business departments
+                        </p>
+                        {businessData.departments && businessData.departments.length > 0 ? (
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span>Number of Departments:</span>
+                              <span className="font-medium">{businessData.departments.length}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Total Line Items:</span>
+                              <span className="font-medium">{businessData.lineItemsData?.length || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Best Performing Department:</span>
+                              <span className="font-medium">
+                                {businessData.departments.reduce((best, dept) => {
+                                  const revenue = businessData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[dept] || 0;
+                                  const bestRevenue = businessData.lineItemsData?.find((i: any) => i.name === "Total Revenue")?.[best] || 0;
+                                  return revenue > bestRevenue ? dept : best;
+                                }, businessData.departments[0])}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center p-4 text-muted-foreground">
+                            No business data available for this month
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
