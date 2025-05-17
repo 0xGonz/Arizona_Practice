@@ -4,17 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  Bar,
-  BarChart 
-} from "recharts";
 
 interface MonthlyBreakdown {
   month: string;
@@ -40,7 +29,7 @@ export default function MonthlySummaryCard({
   netIncome,
   monthlyBreakdown
 }: MonthlySummaryCardProps) {
-  const [view, setView] = useState<"summary" | "table" | "chart">("summary");
+  const [view, setView] = useState<"summary" | "table">("summary");
   
   // Format dollar amounts
   const formatCurrency = (value: number) => {
@@ -51,14 +40,6 @@ export default function MonthlySummaryCard({
       maximumFractionDigits: 0
     }).format(value);
   };
-  
-  // Chart data preparation
-  const chartData = monthlyBreakdown.map(item => ({
-    month: item.month,
-    Revenue: item.revenue,
-    Expenses: item.expenses,
-    Net: item.net
-  }));
   
   return (
     <Card className="overflow-hidden">
@@ -73,11 +54,10 @@ export default function MonthlySummaryCard({
           <span>Monthly financial data summary</span>
         </CardDescription>
         <Tabs defaultValue="summary" className="w-full"
-          onValueChange={(value) => setView(value as "summary" | "table" | "chart")}>
-          <TabsList className="grid w-full grid-cols-3">
+          onValueChange={(value) => setView(value as "summary" | "table")}>
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="table">Table</TabsTrigger>
-            <TabsTrigger value="chart">Chart</TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>
@@ -149,28 +129,6 @@ export default function MonthlySummaryCard({
                 </TableRow>
               </TableBody>
             </Table>
-          </div>
-        )}
-        
-        {view === "chart" && (
-          <div className="h-[250px] mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${value/1000}k`} />
-                <Tooltip 
-                  formatter={(value: number) => formatCurrency(value)}
-                  labelFormatter={(label) => `Month: ${label}`}
-                />
-                <Bar dataKey="Revenue" fill="#3182ce" name="Revenue" />
-                <Bar dataKey="Expenses" fill="#e53e3e" name="Expenses" />
-                <Bar dataKey="Net" fill="#38a169" name="Net Income" />
-              </BarChart>
-            </ResponsiveContainer>
           </div>
         )}
       </CardContent>
