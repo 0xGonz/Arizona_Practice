@@ -104,6 +104,15 @@ export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' |
     }
   });
   
+  // Log the values for March to confirm
+  const marchData = result.find(item => item.month === 'Mar');
+  if (marchData) {
+    console.log('March data from monthly analytics cards:', 
+                `Revenue: ${marchData.revenue}, `,
+                `Expenses: ${marchData.expenses}, `,
+                `Net: ${marchData.net}`);
+  }
+  
   // Sort by month order and return
   return result.sort((a, b) => {
     const monthA = Object.keys(monthAbbrev).find(m => monthAbbrev[m] === a.month) || '';

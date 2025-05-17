@@ -56,7 +56,7 @@ export function getVerifiedDepartmentData(monthlyData?: any) {
               departments[matchedDept].expenses = item.summaryValue || 0;
             }
             
-            // If this is a Net Income line
+            // If this is a Net Income line - use the actual Net Income value from the data
             if (item.name === "Net Income (Loss)" || 
                 item.name === "Net Income" ||
                 (item.name.toLowerCase().includes('net') && item.isTotal)) {

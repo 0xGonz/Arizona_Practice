@@ -75,6 +75,7 @@ export function extractRealDoctorData(monthlyData: any) {
             console.log(`${employee} expenses: ${val}`);
           }
           
+          // Use the actual Net Income line from the data
           if (netIncomeLine && netIncomeLine.entityValues && netIncomeLine.entityValues[employee]) {
             const val = Number(netIncomeLine.entityValues[employee]) || 0;
             employeeData[employee].net += val;
