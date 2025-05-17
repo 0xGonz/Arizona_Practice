@@ -96,7 +96,7 @@ router.get('/analytics/employee/detail', async (req, res) => {
 });
 
 // Business Summary - aggregated data across all business lines
-router.get('/business/summary', async (req, res) => {
+router.get('/analytics/business/summary', async (req, res) => {
   try {
     const { from, to } = rangeSchema.parse(req.query);
     
@@ -126,7 +126,7 @@ router.get('/business/summary', async (req, res) => {
 });
 
 // Business Detail - data for a specific business line
-router.get('/business/detail', async (req, res) => {
+router.get('/analytics/business/detail', async (req, res) => {
   try {
     const queryParams = rangeSchema.extend({ 
       businessId: z.string() 
@@ -158,7 +158,7 @@ router.get('/business/detail', async (req, res) => {
 });
 
 // Employee list - for populating dropdowns
-router.get('/employee/list', async (req, res) => {
+router.get('/analytics/employee/list', async (req, res) => {
   try {
     const employees = await db
       .select({
@@ -177,7 +177,7 @@ router.get('/employee/list', async (req, res) => {
 });
 
 // Business line list - for populating dropdowns
-router.get('/business/list', async (req, res) => {
+router.get('/analytics/business/list', async (req, res) => {
   try {
     const businesses = await db
       .select({
