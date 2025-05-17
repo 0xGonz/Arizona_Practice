@@ -56,20 +56,8 @@ export function processMonthlyCSV(
     const trimmedLineItem = lineItemText.trim();
     processedLines++;
     
-    // If it's just whitespace, create an empty spacer row
+    // Skip empty rows completely instead of creating empty spacer rows
     if (trimmedLineItem === '') {
-      lineItems.push({
-        id: `-${currentDepth}-${Math.random().toString(36).substring(2, 10)}`,
-        name: '',
-        originalLineItem: lineItemText,
-        depth: currentDepth,
-        entityValues: entityColumns.reduce((acc: Record<string, number>, col) => {
-          acc[col] = 0;
-          return acc;
-        }, {}),
-        summaryValue: 0,
-        isTotal: false
-      });
       return;
     }
     

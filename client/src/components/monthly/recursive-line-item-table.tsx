@@ -57,6 +57,11 @@ export default function RecursiveLineItemTable({
   
   // Filter function to determine if a line item should be displayed
   const shouldDisplayLineItem = (item: LineItem): boolean => {
+    // Skip empty rows (empty name or just whitespace)
+    if (!item.name || item.name.trim() === '') {
+      return false;
+    }
+    
     // Check if name matches search term (case insensitive)
     const nameMatch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase());
     
