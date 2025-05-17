@@ -6,6 +6,8 @@ import { useStore } from "@/store/data-store";
 import RecursiveLineItemTable from "@/components/monthly/recursive-line-item-table";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Download } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 // Month names for display (capitalized)
 const months = [
@@ -175,6 +177,69 @@ export default function MonthlyImproved() {
   const toggleViewType = (type: 'e' | 'o') => {
     setViewType(type);
   };
+  
+  // Function to export month data to CSV
+  const exportMonthData = (month: string) => {
+    const monthLower = month.toLowerCase();
+    const matchingKey = Object.keys(monthlyData || {}).find(key => {
+      const keyLower = key.toLowerCase();
+      return keyLower === monthLower || 
+             key === month ||
+             (Object.keys(monthMap).includes(keyLower) && 
+              monthMap[keyLower as keyof typeof monthMap].toLowerCase() === monthLower);
+    });
+    
+    if (!matchingKey) {
+      toast({
+        title: "Export Failed",
+        description: `No data found for ${month}`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const monthObj = monthlyData[matchingKey];
+    
+    // Extract data from both E and O files
+    const eData = monthObj?.e || { lineItems: [] };
+    const oData = monthObj?.o || { lineItems: [] };
+    
+    // Get revenue, expenses, and net income from both file types
+    const getMetrics = (data: any) => {
+      const lineItems = data.lineItems || [];
+      const revenue = getLineItemValue(lineItems, "Total Revenue");
+      const expenses = getLineItemValue(lineItems, "Total Operating Expenses");
+      const netIncome = getLineItemValue(lineItems, "Net Income");
+      return { revenue, expenses, netIncome };
+    };
+    
+    const eMetrics = getMetrics(eData);
+    const oMetrics = getMetrics(oData);
+    
+    // Create CSV content
+    const csvContent = [
+      "Data Type,Revenue,Expenses,Net Income",
+      `Employee (E-File),${eMetrics.revenue},${eMetrics.expenses},${eMetrics.netIncome}`,
+      `Other Business (O-File),${oMetrics.revenue},${oMetrics.expenses},${oMetrics.netIncome}`,
+      `Combined Total,${eMetrics.revenue + oMetrics.revenue},${eMetrics.expenses + oMetrics.expenses},${eMetrics.netIncome + oMetrics.netIncome}`
+    ].join("\n");
+    
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${month}_Financial_Summary.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export Successful",
+      description: `${month} financial data has been downloaded`,
+    });
+  };
 
   return (
     <div className="container px-4 py-6 mx-auto max-w-full">
@@ -243,17 +308,31 @@ export default function MonthlyImproved() {
               </Button>
             </div>
             
-            {/* Month header and summary */}
-            <div className="mb-6">
-              <h2 className="text-xl md:text-2xl font-semibold">
-                {month} {new Date().getFullYear()} - 
-                {viewType === 'e' ? ' Employee Expenses' : ' Other Business Expenses'}
-              </h2>
-              <p className="text-muted-foreground">
-                {hasSelectedData 
-                  ? `Showing ${lineItems.length} line items` 
-                  : `No data available for ${viewType === 'e' ? 'employee' : 'other business'} expenses`}
-              </p>
+            {/* Month header and summary with export button */}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl md:text-2xl font-semibold">
+                  {month} {new Date().getFullYear()} - 
+                  {viewType === 'e' ? ' Employee Expenses' : ' Other Business Expenses'}
+                </h2>
+                <p className="text-muted-foreground">
+                  {hasSelectedData 
+                    ? `Showing ${lineItems.length} line items` 
+                    : `No data available for ${viewType === 'e' ? 'employee' : 'other business'} expenses`}
+                </p>
+              </div>
+              
+              {/* Export button */}
+              {hasData && (
+                <Button 
+                  onClick={() => exportMonthData(month)}
+                  variant="outline" 
+                  className="flex items-center gap-2 self-start"
+                >
+                  <Download size={16} />
+                  <span>Export Summary</span>
+                </Button>
+              )}
             </div>
             
             {/* KPI Cards - responsive grid */}
