@@ -5,8 +5,9 @@ import {
   Upload, 
   History, 
   Stethoscope,
-  FileBarChart,
-  FileSearch
+  Users,
+  Building,
+  Search
 } from "lucide-react";
 
 interface NavItem {
@@ -24,10 +25,11 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
     ]
   },
   {
-    section: "Data Analysis",
+    section: "Detailed Analysis",
     items: [
-      { name: "Data Explorer", path: "/data-analysis", icon: <FileBarChart className="w-5 h-5" /> },
-      { name: "Financial Query", path: "/financial-query", icon: <FileSearch className="w-5 h-5" /> }
+      { name: "Employee Analysis", path: "/employee-analysis", icon: <Users className="w-5 h-5" /> },
+      { name: "Business Analysis", path: "/business-analysis", icon: <Building className="w-5 h-5" /> },
+      { name: "Financial Query", path: "/financial-query", icon: <Search className="w-5 h-5" /> }
     ]
   },
   {

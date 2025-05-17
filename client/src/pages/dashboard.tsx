@@ -3,7 +3,7 @@ import { useStore } from "@/store/data-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  TooltipProps, BarChart, Bar, ComposedChart
+  TooltipProps, BarChart, Bar
 } from "recharts";
 import { ArrowUpIcon, ArrowDownIcon, DollarSignIcon } from "lucide-react";
 
@@ -558,22 +558,24 @@ export default function Dashboard() {
                 data={aggregatedData.monthlyTrends.map(trend => ({
                   month: trend.month,
                   payroll: trend.payrollExpenses || 0,
-                  revenue: trend.revenue || 0,
-                  percentage: trend.revenue ? Math.round((trend.payrollExpenses / trend.revenue) * 100) : 0
+                  revenue: trend.revenue || 0
                 }))}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis 
-                  tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} 
-                />
+                <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
                 <Tooltip 
-                  formatter={(value, name) => {
-                    if (name === 'payroll') return [formatCurrency(value as number), 'Payroll & Related Expenses'];
-                    if (name === 'revenue') return [formatCurrency(value as number), 'Revenue'];
-                    if (name === 'percentage') return [`${value}%`, 'Payroll as % of Revenue'];
-                    return [value, name];
+                  formatter={(value, name, props) => {
+                    if (name === 'payroll') {
+                      const monthData = props.payload?.[0];
+                      let percentage = 0;
+                      if (monthData && monthData.payload.revenue > 0) {
+                        percentage = (monthData.payload.payroll / monthData.payload.revenue) * 100;
+                      }
+                      return [`${formatCurrency(value as number)} (${percentage.toFixed(1)}% of Revenue)`, 'Payroll & Related Expenses'];
+                    }
+                    return [formatCurrency(value as number), 'Revenue'];
                   }}
                   labelFormatter={(label) => `Month: ${label}`}
                 />
@@ -590,32 +592,6 @@ export default function Dashboard() {
                   fill="#f97316" 
                   radius={[4, 4, 0, 0]}
                 />
-                <Tooltip 
-                  formatter={(value, name) => {
-                    if (name === 'payroll') return [formatCurrency(value as number), 'Payroll & Related Expenses'];
-                    if (name === 'revenue') return [formatCurrency(value as number), 'Revenue'];
-                    return [value, name];
-                  }}
-                  labelFormatter={(label) => `Month: ${label}`}
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      const revenue = payload.find(p => p.name === 'revenue')?.value as number || 0;
-                      const payroll = payload.find(p => p.name === 'payroll')?.value as number || 0;
-                      const percentage = revenue ? Math.round((payroll / revenue) * 100) : 0;
-                      
-                      return (
-                        <div className="bg-white p-2 border shadow-sm rounded-md">
-                          <p className="font-semibold">{label}</p>
-                          <p className="text-blue-600">Revenue: {formatCurrency(revenue)}</p>
-                          <p className="text-orange-500">Payroll: {formatCurrency(payroll)}</p>
-                          <p className="text-gray-700 font-medium">Payroll is {percentage}% of Revenue</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend verticalAlign="top" height={36} />
               </BarChart>
             </ResponsiveContainer>
           </div>

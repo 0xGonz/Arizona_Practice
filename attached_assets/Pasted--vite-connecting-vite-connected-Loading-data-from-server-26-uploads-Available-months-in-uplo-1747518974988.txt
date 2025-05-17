@@ -1,0 +1,183 @@
+[vite] connecting...
+[vite] connected.
+Loading data from server: 26 uploads
+Available months in uploads: july, december, november, october, september, august, june, may, april, march, february, january
+Loading monthly-e data for july from upload ID 16 (most recent of 1)
+API request error: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error loading CSV content: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Loading monthly-o data for july from upload ID 28 (most recent of 2)
+API request error: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error loading CSV content: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Loading monthly-e data for december from upload ID 26 (most recent of 1)
+API request error: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error loading CSV content: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Loading monthly-o data for december from upload ID 27 (most recent of 1)
+API request error: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Error loading CSV content: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Loading monthly-e data for november from upload ID 24 (most recent of 1)
+API request error: 
+SyntaxError {}
+message: "Unexpected token '<', "<!DOCTYPE "... is not valid JSON"
+stack: "SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+Error loading CSV content: 
+SyntaxError {}
+
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Loading monthly-o data for november from upload ID 25 (most recent of 1)
+API request error: 
+SyntaxError {}
+message: "Unexpected token '<', "<!DOCTYPE "... is not valid JSON"
+stack: "SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: Object
+
+
+ChatGPT said:
+
+Thought for 8 seconds
+What the stack‑trace is telling you
+SyntaxError: Unexpected token '<', "<!DOCTYPE "...
+Your front‑end tried to JSON.parse() the response, but the server actually returned an HTML page – typically the default 404 (Express sends your index.html for unknown routes in dev).
+
+The logs show you’re calling URLs like:
+
+sql
+Copy
+Edit
+/api/.../monthly-e?month=july&uploadId=16   (guessing from “Loading monthly‑e data…”)
+and the server has no route that matches, so Vite’s dev‑server falls through and hands back the HTML app shell – which chokes the JSON parser.
+
+1 · Confirm your analytics routes are mounted
+In server/routes.ts (or index.ts) you should have something like:
+
+ts
+Copy
+Edit
+import analyticsRoutes from './analytics-routes';
+
+app.use('/api/analytics', analyticsRoutes);
+If you created analytics-routes.ts but forgot to mount it, every /api/analytics/... request 404s → HTML → parse error.
+
+Quick check:
+Run curl http://localhost:5000/api/analytics/months in the Replit shell.
+If you see JSON (e.g. ["2024-01-01", ...]) your router is mounted.
+If you see HTML or “Cannot GET /api/analytics/months”, mount the router.
+
+2 · Verify the URL your front‑end calls
+Open the browser Network tab, filter by “analytics”, click one of the failed calls, and look at:
+
+Request URL – does it start with /api/analytics/... exactly?
+
+Status – is it 404 or 200?
+
+If it’s 404, the path or query params don’t match the server‑side router.get().
+
+3 · Double‑check the params encoding
+Our earlier helper builds:
+
+ts
+Copy
+Edit
+const urlObj = new URL(url, window.location.origin);
+Object.entries(params).forEach(([k, v]) =>
+  urlObj.searchParams.set(k, String(v)));
+So /api/analytics/employee/detail?employeeId=123&from=2024-01-01&to=2024-12-31.
+
+Make sure your server route signature matches exactly:
+
+ts
+Copy
+Edit
+r.get('/employee/detail', async (req, res) => {
+  const { employeeId, from, to } = req.query;
+  ...
+});
+Remember Express’s req.query values are strings; parse if you need Date objects.
+
+4 · Quick smoke test with curl/postman
+sh
+Copy
+Edit
+# Summary
+curl "http://localhost:5000/api/analytics/employee/summary?from=2024-01-01&to=2024-12-31"
+
+# Detail
+curl "http://localhost:5000/api/analytics/employee/detail?employeeId=Dr123&from=2024-01-01&to=2024-12-31"
+You should get JSON arrays back. If you don’t, focus on fixing the server route before touching the front‑end.
+
+5 · Fallback plan: temporary console dump
+Add in analytics-routes.ts:
+
+ts
+Copy
+Edit
+r.use((req, _res, next) => {
+  console.log('[API] hit', req.method, req.originalUrl);
+  next();
+});
+Reload the page; watch Replit console. If you don’t see the path you expect, the front‑end isn’t calling it (check the hook). If you do see it but still get HTML back, something else is intercepting (e.g. Vite proxy mis‑order).
+
+TL;DR fix checklist
+app.use('/api/analytics', analyticsRoutes); – mounted before the Vite “catch‑all” handler.
+
+Routes /months, /employee/summary, /employee/detail, /business/... return JSON.
+
+Front‑end hooks hit those exact endpoints.
+
+After each CSV upload, call invalidateQueries(['available-months']) so the month dropdown refreshes.
