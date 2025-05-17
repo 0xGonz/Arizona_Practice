@@ -31,6 +31,14 @@ interface RecursiveLineItemTableProps {
   summaryColumn?: string;
 }
 
+// Key financial metrics we want to show in simplified view
+const KEY_FINANCIAL_METRICS = [
+  'Total Revenue',
+  'Total Operating Expenses',
+  'Net Income',
+  'Net Income (Loss)'
+];
+
 export default function RecursiveLineItemTable({ 
   data, 
   entityColumns,
@@ -38,6 +46,7 @@ export default function RecursiveLineItemTable({
 }: RecursiveLineItemTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyNegative, setShowOnlyNegative] = useState(false);
+  const [showSimplified, setShowSimplified] = useState(false);
   
   if (!data || data.length === 0) {
     return (
@@ -61,7 +70,16 @@ export default function RecursiveLineItemTable({
       negativeMatch = hasNegativeEntityValue || hasNegativeSummary;
     }
     
-    return nameMatch && negativeMatch;
+    // Check if it matches the simplified view filter
+    let simplifiedMatch = true;
+    if (showSimplified) {
+      const isKeyMetric = KEY_FINANCIAL_METRICS.some(metric => 
+        item.name.toLowerCase().includes(metric.toLowerCase())
+      );
+      simplifiedMatch = isKeyMetric;
+    }
+    
+    return nameMatch && negativeMatch && simplifiedMatch;
   };
   
   // Recursive component to render a line item row and its children
@@ -145,12 +163,23 @@ export default function RecursiveLineItemTable({
             Show Only Negative Values
           </Label>
         </div>
+        <div className="flex items-center gap-2">
+          <Switch 
+            id="show-simplified" 
+            checked={showSimplified} 
+            onCheckedChange={setShowSimplified} 
+          />
+          <Label htmlFor="show-simplified" className="text-xs cursor-pointer">
+            Show Simplified
+          </Label>
+        </div>
         <Button
           variant="outline" 
           size="sm"
           onClick={() => {
             setSearchTerm('');
             setShowOnlyNegative(false);
+            setShowSimplified(false);
           }}
           className="text-xs h-8"
         >
