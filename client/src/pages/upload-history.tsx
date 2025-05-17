@@ -1,18 +1,21 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useStore } from "@/store/data-store";
 import { Button } from "@/components/ui/button";
-import { Trash, FileSpreadsheet, Calendar, Eye, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Trash, FileSpreadsheet, Calendar, Eye, ChevronDown, ChevronUp, X, Download } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CSVType } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UploadHistory() {
-  const { uploadHistory, uploadStatus, clearUploadedData, annualData, monthlyData } = useStore();
+  const { uploadHistory, uploadStatus, clearUploadedData, annualData, monthlyData, loadCSVContent } = useStore();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("list");
+  const [loading, setLoading] = useState<{[key: number]: boolean}>({});
+  const { toast } = useToast();
   
   // Format the date for display
   const formatDate = (date: Date) => {
