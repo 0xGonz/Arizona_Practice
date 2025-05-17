@@ -19,8 +19,7 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
   {
     section: "Overview",
     items: [
-      { name: "Dashboard", path: "/", icon: <LayoutDashboard className="w-5 h-5" /> },
-      { name: "Month by Month", path: "/monthly", icon: <CalendarDays className="w-5 h-5" /> },
+      { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-5 h-5" /> },
       { name: "Doctor Performance", path: "/doctor-performance", icon: <User className="w-5 h-5" /> },
       { name: "Department Analysis", path: "/department-analysis", icon: <Building className="w-5 h-5" /> }
     ]
