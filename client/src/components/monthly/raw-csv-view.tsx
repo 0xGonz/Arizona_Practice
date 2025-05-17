@@ -71,19 +71,21 @@ export default function RawCSVView({ data }: RawCSVViewProps) {
               
               // Determine if this is a total line
               const name = lineItem.trim();
-              const isTotal = name.toLowerCase().includes('total');
+              const isTotal = name.toLowerCase().includes('total') || false;
               
               // Calculate a raw total from all numerical values
               const rowTotal = displayHeaders
                 .filter(header => header !== 'Total (Raw)') // Exclude our added total column
                 .reduce((sum, header) => {
                   // Skip empty or invalid values
-                  if (!row[header] && row[header] !== 0) return sum;
+                  const rawHeaderValue = row[header];
+                  if (rawHeaderValue === undefined || rawHeaderValue === null || rawHeaderValue === '') return sum;
                   
                   try {
                     // For numbers or number-like strings
-                    if (typeof row[header] === 'number') {
-                      return sum + (isNaN(row[header]) ? 0 : row[header]);
+                    const value = row[header];
+                  if (typeof value === 'number') {
+                      return sum + (isNaN(value) ? 0 : value);
                     } else {
                       // For formatted strings (like "$1,234.56")
                       return sum + parseFinancialValue(String(row[header]).trim());

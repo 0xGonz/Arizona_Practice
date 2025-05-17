@@ -6,6 +6,7 @@ import { useStore } from "@/store/data-store";
 import { parseFinancialValue } from "@/lib/csv-parser";
 import HierarchicalView from "@/components/monthly/hierarchical-view";
 import RecursiveLineItemTable from "@/components/monthly/recursive-line-item-table";
+import RawCSVView from "@/components/monthly/raw-csv-view";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -26,6 +27,7 @@ export default function Monthly() {
   const { uploadStatus, monthlyData } = useStore();
   const [activeMonth, setActiveMonth] = useState("January");
   const [selectedView, setSelectedView] = useState("employees"); // 'employees' or 'other'
+  const [dataViewMode, setDataViewMode] = useState("processed"); // 'processed' or 'raw'
   const monthLower = activeMonth.toLowerCase();
 
   // Extract data for the active month with enhanced logging and error handling
