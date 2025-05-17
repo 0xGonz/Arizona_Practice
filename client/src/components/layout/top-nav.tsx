@@ -2,8 +2,6 @@ import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
   CalendarDays, 
-  User, 
-  Building, 
   Upload, 
   History, 
   Stethoscope,
@@ -21,8 +19,6 @@ interface NavItem {
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
   { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-4 h-4" /> },
-  { name: "Doctor Performance", path: "/doctor-performance", icon: <User className="w-4 h-4" /> },
-  { name: "Department Analysis", path: "/department-analysis", icon: <Building className="w-4 h-4" /> },
   { name: "Upload Data", path: "/upload", icon: <Upload className="w-4 h-4" /> },
   { name: "Upload History", path: "/upload-history", icon: <History className="w-4 h-4" /> }
 ];
