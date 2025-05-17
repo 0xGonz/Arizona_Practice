@@ -219,33 +219,43 @@ export default function Dashboard() {
 
           {/* Monthly Summary Data and Ancillary ROI */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            {/* Process and display monthly data from E-files (Employee/Provider) */}
+            {/* Process monthly data once and use it for both cards */}
             {(() => {
+              // Extract monthly summary data only once to prevent double processing
               const monthlySummary = extractMonthlySummaryData(monthlyData);
+              console.log("Monthly Summary Data:", {
+                e_total: {
+                  revenue: monthlySummary?.e?.totalRevenue,
+                  expenses: monthlySummary?.e?.totalExpenses,
+                  net: monthlySummary?.e?.netIncome
+                },
+                o_total: {
+                  revenue: monthlySummary?.o?.totalRevenue,
+                  expenses: monthlySummary?.o?.totalExpenses,
+                  net: monthlySummary?.o?.netIncome
+                }
+              });
+              
               return (
-                <MonthlySummaryCard 
-                  title="Provider Financial Summary"
-                  fileType="e"
-                  totalRevenue={monthlySummary?.e?.totalRevenue || 0}
-                  totalExpenses={monthlySummary?.e?.totalExpenses || 0}
-                  netIncome={monthlySummary?.e?.netIncome || 0}
-                  monthlyBreakdown={monthlySummary?.e?.monthlyBreakdown || []}
-                />
-              );
-            })()}
-            
-            {/* Process and display monthly data from O-files (Other Business) */}
-            {(() => {
-              const monthlySummary = extractMonthlySummaryData(monthlyData);
-              return (
-                <MonthlySummaryCard 
-                  title="Department Financial Summary"
-                  fileType="o"
-                  totalRevenue={monthlySummary?.o?.totalRevenue || 0}
-                  totalExpenses={monthlySummary?.o?.totalExpenses || 0}
-                  netIncome={monthlySummary?.o?.netIncome || 0}
-                  monthlyBreakdown={monthlySummary?.o?.monthlyBreakdown || []}
-                />
+                <>
+                  <MonthlySummaryCard 
+                    title="Provider Financial Summary"
+                    fileType="e"
+                    totalRevenue={monthlySummary?.e?.totalRevenue || 0}
+                    totalExpenses={monthlySummary?.e?.totalExpenses || 0}
+                    netIncome={monthlySummary?.e?.netIncome || 0}
+                    monthlyBreakdown={monthlySummary?.e?.monthlyBreakdown || []}
+                  />
+                  
+                  <MonthlySummaryCard 
+                    title="Department Financial Summary"
+                    fileType="o"
+                    totalRevenue={monthlySummary?.o?.totalRevenue || 0}
+                    totalExpenses={monthlySummary?.o?.totalExpenses || 0}
+                    netIncome={monthlySummary?.o?.netIncome || 0}
+                    monthlyBreakdown={monthlySummary?.o?.monthlyBreakdown || []}
+                  />
+                </>
               );
             })()}
             
