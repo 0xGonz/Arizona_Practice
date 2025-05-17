@@ -48,7 +48,7 @@ export default function DoctorPerformance() {
     return extractRealDoctorData(filteredMonthlyData);
   }, [monthlyData, selectedMonth]);
 
-  // Extract monthly performance trend
+  // Extract monthly performance trend using only key financial metrics from analytics cards
   const monthlyTrend = useMemo(() => {
     return extractMonthlyPerformanceTrend(monthlyData, 'e');
   }, [monthlyData]);
