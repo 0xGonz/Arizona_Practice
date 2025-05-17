@@ -75,15 +75,18 @@ export const doctorPerformance = pgTable("doctor_performance", {
 
 // Table for tracking upload status by month
 export const uploadStatus = pgTable("upload_status", {
+  id: serial("id").primaryKey(),
   month: text("month").notNull(),
   year: integer("year").notNull(),
   annualUploaded: boolean("annual_uploaded").default(false).notNull(),
   monthlyEUploaded: boolean("monthly_e_uploaded").default(false).notNull(),
   monthlyOUploaded: boolean("monthly_o_uploaded").default(false).notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  eFileUploadId: integer("e_file_upload_id").references(() => csvUploads.id),
+  oFileUploadId: integer("o_file_upload_id").references(() => csvUploads.id),
+  lastUpdated: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => {
   return {
-    pk: primaryKey({ columns: [table.month, table.year] }),
+    monthYearIdx: primaryKey({ columns: [table.month, table.year] }),
   }
 });
 
@@ -94,6 +97,15 @@ export const insertCSVUploadSchema = createInsertSchema(csvUploads).pick({
   content: true,
   month: true,
   processed: true,
+});
+
+export const insertCSVDataSchema = createInsertSchema(csvData).pick({
+  uploadId: true,
+  rowIndex: true,
+  rowType: true,
+  depth: true,
+  lineItem: true,
+  values: true,
 });
 
 export const insertMonthlyFinancialDataSchema = createInsertSchema(monthlyFinancialData).pick({

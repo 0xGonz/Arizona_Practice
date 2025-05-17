@@ -4,12 +4,15 @@ import {
   departmentPerformance,
   doctorPerformance,
   monthlyFinancialData,
+  csvData,
   type CSVUpload,
   type InsertCSVUpload,
-  type CSVFileType
+  type CSVFileType,
+  type CSVRowType
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
+import * as Papa from 'papaparse';
 
 export interface IStorage {
   storeCSVFile(
@@ -18,6 +21,12 @@ export interface IStorage {
     filename: string,
     month?: string
   ): Promise<number>;
+  
+  storeStructuredCSVData(
+    uploadId: number,
+    content: string,
+    type: CSVFileType
+  ): Promise<boolean>;
   
   getCSVUploads(): Promise<CSVUpload[]>;
   getCSVUploadById(id: number): Promise<CSVUpload | undefined>;
@@ -44,6 +53,15 @@ export class MemStorage implements IStorage {
   constructor() {
     this.uploads = new Map<number, CSVUpload>();
     this.currentId = 1;
+  }
+  
+  async storeStructuredCSVData(
+    uploadId: number,
+    content: string,
+    type: CSVFileType
+  ): Promise<boolean> {
+    // MemStorage doesn't persist structured CSV data
+    return true;
   }
   
   async storeCSVFile(
@@ -111,6 +129,90 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async storeStructuredCSVData(
+    uploadId: number,
+    content: string,
+    type: CSVFileType
+  ): Promise<boolean> {
+    try {
+      // First, parse the CSV content using PapaParser
+      const parseResult = Papa.parse(content, {
+        header: true,
+        skipEmptyLines: true
+      });
+      
+      if (!parseResult.data || parseResult.data.length === 0) {
+        console.error('No data found in CSV content');
+        return false;
+      }
+      
+      // Get headers (first row) and extract line item column name
+      const headers = parseResult.meta.fields || [];
+      const lineItemColumnName = headers[0] || 'Line Item';
+      
+      // Delete any existing structured data for this upload
+      await db.delete(csvData).where(eq(csvData.uploadId, uploadId));
+      
+      // Process each row
+      const rows = parseResult.data as Array<Record<string, string>>;
+      let rowIndex = 0;
+      let currentDepth = 0;
+      
+      for (const row of rows) {
+        const lineItem = row[lineItemColumnName] || '';
+        
+        // Skip empty rows
+        if (!lineItem.trim()) {
+          rowIndex++;
+          continue;
+        }
+        
+        // Calculate depth by counting leading spaces (2 spaces = 1 depth level)
+        const leadingSpaces = lineItem.match(/^(\s*)/)?.[1].length || 0;
+        currentDepth = Math.floor(leadingSpaces / 2);
+        
+        // Determine row type (header, data, total)
+        let rowType: CSVRowType = 'data';
+        if (lineItem.toLowerCase().includes('total')) {
+          rowType = 'total';
+        } else if (currentDepth === 0) {
+          rowType = 'header';
+        }
+        
+        // Extract values for this row (excluding the line item column)
+        const values: Record<string, string> = {};
+        for (const header of headers) {
+          if (header !== lineItemColumnName) {
+            values[header] = row[header] || '';
+          }
+        }
+        
+        // Store the structured row data
+        await db.insert(csvData).values({
+          uploadId,
+          rowIndex,
+          rowType,
+          depth: currentDepth,
+          lineItem: lineItem.trim(),
+          values: JSON.stringify(values)
+        });
+        
+        rowIndex++;
+      }
+      
+      // Update the processed flag on the original upload
+      await db.update(csvUploads)
+        .set({ processed: true })
+        .where(eq(csvUploads.id, uploadId));
+      
+      console.log(`Successfully stored structured CSV data for upload ${uploadId} (${rowIndex} rows)`);
+      return true;
+    } catch (error) {
+      console.error('Error storing structured CSV data:', error);
+      return false;
+    }
+  }
+  
   async storeCSVFile(
     type: CSVFileType,
     content: string,
@@ -157,7 +259,7 @@ export class DatabaseStorage implements IStorage {
             if (type === 'monthly-e') {
               await db.update(uploadStatus)
                 .set({ 
-                  eFile: true,
+                  monthlyEUploaded: true,
                   eFileUploadId: uploadId,
                   lastUpdated: new Date()
                 })
@@ -168,7 +270,7 @@ export class DatabaseStorage implements IStorage {
             } else if (type === 'monthly-o') {
               await db.update(uploadStatus)
                 .set({ 
-                  oFile: true,
+                  monthlyOUploaded: true,
                   oFileUploadId: uploadId,
                   lastUpdated: new Date()
                 })
@@ -182,8 +284,9 @@ export class DatabaseStorage implements IStorage {
             const newStatus = {
               month,
               year: currentYear,
-              eFile: type === 'monthly-e',
-              oFile: type === 'monthly-o',
+              annualUploaded: false,
+              monthlyEUploaded: type === 'monthly-e',
+              monthlyOUploaded: type === 'monthly-o',
               eFileUploadId: type === 'monthly-e' ? uploadId : null,
               oFileUploadId: type === 'monthly-o' ? uploadId : null,
               lastUpdated: new Date()
@@ -195,6 +298,27 @@ export class DatabaseStorage implements IStorage {
           console.error('Error updating upload status:', error);
           // Don't fail the whole operation if status update fails
         }
+      } else if (type === 'annual') {
+        // For annual CSV files
+        try {
+          // Update all status records for the current year to indicate annual file was uploaded
+          await db.update(uploadStatus)
+            .set({ 
+              annualUploaded: true,
+              lastUpdated: new Date()
+            })
+            .where(eq(uploadStatus.year, currentYear));
+        } catch (error) {
+          console.error('Error updating annual upload status:', error);
+        }
+      }
+      
+      // Store the data in a more structured format
+      try {
+        await this.storeStructuredCSVData(uploadId, content, type);
+      } catch (error) {
+        console.error('Error storing structured CSV data:', error);
+        // Continue anyway - we still have the raw data
       }
       
       return uploadId;
