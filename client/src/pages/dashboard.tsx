@@ -69,7 +69,7 @@ export default function Dashboard() {
         )?.summaryValue || 0;
         
         monthRevenue += oRevenue;
-        monthExpenses += eExpenses;
+        monthExpenses += oExpenses;
       }
       
       // Calculate month's net income
