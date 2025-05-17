@@ -54,19 +54,7 @@ export default function DepartmentAnalysis() {
     return extractMonthlyPerformanceTrend(monthlyData, 'o');
   }, [monthlyData]);
 
-  // Generate expense categories based on department expense data
-  const expenseCategories = useMemo(() => {
-    // This is a data-driven approach based on the expense data in the CSV
-    const totalExpenses = departmentData.reduce((sum, dept) => sum + dept.expenses, 0);
-    
-    // Calculate breakdown of expenses based on common healthcare practice patterns
-    return [
-      { name: "Operations", value: Math.round(totalExpenses * 0.50) },  // ~50% of expenses
-      { name: "Supplies", value: Math.round(totalExpenses * 0.30) },    // ~30% of expenses
-      { name: "Staff", value: Math.round(totalExpenses * 0.15) },       // ~15% of expenses
-      { name: "Other", value: Math.round(totalExpenses * 0.05) }        // ~5% of expenses
-    ];
-  }, [departmentData]);
+  // Removed expense categories as we no longer need the expense composition section
 
   // Filter data based on selected department
   const filteredData = useMemo(() => {
@@ -194,36 +182,7 @@ export default function DepartmentAnalysis() {
             </CardContent>
           </Card>
 
-          {/* Expense Composition */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Composition</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart 
-                  layout="vertical" 
-                  data={expenseCategories}
-                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    type="number" 
-                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
-                    domain={[0, 'dataMax']}
-                  />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    width={100}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Bar dataKey="value" name="Amount" fill="#42A5F5" barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+
 
           {/* Profitability Chart */}
           <Card className="lg:col-span-2">
