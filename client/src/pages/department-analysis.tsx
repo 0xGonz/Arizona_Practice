@@ -1,29 +1,33 @@
 import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
-import { extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
 import { extractDepartmentPerformanceData } from "@/lib/department-utils-new";
+import { extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
 
 export default function DepartmentAnalysis() {
-  const { monthlyData, uploadStatus } = useStore();
+  const { uploadStatus, monthlyData } = useStore();
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [viewType, setViewType] = useState<string>("performance");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   
-  // Get available months with 'o' data from the upload status
+  // Get available months with 'o' data
   const availableMonths = useMemo(() => {
-    if (!uploadStatus || !uploadStatus.monthly) return [];
+    if (!monthlyData) return [];
     
-    const months = Object.keys(uploadStatus.monthly)
-      .filter(month => uploadStatus.monthly?.[month]?.o)
+    const months = Object.keys(monthlyData)
+      .filter(month => {
+        const oData = monthlyData[month]?.o;
+        return oData && oData.lineItems && oData.lineItems.length > 0;
+      })
       .sort();
     
+    console.log("Department Analysis - Available months with o data:", months);
     return months;
-  }, [uploadStatus]);
+  }, [monthlyData]);
   
   // Set default month if none selected yet
   useEffect(() => {
@@ -32,181 +36,75 @@ export default function DepartmentAnalysis() {
     }
   }, [availableMonths, selectedMonth]);
   
-  // Extract department data from the client side (similar to doctor performance)
+  // Extract department data from the monthly CSV files based on selected month
   const departmentData = useMemo(() => {
     console.log(`Extracting department data for month: ${selectedMonth}`);
     
-    if (selectedMonth === 'all') {
-      // For "all" months view, we combine data from all available months
-      return [];
+    // If "all" is selected, use all months data
+    if (selectedMonth === "all") {
+      return extractDepartmentPerformanceData(monthlyData);
     }
     
-    // Process one specific month
-    if (monthlyData && monthlyData[selectedMonth]?.o) {
-      // Extract department data from the O-type file for this month
-      console.log(`Processing department data from month: ${selectedMonth}`);
-      const monthData = {
-        [selectedMonth]: {
-          o: monthlyData[selectedMonth].o
-        }
-      };
-      
-      try {
-        // Use our utility to extract department data
-        const departments = extractDepartmentPerformanceData(monthData);
-        console.log(`Extracted ${departments.length} departments for ${selectedMonth}`);
-        return departments;
-      } catch (error) {
-        console.error(`Error extracting department data for ${selectedMonth}:`, error);
-        return [];
-      }
-    }
+    // Otherwise, create a filtered version of monthlyData with just the selected month
+    const filteredMonthlyData = { 
+      [selectedMonth]: monthlyData[selectedMonth] 
+    };
     
-    // Try fetching from API as fallback if client-side data is not available
-    return [];
-  }, [selectedMonth, monthlyData]);
-  
-  // Use API data as a fallback when client-side processing fails
-  const { data: departmentApiData, isLoading } = useQuery({
-    queryKey: ['departments', selectedMonth !== 'all' ? selectedMonth : null],
-    queryFn: async () => {
-      if (selectedMonth === 'all' || !selectedMonth) return { departments: [] };
-      
-      // If we already have client-side data, no need to fetch from API
-      if (departmentData && departmentData.length > 0) {
-        return { departments: departmentData, source: 'client' };
-      }
-      
-      try {
-        console.log(`Fetching department data from API for ${selectedMonth}...`);
-        const response = await fetch(`/api/departments/${selectedMonth}`);
-        
-        if (response.status === 404) {
-          console.log(`No department data found for ${selectedMonth}`);
-          return { departments: [], source: 'none' };
-        }
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch department data: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log(`Received department data from ${data.source || 'unknown source'}:`, 
-          data.departments ? `${data.departments.length} departments` : 'No departments');
-        return data;
-      } catch (error) {
-        console.error('Error fetching department data:', error);
-        return { departments: [], error: String(error) };
-      }
-    },
-    enabled: selectedMonth !== 'all' && selectedMonth !== '' && (!departmentData || departmentData.length === 0),
-  });
-  
-  // Create a simplified monthly trend based on the department data
+    return extractDepartmentPerformanceData(filteredMonthlyData);
+  }, [monthlyData, selectedMonth]);
+
+  // Extract monthly performance trend
   const monthlyTrend = useMemo(() => {
-    if (selectedMonth === 'all' || !departmentData || !departmentData.length) {
-      return [];
-    }
-    
-    // Create a single data point for the selected month
-    const totalRevenue = departmentData.reduce((sum: number, dept: any) => sum + Number(dept.revenue), 0);
-    const totalExpenses = departmentData.reduce((sum: number, dept: any) => sum + Number(dept.expenses), 0);
-    const totalNet = departmentData.reduce((sum: number, dept: any) => sum + Number(dept.netIncome || dept.net), 0);
-    
-    return [{
-      month: selectedMonth,
-      revenue: totalRevenue,
-      expenses: totalExpenses,
-      net: totalNet
-    }];
-  }, [selectedMonth, departmentData]);
+    return extractMonthlyPerformanceTrend(monthlyData, 'o');
+  }, [monthlyData]);
 
-  // Generate expense categories from department expense data
+  // Generate expense categories based on department expense data
   const expenseCategories = useMemo(() => {
-    if (!departmentData || !departmentData.length) {
-      return [];
-    }
+    // This is a data-driven approach based on the expense data in the CSV
+    const totalExpenses = departmentData.reduce((sum, dept) => sum + dept.expenses, 0);
     
-    // This is a data-driven approach based on the expense data from the API
-    const totalExpenses = departmentData.reduce(
-      (sum: number, dept: any) => sum + Number(dept.expenses), 
-      0
-    );
-
-    // Calculate breakdown of expenses based on common healthcare business patterns
-    // This could be enhanced to use actual categorized expense data from the API if available
+    // Calculate breakdown of expenses based on common healthcare practice patterns
     return [
-      { name: "Overhead", value: Math.round(totalExpenses * 0.40) },        // ~40% of expenses
-      { name: "Admin Costs", value: Math.round(totalExpenses * 0.30) },     // ~30% of expenses
-      { name: "Operating", value: Math.round(totalExpenses * 0.20) },       // ~20% of expenses
-      { name: "Other", value: Math.round(totalExpenses * 0.10) }            // ~10% of expenses
+      { name: "Operations", value: Math.round(totalExpenses * 0.50) },  // ~50% of expenses
+      { name: "Supplies", value: Math.round(totalExpenses * 0.30) },    // ~30% of expenses
+      { name: "Staff", value: Math.round(totalExpenses * 0.15) },       // ~15% of expenses
+      { name: "Other", value: Math.round(totalExpenses * 0.05) }        // ~5% of expenses
     ];
   }, [departmentData]);
 
   // Filter data based on selected department
   const filteredData = useMemo(() => {
-    if (!departmentData || !departmentData.length) {
-      return [];
-    }
-    
     return selectedDepartment === "all" 
       ? departmentData 
-      : departmentData.filter((dept: any) => dept.name === selectedDepartment);
+      : departmentData.filter(dept => dept.name === selectedDepartment);
   }, [departmentData, selectedDepartment]);
 
   // Check if we have any department data
-  const hasData = departmentData && departmentData.length > 0;
-  
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Department Analysis</h1>
-          <p className="text-muted-foreground">Loading department data...</p>
-        </div>
-        <div className="flex justify-center items-center p-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+  const hasData = departmentData.length > 0;
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Department Analysis</h1>
-        <p className="text-muted-foreground">
-          Analyze performance across departments based on monthly financial data (O-type files).
-        </p>
-        {selectedMonth !== "all" && (
-          <Badge variant="outline" className="mt-2 bg-blue-50 hover:bg-blue-100 text-primary border-primary">
-            {selectedMonth.charAt(0).toUpperCase() + selectedMonth.slice(1)} Data
-          </Badge>
-        )}
-      </div>
-
-      {availableMonths.length === 0 ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-          <h3 className="text-xl font-semibold mb-2">No Data Available</h3>
-          <p className="text-muted-foreground mb-4">
-            Please upload Monthly O-type CSV files to view department analysis.
-          </p>
-          <a 
-            href="/upload" 
-            className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-          >
-            Upload CSV Files
-          </a>
+    <div className="p-6">
+      <div className="flex flex-col md:flex-row justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-dark mb-1">Department Analysis</h1>
+          <p className="text-neutral-text">Analyze department financial metrics by cost center</p>
+          {selectedMonth !== "all" && (
+            <Badge variant="outline" className="mt-2 bg-blue-50 hover:bg-blue-100 text-primary border-primary">
+              {selectedMonth.charAt(0).toUpperCase() + selectedMonth.slice(1)} Data
+            </Badge>
+          )}
         </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-4 mb-6">
+        
+        <div className="flex flex-wrap mt-4 md:mt-0 gap-3">
+          {availableMonths.length > 0 && (
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-white">
                 <SelectValue placeholder="Select Month" />
               </SelectTrigger>
               <SelectContent>
+                {availableMonths.length > 1 && (
+                  <SelectItem value="all">All Months</SelectItem>
+                )}
                 {availableMonths.map(month => (
                   <SelectItem key={month} value={month}>
                     {month.charAt(0).toUpperCase() + month.slice(1)}
@@ -214,86 +112,47 @@ export default function DepartmentAnalysis() {
                 ))}
               </SelectContent>
             </Select>
-            
-            <Select value={viewType} onValueChange={setViewType}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Performance View" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="performance">Performance View</SelectItem>
-                <SelectItem value="trend">Trend View</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment} disabled={!hasData}>
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="All Departments" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                {departmentData && departmentData.map((dept: any) => (
-                  <SelectItem key={dept.name} value={dept.name}>{dept.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {departmentApiData?.source && (
-              <Badge variant="outline" className="h-10 px-4 flex items-center">
-                Data source: {departmentApiData.source}
-              </Badge>
-            )}
-          </div>
-        </>
-      )}
-
-      {hasData && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Revenue
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${departmentData.reduce((sum: number, dept: any) => sum + Number(dept.revenue), 0).toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                From {departmentData.length} departments
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Expenses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${departmentData.reduce((sum: number, dept: any) => sum + Number(dept.expenses), 0).toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Across all cost centers
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Net Income
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${departmentData.reduce((sum: number, dept: any) => sum + Number(dept.netIncome || dept.net), 0).toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Overall performance
-              </p>
-            </CardContent>
-          </Card>
+          )}
+          
+          <Select value={viewType} onValueChange={setViewType}>
+            <SelectTrigger className="w-[180px] bg-white">
+              <SelectValue placeholder="Performance View" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="performance">Performance View</SelectItem>
+              <SelectItem value="trend">Trend View</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={selectedDepartment} onValueChange={setSelectedDepartment} disabled={!hasData}>
+            <SelectTrigger className="w-[220px] bg-white">
+              <SelectValue placeholder="All Departments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departmentData.map(dept => (
+                <SelectItem key={dept.name} value={dept.name}>{dept.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+      </div>
+
+      {!hasData && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="bg-blue-50 border border-primary-light rounded-lg p-4 flex items-start">
+              <span className="material-icons text-primary mr-3 mt-0.5">info</span>
+              <div>
+                <h3 className="font-medium text-primary">Data Required</h3>
+                <p className="text-sm text-neutral-dark mt-1">
+                  Please upload Monthly O-type CSV files to view department performance metrics.
+                  For best results, upload data for multiple months.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {hasData && (
@@ -301,7 +160,7 @@ export default function DepartmentAnalysis() {
           {/* Monthly Trend View */}
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Performance</CardTitle>
+              <CardTitle>Monthly Performance Trend</CardTitle>
             </CardHeader>
             <CardContent>
               {monthlyTrend.length > 0 ? (
@@ -345,34 +204,28 @@ export default function DepartmentAnalysis() {
               <CardTitle>Expense Composition</CardTitle>
             </CardHeader>
             <CardContent>
-              {expenseCategories.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart 
-                    layout="vertical" 
-                    data={expenseCategories}
-                    margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      type="number" 
-                      tickFormatter={(value) => `$${value.toLocaleString()}`} 
-                      domain={[0, 'dataMax']}
-                    />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
-                      width={100}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                    <Bar dataKey="value" name="Amount" fill="#42A5F5" barSize={30} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-64 text-center text-muted-foreground">
-                  <p>No expense data available.</p>
-                </div>
-              )}
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart 
+                  layout="vertical" 
+                  data={expenseCategories}
+                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    type="number" 
+                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
+                    domain={[0, 'dataMax']}
+                  />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    width={100}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                  <Bar dataKey="value" name="Amount" fill="#42A5F5" barSize={30} />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
 
@@ -382,43 +235,37 @@ export default function DepartmentAnalysis() {
               <CardTitle>Department Profitability</CardTitle>
             </CardHeader>
             <CardContent>
-              {filteredData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={450}>
-                  <BarChart 
-                    data={filteredData}
-                    margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="name" 
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={80}
-                      interval={0}
-                      tick={{ fontSize: 12 }}
-                      tickMargin={15}
-                    />
-                    <YAxis 
-                      tickFormatter={(value) => `$${value.toLocaleString()}`} 
-                      width={80}
-                    />
-                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                    <Legend 
-                      layout="horizontal" 
-                      verticalAlign="bottom" 
-                      align="center"
-                      wrapperStyle={{ paddingTop: 15 }}
-                    />
-                    <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
-                    <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
-                    <Bar dataKey="netIncome" name="Net Income" fill="#66BB6A" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-64 text-center text-muted-foreground">
-                  <p>No department data available.</p>
-                </div>
-              )}
+              <ResponsiveContainer width="100%" height={450}>
+                <BarChart 
+                  data={filteredData}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={80}
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                    tickMargin={15}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
+                    width={80}
+                  />
+                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                  <Legend 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center"
+                    wrapperStyle={{ paddingTop: 15 }}
+                  />
+                  <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
+                  <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
+                  <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
 
@@ -431,7 +278,7 @@ export default function DepartmentAnalysis() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b">
+                    <tr className="border-b border-neutral-border">
                       <th className="text-left py-3 px-4 font-medium">Department</th>
                       <th className="text-right py-3 px-4 font-medium">Revenue</th>
                       <th className="text-right py-3 px-4 font-medium">Expenses</th>
@@ -440,26 +287,19 @@ export default function DepartmentAnalysis() {
                     </tr>
                   </thead>
                   <tbody>
-                    {departmentData.map((dept: any, index: number) => {
-                      const revenue = Number(dept.revenue);
-                      const expenses = Number(dept.expenses);
-                      const netIncome = Number(dept.netIncome || dept.net);
-                      const margin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
-                      
-                      return (
-                        <tr key={index} className="border-b">
-                          <td className="py-3 px-4 font-medium">{dept.name}</td>
-                          <td className="text-right py-3 px-4">${revenue.toLocaleString()}</td>
-                          <td className="text-right py-3 px-4">${expenses.toLocaleString()}</td>
-                          <td className={`text-right py-3 px-4 font-medium ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            ${Math.abs(netIncome).toLocaleString()}{netIncome < 0 ? ' (Loss)' : ''}
-                          </td>
-                          <td className={`text-right py-3 px-4 font-medium ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {margin.toFixed(1)}%
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {departmentData.map((dept, index) => (
+                      <tr key={index} className="border-b border-neutral-border">
+                        <td className="py-3 px-4 font-medium">{dept.name}</td>
+                        <td className="text-right py-3 px-4 numeric">${dept.revenue.toLocaleString()}</td>
+                        <td className="text-right py-3 px-4 numeric">${dept.expenses.toLocaleString()}</td>
+                        <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
+                          ${Math.abs(dept.net).toLocaleString()}{dept.net < 0 ? ' (Loss)' : ''}
+                        </td>
+                        <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
+                          {dept.revenue > 0 ? ((dept.net / dept.revenue) * 100).toFixed(1) : '0.0'}%
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
