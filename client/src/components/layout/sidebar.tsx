@@ -2,8 +2,6 @@ import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
   CalendarDays, 
-  User, 
-  Building, 
   Upload, 
   History, 
   Stethoscope
@@ -20,9 +18,7 @@ const navigationItems: { section: string; items: NavItem[] }[] = [
     section: "Overview",
     items: [
       { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-      { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-5 h-5" /> },
-      { name: "Doctor Performance", path: "/doctor-performance", icon: <User className="w-5 h-5" /> },
-      { name: "Department Analysis", path: "/department-analysis", icon: <Building className="w-5 h-5" /> }
+      { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-5 h-5" /> }
     ]
   },
   {

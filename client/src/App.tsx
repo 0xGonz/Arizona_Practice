@@ -6,8 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "@/components/layout/layout";
 import Dashboard from "@/pages/dashboard";
 import Monthly from "@/pages/monthly-improved";
-import DoctorPerformance from "@/pages/doctor-performance";
-import DepartmentAnalysis from "@/pages/department-analysis";
 import Upload from "@/pages/upload";
 import UploadHistory from "@/pages/upload-history";
 import FinancialQuery from "@/pages/financial-query";
@@ -114,8 +112,6 @@ function Router() {
         <Route path="/" component={Monthly} />
         <Route path="/monthly" component={Monthly} />
         <Route path="/dashboard" component={Dashboard} />
-        <Route path="/doctor-performance" component={DoctorPerformance} />
-        <Route path="/department-analysis" component={DepartmentAnalysis} />
         <Route path="/upload" component={Upload} />
         <Route path="/upload-history" component={UploadHistory} />
         <Route path="/financial-query" component={FinancialQuery} />
