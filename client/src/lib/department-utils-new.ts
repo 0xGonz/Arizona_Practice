@@ -245,19 +245,10 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
     });
   });
   
-  // If no departments were found through column headers, try a fallback approach
+  // If no departments were found through column headers, log the issue
   if (Object.keys(departmentData).length === 0) {
-    console.log("No department data extracted from columns, using fallback department list");
-    
-    const departmentNames = [
-      "CBD", "Pharmacy", "DME", "Procedure Charges", "Imaging", 
-      "Physical Therapy", "MRI", "Mobile MRI", "Therapy", "Massage Therapy"
-    ];
-    
-    // Create placeholder departments
-    departmentNames.forEach(dept => {
-      departmentData[dept] = { revenue: 10000 + Math.random() * 50000, expenses: 7000 + Math.random() * 30000 };
-    });
+    console.log("No department data extracted from columns. Please ensure Monthly O-type CSV files are uploaded.");
+    // No fallback data - we only want to use actual data from uploaded CSVs
   }
   
   // Convert department data to result array
