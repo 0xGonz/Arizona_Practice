@@ -616,10 +616,10 @@ export default function Monthly() {
                   )
                   ) : (
                     // Raw CSV data view
-                    selectedView === 'employees' && monthlyData[monthLower]?.e?.raw?.length > 0 ? (
-                      <RawCSVView data={monthlyData[monthLower].e.raw} />
-                    ) : selectedView === 'other' && monthlyData[monthLower]?.o?.raw?.length > 0 ? (
-                      <RawCSVView data={monthlyData[monthLower].o.raw} />
+                    selectedView === 'employees' && monthlyData[monthLower]?.e?.raw && Array.isArray(monthlyData[monthLower]?.e?.raw) ? (
+                      <RawCSVView data={monthlyData[monthLower]?.e?.raw} />
+                    ) : selectedView === 'other' && monthlyData[monthLower]?.o?.raw && Array.isArray(monthlyData[monthLower]?.o?.raw) ? (
+                      <RawCSVView data={monthlyData[monthLower]?.o?.raw} />
                     ) : (
                       <div className="text-center p-4 text-muted-foreground">
                         No raw CSV data available for this month.

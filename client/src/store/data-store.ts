@@ -228,8 +228,20 @@ interface DataStore {
   annualData: any[] | null;
   monthlyData: {
     [month: string]: {
-      e?: any[] | null;
-      o?: any[] | null;
+      e?: {
+        lineItems: any[];
+        entityColumns: string[];
+        summaryColumn?: string;
+        type: 'monthly-e' | 'monthly-o';
+        raw?: any[];
+      } | null;
+      o?: {
+        lineItems: any[];
+        entityColumns: string[];
+        summaryColumn?: string;
+        type: 'monthly-e' | 'monthly-o';
+        raw?: any[];
+      } | null;
     };
   };
   
@@ -563,11 +575,15 @@ export const useStore = create<DataStore>((set, get) => ({
           existingMonthData = state.monthlyData[month];
         }
         
+        // Store both the processed data and the raw data for direct access
         const updatedMonthlyData = {
           ...state.monthlyData,
           [month]: {
             ...existingMonthData,
-            [fileType]: processedData // Store the complete processed result
+            [fileType]: {
+              ...processedData,              // Store the processed data (lineItems, etc.)
+              raw: data                      // Store the original raw CSV data for raw view
+            }
           }
         };
         
