@@ -48,10 +48,11 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
           const monthlyByMonth: Record<string, any[]> = {};
           monthlyUploads.forEach((upload: any) => {
             if (upload.month) {
-              if (!monthlyByMonth[upload.month]) {
-                monthlyByMonth[upload.month] = [];
+              const cleanMonth = upload.month.toLowerCase().trim();
+              if (!monthlyByMonth[cleanMonth]) {
+                monthlyByMonth[cleanMonth] = [];
               }
-              monthlyByMonth[upload.month].push(upload);
+              monthlyByMonth[cleanMonth].push(upload);
             }
           });
           
@@ -62,24 +63,33 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
             await loadCSVContent(latestAnnual.id);
           }
           
-          // Load one month's data to have something displayed
+          // Load ALL months to ensure complete data visibility
           const monthKeys = Object.keys(monthlyByMonth);
-          if (monthKeys.length > 0) {
-            const firstMonth = monthKeys[0];
-            const monthUploads = monthlyByMonth[firstMonth];
+          console.log("Available months in uploads:", monthKeys.join(", "));
+          
+          for (const month of monthKeys) {
+            const monthUploads = monthlyByMonth[month];
             
             // Load E-type upload for this month if available
             const eUpload = monthUploads.find((u: any) => u.type === 'monthly-e');
             if (eUpload) {
-              console.log(`Loading monthly-e data for ${firstMonth} from upload ID ${eUpload.id}`);
-              await loadCSVContent(eUpload.id);
+              console.log(`Loading monthly-e data for ${month} from upload ID ${eUpload.id}`);
+              try {
+                await loadCSVContent(eUpload.id);
+              } catch (e) {
+                console.error(`Error loading monthly-e data for ${month}:`, e);
+              }
             }
             
             // Load O-type upload for this month if available
             const oUpload = monthUploads.find((u: any) => u.type === 'monthly-o');
             if (oUpload) {
-              console.log(`Loading monthly-o data for ${firstMonth} from upload ID ${oUpload.id}`);
-              await loadCSVContent(oUpload.id);
+              console.log(`Loading monthly-o data for ${month} from upload ID ${oUpload.id}`);
+              try {
+                await loadCSVContent(oUpload.id);
+              } catch (e) {
+                console.error(`Error loading monthly-o data for ${month}:`, e);
+              }
             }
           }
           

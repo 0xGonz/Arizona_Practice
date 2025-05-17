@@ -345,7 +345,7 @@ export const useStore = create<DataStore>((set, get) => ({
   }),
   
   // Process CSV data and update store
-  processCSVData: (type, data, month) => set(async (state) => {
+  processCSVData: (type, data, month) => set(state => {
     if (type === 'annual') {
       // Process annual data
       try {
@@ -388,20 +388,81 @@ export const useStore = create<DataStore>((set, get) => ({
     } else if (type.startsWith('monthly-') && month) {
       // Process monthly data
       try {
-        // Import the processMonthlyCSV function from our lib
-        const { processMonthlyCSV } = await import('../lib/monthly-csv-parser');
-        
-        // Process the monthly CSV data
-        const csvType = type as 'monthly-e' | 'monthly-o';
-        const processed = processMonthlyCSV(data, csvType);
+        // Parse the raw data to extract entity columns and line items
+        // This approach avoids using external libraries that might cause async issues
         
         // Clean the month name for consistency
         const cleanMonth = month.toLowerCase().trim();
         const isEType = type === 'monthly-e';
+        const csvType = type as 'monthly-e' | 'monthly-o';
         
-        console.log(`Processing monthly-${isEType ? 'e' : 'o'} CSV with:`, {
-          totalRows: data.length,
-          entityColumns: processed.meta.entityColumns
+        // Make sure we have valid data
+        if (!data || !Array.isArray(data) || data.length === 0) {
+          console.error(`No valid data for ${type} processing`);
+          return state;
+        }
+        
+        // Get column headers
+        const firstRow = data[0] || {};
+        const columns = Object.keys(firstRow);
+        
+        // Find entity columns (all except Line Item and summary columns)
+        const entityColumns = columns.filter(col => 
+          col !== 'Line Item' && 
+          col !== '' &&
+          !col.toLowerCase().includes('all') &&
+          !col.toLowerCase().includes('total')
+        );
+        
+        // Find summary column
+        const summaryColumn = columns.find(col => 
+          col.toLowerCase().includes('all') || 
+          col === '' || 
+          col.toLowerCase().includes('total')
+        ) || null;
+        
+        console.log(`Processing ${csvType} data for ${cleanMonth} with ${data.length} rows`);
+        console.log(`Found ${entityColumns.length} entity columns`);
+        
+        // Process line items
+        const lineItems = data.map(row => {
+          const lineItem = String(row['Line Item'] || '').trim();
+          
+          // Determine depth from indentation
+          const originalItem = String(row['Line Item'] || '');
+          const leadingSpaces = originalItem.length - originalItem.trimStart().length;
+          const depth = Math.floor(leadingSpaces / 2);
+          
+          // Extract values for each entity
+          const entityValues = {};
+          for (const entity of entityColumns) {
+            const rawValue = row[entity];
+            entityValues[entity] = typeof rawValue === 'number' 
+              ? rawValue 
+              : parseFinancialValue(String(rawValue || '0'));
+          }
+          
+          // Calculate or extract summary value
+          let summaryValue = 0;
+          if (summaryColumn && row[summaryColumn] !== undefined) {
+            const rawSummary = row[summaryColumn];
+            summaryValue = typeof rawSummary === 'number'
+              ? rawSummary
+              : parseFinancialValue(String(rawSummary || '0'));
+          } else {
+            // Sum all entity values
+            summaryValue = Object.values(entityValues).reduce((sum, val) => sum + (val || 0), 0);
+          }
+          
+          return {
+            id: `${lineItem}-${depth}-${Math.random().toString(36).substring(2, 9)}`,
+            name: lineItem,
+            originalLineItem: originalItem,
+            depth,
+            entityValues,
+            summaryValue,
+            isTotal: lineItem.toLowerCase().includes('total')
+          };
         });
         
         // Initialize month data if it doesn't exist
@@ -410,16 +471,15 @@ export const useStore = create<DataStore>((set, get) => ({
           newMonthlyData[cleanMonth] = {};
         }
         
-        // Update with new data using the properly processed data structure
+        // Update with new data 
         newMonthlyData[cleanMonth] = {
           ...newMonthlyData[cleanMonth],
           [isEType ? 'e' : 'o']: {
-            lineItems: processed.flat, // Use the flat representation for compatibility
-            entityColumns: processed.meta.entityColumns,
-            summaryColumn: processed.meta.summaryColumn,
+            lineItems: lineItems,
+            entityColumns: entityColumns,
+            summaryColumn: summaryColumn,
             type: csvType,
-            raw: data,
-            nested: processed.nested // Keep the nested data for hierarchical display
+            raw: data
           }
         };
         
