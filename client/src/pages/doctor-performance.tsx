@@ -255,7 +255,6 @@ export default function DoctorPerformance() {
                     wrapperStyle={{ paddingTop: 15 }}
                   />
                   <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
-                  <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
                   <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
                 </BarChart>
               </ResponsiveContainer>
@@ -274,7 +273,6 @@ export default function DoctorPerformance() {
                     <tr className="border-b border-neutral-border">
                       <th className="text-left py-3 px-4 font-medium">Provider</th>
                       <th className="text-right py-3 px-4 font-medium">Revenue</th>
-                      <th className="text-right py-3 px-4 font-medium">Expenses</th>
                       <th className="text-right py-3 px-4 font-medium">Net Income</th>
                       <th className="text-right py-3 px-4 font-medium">Margin %</th>
                     </tr>
@@ -284,7 +282,6 @@ export default function DoctorPerformance() {
                       <tr key={index} className="border-b border-neutral-border">
                         <td className="py-3 px-4 font-medium">{doc.name}</td>
                         <td className="text-right py-3 px-4 numeric">${doc.revenue.toLocaleString()}</td>
-                        <td className="text-right py-3 px-4 numeric">${doc.expenses.toLocaleString()}</td>
                         <td className={`text-right py-3 px-4 numeric font-medium ${doc.net >= 0 ? 'text-positive' : 'text-negative'}`}>
                           ${Math.abs(doc.net).toLocaleString()}{doc.net < 0 ? ' (Loss)' : ''}
                         </td>
