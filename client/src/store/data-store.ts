@@ -516,21 +516,36 @@ export const useStore = create<DataStore>((set, get) => ({
       const response = await apiRequest('GET', `/api/uploads/${id}`);
       
       if (response && response.content) {
-        // Parse the CSV content
-        const parsed = Papa.parse(response.content, {
-          header: true,
-          skipEmptyLines: true,
-          transformHeader: (header) => header.trim(),
-        });
-        
-        if (parsed.data && Array.isArray(parsed.data)) {
-          return parsed.data;
+        try {
+          // Parse the CSV content
+          const parsed = Papa.parse(response.content, {
+            header: true,
+            skipEmptyLines: true,
+            transformHeader: (header) => header.trim(),
+          });
+          
+          if (parsed.data && Array.isArray(parsed.data)) {
+            // If CSV was loaded successfully, update the process flag in database
+            // This just makes a background request, we don't need to wait for it
+            apiRequest('POST', `/api/uploads/${id}/mark-processed`, { processed: true })
+              .catch(err => console.error('Could not mark upload as processed:', err));
+            
+            // Process the data and return it
+            console.log(`Successfully loaded CSV content for upload ID ${id}, found ${parsed.data.length} rows`);
+            return parsed.data;
+          }
+        } catch (parseError) {
+          console.error('Error parsing CSV content:', parseError);
+          // If we can't parse the data, it might be corrupted
+          return undefined;
         }
+      } else {
+        console.error(`No content found for upload ID ${id}`);
       }
       
       return undefined;
     } catch (error) {
-      console.error('Error loading CSV content:', error);
+      console.error('API error loading CSV content:', error);
       return undefined;
     }
   }
