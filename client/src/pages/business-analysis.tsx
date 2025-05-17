@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useBusinessSummary, useBusinessDetail } from '../hooks/useBusinessAnalysis';
 import { useAnalysisStore } from '../store/analysis-store';
-import { FiltersBar, KpiCard, MonthlyBarChart, ProfitabilityChart, AnalysisTable } from '../components/analysis';
+import { FiltersBar } from '../components/analysis/FiltersBar';
+import { KpiCard } from '../components/analysis/KpiCard';
+import { MonthlyBarChart } from '../components/analysis/MonthlyBarChart';
+import { ProfitabilityChart } from '../components/analysis/ProfitabilityChart';
+import { AnalysisTable } from '../components/analysis/AnalysisTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
