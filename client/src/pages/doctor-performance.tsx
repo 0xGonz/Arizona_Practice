@@ -52,18 +52,7 @@ export default function DoctorPerformance() {
     return extractMonthlyPerformanceTrend(monthlyData, 'e');
   }, [monthlyData]);
 
-  // Generate expense categories based on provider expense data
-  const expenseCategories = useMemo(() => {
-    // This is a data-driven approach based on the expense data in the CSV
-    const totalExpenses = doctorData.reduce((sum, doc) => sum + doc.expenses, 0);
-    
-    // Calculate breakdown of expenses based on common healthcare practice patterns
-    return [
-      { name: "Provider Salary", value: Math.round(totalExpenses * 0.65) }, // ~65% of expenses
-      { name: "Operating", value: Math.round(totalExpenses * 0.25) },       // ~25% of expenses
-      { name: "Admin", value: Math.round(totalExpenses * 0.10) }            // ~10% of expenses
-    ];
-  }, [doctorData]);
+  // Skip expense categories as we're removing expense composition section
 
   // Filter data based on selected doctor
   const filteredData = useMemo(() => {
@@ -191,34 +180,43 @@ export default function DoctorPerformance() {
             </CardContent>
           </Card>
 
-          {/* Expense Composition */}
+          {/* Provider Performance */}
           <Card>
             <CardHeader>
-              <CardTitle>Expense Composition</CardTitle>
+              <CardTitle>Provider Performance</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart 
-                  layout="vertical" 
-                  data={expenseCategories}
-                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    type="number" 
-                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
-                    domain={[0, 'dataMax']}
-                  />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    width={100}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Bar dataKey="value" name="Amount" fill="#42A5F5" barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
+              {filteredData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart 
+                    data={filteredData}
+                    margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => `$${value.toLocaleString()}`}
+                      width={80}
+                    />
+                    <Tooltip 
+                      formatter={(value) => `$${value.toLocaleString()}`}
+                      wrapperStyle={{ fontSize: 12 }}
+                    />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: 15 }}
+                    />
+                    <Bar dataKey="revenue" name="Revenue" fill="#10B981" />
+                    <Bar dataKey="net" name="Net Income" fill="#6366F1" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-center text-muted-foreground">
+                  <p>No provider performance data available.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
