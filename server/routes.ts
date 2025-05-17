@@ -40,8 +40,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify database connection
       try {
-        const tables = await db.query.sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
-        console.log(`Database connection successful. Found ${tables.length} tables.`);
+        const tables = await db.execute(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`);
+        console.log(`Database connection successful. Found ${tables.rows.length} tables.`);
       } catch (dbError) {
         console.error('Database connection error:', dbError);
       }

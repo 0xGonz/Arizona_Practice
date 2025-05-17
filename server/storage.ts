@@ -137,56 +137,62 @@ export class DatabaseStorage implements IStorage {
       // Get the current year
       const currentYear = new Date().getFullYear();
       
-      // Store CSV file in database
-      const [upload] = await db.insert(csvUploads).values({
-        type,
-        filename,
-        content,
-        month,
-        processed: false
-      }).returning();
+      console.log(`DatabaseStorage: Storing ${type} CSV file in database: ${filename}`);
+      
+      // Use direct SQL insert for better logging and troubleshooting
+      const result = await db.execute(`
+        INSERT INTO csv_uploads (type, filename, content, month, uploaded_at, processed)
+        VALUES ($1, $2, $3, $4, NOW(), false)
+        RETURNING id
+      `, [type, filename, content, month || null]);
+      
+      if (!result.rows || result.rows.length === 0) {
+        console.error("Failed to insert CSV file: No rows returned");
+        throw new Error("Database insert failed");
+      }
+      
+      const uploadId = result.rows[0].id;
+      console.log(`DatabaseStorage: CSV upload successful. ID: ${uploadId}`);
       
       // Update upload status
       if (month) {
         // For monthly CSV files
         try {
           // Check if we already have a record for this month/year
-          const [status] = await db.select()
-            .from(uploadStatus)
-            .where(and(
-              eq(uploadStatus.month, month),
-              eq(uploadStatus.year, currentYear)
-            ));
+          const statusResult = await db.execute(`
+            SELECT * FROM upload_status 
+            WHERE month = $1 AND year = $2
+          `, [month, currentYear]);
           
-          if (status) {
+          if (statusResult.rows && statusResult.rows.length > 0) {
             // Update existing record
             if (type === 'monthly-e') {
-              await db.update(uploadStatus)
-                .set({ monthlyEUploaded: true, updatedAt: new Date() })
-                .where(and(
-                  eq(uploadStatus.month, month),
-                  eq(uploadStatus.year, currentYear)
-                ));
+              await db.execute(`
+                UPDATE upload_status 
+                SET monthly_e_uploaded = true, updated_at = NOW() 
+                WHERE month = $1 AND year = $2
+              `, [month, currentYear]);
             } else if (type === 'monthly-o') {
-              await db.update(uploadStatus)
-                .set({ monthlyOUploaded: true, updatedAt: new Date() })
-                .where(and(
-                  eq(uploadStatus.month, month),
-                  eq(uploadStatus.year, currentYear)
-                ));
+              await db.execute(`
+                UPDATE upload_status 
+                SET monthly_o_uploaded = true, updated_at = NOW() 
+                WHERE month = $1 AND year = $2
+              `, [month, currentYear]);
             }
           } else {
             // Create new record
-            const newStatus: any = {
-              month,
-              year: currentYear,
-              annualUploaded: false,
-              monthlyEUploaded: type === 'monthly-e',
-              monthlyOUploaded: type === 'monthly-o'
-            };
-            
-            await db.insert(uploadStatus).values(newStatus);
+            await db.execute(`
+              INSERT INTO upload_status 
+              (month, year, annual_uploaded, monthly_e_uploaded, monthly_o_uploaded, updated_at)
+              VALUES ($1, $2, false, $3, $4, NOW())
+            `, [
+              month, 
+              currentYear, 
+              type === 'monthly-e', 
+              type === 'monthly-o'
+            ]);
           }
+          console.log(`DatabaseStorage: Upload status updated for ${month}`);
         } catch (statusError) {
           console.error('Error updating upload status:', statusError);
           // Continue even if status update fails
@@ -201,39 +207,35 @@ export class DatabaseStorage implements IStorage {
           
           for (const monthName of months) {
             // Check if status record exists
-            const [existingStatus] = await db.select()
-              .from(uploadStatus)
-              .where(and(
-                eq(uploadStatus.month, monthName),
-                eq(uploadStatus.year, currentYear)
-              ));
+            const statusResult = await db.execute(`
+              SELECT * FROM upload_status 
+              WHERE month = $1 AND year = $2
+            `, [monthName, currentYear]);
             
-            if (existingStatus) {
+            if (statusResult.rows && statusResult.rows.length > 0) {
               // Update existing record
-              await db.update(uploadStatus)
-                .set({ annualUploaded: true, updatedAt: new Date() })
-                .where(and(
-                  eq(uploadStatus.month, monthName),
-                  eq(uploadStatus.year, currentYear)
-                ));
+              await db.execute(`
+                UPDATE upload_status 
+                SET annual_uploaded = true, updated_at = NOW() 
+                WHERE month = $1 AND year = $2
+              `, [monthName, currentYear]);
             } else {
               // Create new record
-              await db.insert(uploadStatus).values({
-                month: monthName,
-                year: currentYear,
-                annualUploaded: true,
-                monthlyEUploaded: false,
-                monthlyOUploaded: false
-              });
+              await db.execute(`
+                INSERT INTO upload_status 
+                (month, year, annual_uploaded, monthly_e_uploaded, monthly_o_uploaded, updated_at)
+                VALUES ($1, $2, true, false, false, NOW())
+              `, [monthName, currentYear]);
             }
           }
+          console.log(`DatabaseStorage: Annual upload status updated for all months`);
         } catch (statusError) {
           console.error('Error updating annual upload status:', statusError);
           // Continue even if status update fails
         }
       }
       
-      return upload.id;
+      return uploadId;
     } catch (error) {
       console.error('Error storing CSV file in database:', error);
       throw error;
