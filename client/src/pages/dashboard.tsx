@@ -369,13 +369,13 @@ export default function Dashboard() {
               {formatCurrency(aggregatedData.netIncome)}
             </div>
             <div className="text-sm text-gray-600 flex flex-col mt-2">
-              <span className={`flex items-center ${aggregatedData.eNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                <span className={`w-2 h-2 ${aggregatedData.eNetIncome < 0 ? 'bg-red-400' : 'bg-green-400'} rounded-full mr-1`}></span>
-                E-Files: {formatCurrency(aggregatedData.eNetIncome)}
+              <span className={`flex items-center ${aggregatedData.eData.netIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`w-2 h-2 ${aggregatedData.eData.netIncome < 0 ? 'bg-red-400' : 'bg-green-400'} rounded-full mr-1`}></span>
+                E-Files: {formatCurrency(aggregatedData.eData.netIncome)}
               </span>
-              <span className={`flex items-center ${aggregatedData.oNetIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                <span className={`w-2 h-2 ${aggregatedData.oNetIncome < 0 ? 'bg-red-400' : 'bg-green-400'} rounded-full mr-1`}></span>
-                O-Files: {formatCurrency(aggregatedData.oNetIncome)}
+              <span className={`flex items-center ${aggregatedData.oData.netIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`w-2 h-2 ${aggregatedData.oData.netIncome < 0 ? 'bg-red-400' : 'bg-green-400'} rounded-full mr-1`}></span>
+                O-Files: {formatCurrency(aggregatedData.oData.netIncome)}
               </span>
             </div>
           </CardContent>
