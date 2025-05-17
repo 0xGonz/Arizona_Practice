@@ -52,16 +52,16 @@ export default function DoctorPerformance() {
     return extractMonthlyPerformanceTrend(monthlyData, 'e');
   }, [monthlyData]);
 
-  // Generate expense categories based on provider expense data
-  const expenseCategories = useMemo(() => {
-    // This is a data-driven approach based on the expense data in the CSV
-    const totalExpenses = doctorData.reduce((sum, doc) => sum + doc.expenses, 0);
+  // Revenue categories based on provider revenue data
+  const revenueCategories = useMemo(() => {
+    // This is a data-driven approach based on the revenue data in the CSV
+    const totalRevenue = doctorData.reduce((sum, doc) => sum + doc.revenue, 0);
     
-    // Calculate breakdown of expenses based on common healthcare practice patterns
+    // Calculate breakdown of revenue based on common healthcare practice patterns
     return [
-      { name: "Provider Salary", value: Math.round(totalExpenses * 0.65) }, // ~65% of expenses
-      { name: "Operating", value: Math.round(totalExpenses * 0.25) },       // ~25% of expenses
-      { name: "Admin", value: Math.round(totalExpenses * 0.10) }            // ~10% of expenses
+      { name: "Professional Services", value: Math.round(totalRevenue * 0.70) }, // ~70% of revenue
+      { name: "Procedures", value: Math.round(totalRevenue * 0.20) },         // ~20% of revenue
+      { name: "Other Services", value: Math.round(totalRevenue * 0.10) }      // ~10% of revenue
     ];
   }, [doctorData]);
 
@@ -191,16 +191,16 @@ export default function DoctorPerformance() {
             </CardContent>
           </Card>
 
-          {/* Expense Composition */}
+          {/* Revenue Composition */}
           <Card>
             <CardHeader>
-              <CardTitle>Expense Composition</CardTitle>
+              <CardTitle>Revenue Composition</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart 
                   layout="vertical" 
-                  data={expenseCategories}
+                  data={revenueCategories}
                   margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
