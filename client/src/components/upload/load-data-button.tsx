@@ -44,19 +44,28 @@ export function LoadDataButton({
     try {
       setLoading(true);
       
+      console.log(`Attempting to load CSV content for ID: ${uploadId}`);
       // Load the CSV content from database
-      await loadCSVContent(uploadId);
+      const result = await loadCSVContent(uploadId);
       
-      toast({
-        title: "Data loaded successfully",
-        description: `${getTypeDisplay(type)} has been loaded from the database.`,
-      });
-      
-      // Redirect to the appropriate page based on type
-      if (type === 'annual') {
-        window.location.href = '/';
-      } else if (type.startsWith('monthly') && month) {
-        window.location.href = `/monthly?month=${month}`;
+      if (result) {
+        toast({
+          title: "Data loaded successfully",
+          description: `${getTypeDisplay(type)} has been loaded from the database.`,
+        });
+        
+        // Redirect to the appropriate page based on type
+        if (type === 'annual') {
+          window.location.href = '/';
+        } else if (type.startsWith('monthly') && month) {
+          window.location.href = `/monthly?month=${month}`;
+        }
+      } else {
+        toast({
+          title: "Error loading data",
+          description: "No data was returned from the server.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error loading CSV content:", error);
