@@ -17,7 +17,7 @@ const rangeSchema = z.object({
 });
 
 // Get available months with data
-router.get('/analytics/months', async (_req, res) => {
+router.get('/months', async (_req, res) => {
   try {
     // Pull distinct months that exist in financial_values
     const months = await db
@@ -34,7 +34,7 @@ router.get('/analytics/months', async (_req, res) => {
 });
 
 // Employee Summary - aggregated data across all employees
-router.get('/analytics/employee/summary', async (req, res) => {
+router.get('/employee/summary', async (req, res) => {
   try {
     const { from, to } = rangeSchema.parse(req.query);
     
@@ -64,7 +64,7 @@ router.get('/analytics/employee/summary', async (req, res) => {
 });
 
 // Employee Detail - data for a specific employee
-router.get('/analytics/employee/detail', async (req, res) => {
+router.get('/employee/detail', async (req, res) => {
   try {
     const queryParams = rangeSchema.extend({ 
       employeeId: z.string() 
@@ -96,7 +96,7 @@ router.get('/analytics/employee/detail', async (req, res) => {
 });
 
 // Business Summary - aggregated data across all business lines
-router.get('/analytics/business/summary', async (req, res) => {
+router.get('/business/summary', async (req, res) => {
   try {
     const { from, to } = rangeSchema.parse(req.query);
     
@@ -126,7 +126,7 @@ router.get('/analytics/business/summary', async (req, res) => {
 });
 
 // Business Detail - data for a specific business line
-router.get('/analytics/business/detail', async (req, res) => {
+router.get('/business/detail', async (req, res) => {
   try {
     const queryParams = rangeSchema.extend({ 
       businessId: z.string() 
@@ -158,7 +158,7 @@ router.get('/analytics/business/detail', async (req, res) => {
 });
 
 // Employee list - for populating dropdowns
-router.get('/analytics/employee/list', async (req, res) => {
+router.get('/employee/list', async (req, res) => {
   try {
     const employees = await db
       .select({
@@ -177,7 +177,7 @@ router.get('/analytics/employee/list', async (req, res) => {
 });
 
 // Business line list - for populating dropdowns
-router.get('/analytics/business/list', async (req, res) => {
+router.get('/business/list', async (req, res) => {
   try {
     const businesses = await db
       .select({
