@@ -77,14 +77,18 @@ export default function Dashboard() {
           (item.isTotal || item.depth === 1)
         );
         
-        // Look for Payroll and Related Expenses
+        // Look for Payroll and Related Expenses - try to find the exact Total line first
         const payrollExpenseLine = monthData.e.lineItems.find(item => 
-          item.name.includes("Payroll and Related Expense") || 
-          item.name.includes("Total Payroll and Related Expense")
+          item.name === "Total Payroll and Related Expense" ||
+          (item.name.includes("Payroll and Related Expense") && item.isTotal)
+        ) || monthData.e.lineItems.find(item => 
+          item.name.includes("Payroll and Related Expense")
         );
         
         if (payrollExpenseLine) {
+          // Extract value, payroll expenses are typically negative so we use absolute value for display
           monthPayrollExpenses += Math.abs(payrollExpenseLine.summaryValue || 0);
+          console.log(`Found E Payroll expense in ${month}: ${Math.abs(payrollExpenseLine.summaryValue || 0)}`);
         }
         
         monthERevenue = revenueLine?.summaryValue || 0;
@@ -122,14 +126,18 @@ export default function Dashboard() {
           (item.isTotal || item.depth === 1)
         );
         
-        // Look for Payroll and Related Expenses
+        // Look for Payroll and Related Expenses - try to find the exact Total line first
         const payrollExpenseLine = monthData.o.lineItems.find(item => 
-          item.name.includes("Payroll and Related Expense") || 
-          item.name.includes("Total Payroll and Related Expense")
+          item.name === "Total Payroll and Related Expense" ||
+          (item.name.includes("Payroll and Related Expense") && item.isTotal)
+        ) || monthData.o.lineItems.find(item => 
+          item.name.includes("Payroll and Related Expense")
         );
         
         if (payrollExpenseLine) {
+          // Extract value, payroll expenses are typically negative so we use absolute value for display
           monthPayrollExpenses += Math.abs(payrollExpenseLine.summaryValue || 0);
+          console.log(`Found O Payroll expense in ${month}: ${Math.abs(payrollExpenseLine.summaryValue || 0)}`);
         }
         
         monthORevenue = revenueLine?.summaryValue || 0;
