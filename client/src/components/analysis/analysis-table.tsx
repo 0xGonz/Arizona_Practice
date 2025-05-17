@@ -1,6 +1,8 @@
 import React from 'react';
+import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 interface AnalysisTableProps {
   data: {
@@ -10,118 +12,119 @@ interface AnalysisTableProps {
     net: number;
     marginPct?: number;
   }[];
-  entityType: 'employee' | 'business';
   isLoading?: boolean;
 }
 
-export function AnalysisTable({ data, entityType, isLoading = false }: AnalysisTableProps) {
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Monthly Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="animate-pulse">
-          <div className="h-64 bg-slate-200 rounded"></div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Sort data by month (assuming month names)
-  const monthOrder = [
-    'january', 'february', 'march', 'april', 'may', 'june',
-    'july', 'august', 'september', 'october', 'november', 'december'
-  ];
-  
-  const sortedData = [...data].sort((a, b) => {
-    const aIndex = monthOrder.indexOf(a.month.toLowerCase());
-    const bIndex = monthOrder.indexOf(b.month.toLowerCase());
-    return aIndex - bIndex;
-  });
-  
-  // Format currency values
+export function AnalysisTable({ data, isLoading = false }: AnalysisTableProps) {
+  // Format currency value
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0 
     }).format(value);
   };
   
-  // Format percentage values
-  const formatPercent = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(value / 100);
+  // Format percentage value
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
   };
   
-  // Calculate year-to-date totals
-  const ytdTotals = sortedData.reduce((acc, item) => {
-    return {
-      revenue: acc.revenue + Number(item.revenue),
-      expense: acc.expense + Number(item.expense),
-      net: acc.net + Number(item.net)
-    };
-  }, { revenue: 0, expense: 0, net: 0 });
-  
-  // Calculate overall margin
-  const overallMargin = ytdTotals.revenue ? (ytdTotals.net / ytdTotals.revenue) * 100 : 0;
+  // Handle CSV export
+  const handleExportCSV = () => {
+    // Create CSV content
+    const headers = ['Month', 'Revenue', 'Expenses', 'Net Income', 'Margin %'];
+    const csvRows = [
+      headers.join(','),
+      ...data.map(row => [
+        row.month,
+        row.revenue.toFixed(2),
+        row.expense.toFixed(2),
+        row.net.toFixed(2),
+        row.marginPct ? row.marginPct.toFixed(2) : (row.net / row.revenue * 100).toFixed(2)
+      ].join(','))
+    ];
+    const csvContent = csvRows.join('\n');
+    
+    // Create a blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `financial_analysis_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">
-          {entityType === 'employee' ? 'Employee Performance by Month' : 'Business Performance by Month'}
-        </CardTitle>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-medium">Monthly Financial Data</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportCSV}
+          disabled={isLoading || data.length === 0}
+          className="flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Month</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
-                <TableHead className="text-right">Expenses</TableHead>
-                <TableHead className="text-right">Net Income</TableHead>
-                <TableHead className="text-right">Margin</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedData.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">
-                    {item.month.charAt(0).toUpperCase() + item.month.slice(1)}
-                  </TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.revenue)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.expense)}</TableCell>
-                  <TableCell className={`text-right ${item.net >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {formatCurrency(item.net)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatPercent(item.marginPct || (item.revenue ? (item.net / item.revenue) * 100 : 0))}
-                  </TableCell>
-                </TableRow>
-              ))}
-              
-              {/* YTD row */}
-              <TableRow className="bg-muted/50 font-medium">
-                <TableCell>Year to Date</TableCell>
-                <TableCell className="text-right">{formatCurrency(ytdTotals.revenue)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(ytdTotals.expense)}</TableCell>
-                <TableCell className={`text-right ${ytdTotals.net >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {formatCurrency(ytdTotals.net)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatPercent(overallMargin)}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+        {isLoading ? (
+          <div className="space-y-2">
+            <div className="h-8 w-full bg-gray-100 animate-pulse rounded"></div>
+            <div className="h-8 w-full bg-gray-100 animate-pulse rounded"></div>
+            <div className="h-8 w-full bg-gray-100 animate-pulse rounded"></div>
+          </div>
+        ) : data.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No data available for the selected period
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="px-4 py-2 text-left font-medium">Month</th>
+                  <th className="px-4 py-2 text-right font-medium">Revenue</th>
+                  <th className="px-4 py-2 text-right font-medium">Expenses</th>
+                  <th className="px-4 py-2 text-right font-medium">Net Income</th>
+                  <th className="px-4 py-2 text-right font-medium">Margin %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((row, index) => {
+                  // Calculate margin percentage if not provided
+                  const marginPct = row.marginPct !== undefined 
+                    ? row.marginPct 
+                    : (row.revenue !== 0 ? (row.net / row.revenue) * 100 : 0);
+                  
+                  return (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-2 text-left">{row.month}</td>
+                      <td className="px-4 py-2 text-right">{formatCurrency(row.revenue)}</td>
+                      <td className="px-4 py-2 text-right">{formatCurrency(row.expense)}</td>
+                      <td className="px-4 py-2 text-right font-medium">
+                        <span className={row.net >= 0 ? 'text-green-600' : 'text-red-600'}>
+                          {formatCurrency(row.net)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <span className={marginPct >= 0 ? 'text-green-600' : 'text-red-600'}>
+                          {formatPercentage(marginPct)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
