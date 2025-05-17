@@ -45,7 +45,7 @@ export function FiltersBar({ mode }: FiltersBarProps) {
   const { data: employees, isLoading: isLoadingEmployees } = useEmployeeList();
   const { data: businesses, isLoading: isLoadingBusinesses } = useBusinessList();
   const { data: months } = useMonthsList();
-
+  
   // Reset filters when mode changes
   useEffect(() => {
     resetFilters();

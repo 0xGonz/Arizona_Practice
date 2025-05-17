@@ -11,14 +11,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function EmployeeAnalysis() {
   const [activeTab, setActiveTab] = useState("performance");
-  const { employeeId, getDateRange } = useAnalysisStore();
-  const dateRange = getDateRange();
+  const { employeeId, range } = useAnalysisStore();
   
   // Fetch summary data for all employees
-  const { data: summaryData, isLoading: isLoadingSummary } = useEmployeeSummary(dateRange);
+  const { data: summaryData, isLoading: isLoadingSummary } = useEmployeeSummary(range);
   
   // Fetch detailed data for a specific employee when selected
-  const { data: detailData, isLoading: isLoadingDetail } = useEmployeeDetail(employeeId, dateRange);
+  const { data: detailData, isLoading: isLoadingDetail } = useEmployeeDetail(employeeId, range);
   
   // Reset tab when employee changes
   useEffect(() => {

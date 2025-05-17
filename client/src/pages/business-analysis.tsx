@@ -11,14 +11,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function BusinessAnalysis() {
   const [activeTab, setActiveTab] = useState("performance");
-  const { businessId, getDateRange } = useAnalysisStore();
-  const dateRange = getDateRange();
+  const { businessId, range } = useAnalysisStore();
   
   // Fetch summary data for all business lines
-  const { data: summaryData, isLoading: isLoadingSummary } = useBusinessSummary(dateRange);
+  const { data: summaryData, isLoading: isLoadingSummary } = useBusinessSummary(range);
   
   // Fetch detailed data for a specific business line when selected
-  const { data: detailData, isLoading: isLoadingDetail } = useBusinessDetail(businessId, dateRange);
+  const { data: detailData, isLoading: isLoadingDetail } = useBusinessDetail(businessId, range);
   
   // Reset tab when business changes
   useEffect(() => {
