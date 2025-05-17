@@ -235,17 +235,17 @@ export default function DataAnalysis() {
 
   return (
     <div className="container py-6">
-      <h1 className="text-3xl font-bold mb-6">Financial Data Analysis</h1>
+      <h1 className="text-3xl font-bold mb-4">Financial Data Analysis</h1>
       
       {/* Top Navigation Tabs */}
-      <div className="mb-8">
+      <div className="sticky top-0 z-10 bg-background pt-2 pb-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full mb-4 flex justify-between bg-background border overflow-auto">
+          <TabsList className="w-full grid grid-cols-4 p-0 rounded-lg shadow-md">
             {navigationTabs.map((tab) => (
               <TabsTrigger 
                 key={tab.id} 
                 value={tab.id}
-                className="flex-1 py-3 data-[state=active]:border-b-2 data-[state=active]:border-primary"
+                className="flex-1 py-3 rounded-none data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 <div className="flex items-center justify-center">
                   {tab.icon}
