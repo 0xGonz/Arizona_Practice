@@ -541,12 +541,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Monthly Payroll and Related Expenses */}
-      <Card className="shadow-lg border-t-4 border-purple-500 mb-6">
+      {/* Monthly Payroll vs Revenue Comparison */}
+      <Card className="shadow-lg border-t-4 border-blue-500 mb-6">
         <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
           <CardTitle className="text-xl font-semibold flex items-center justify-between">
-            <span>Monthly Payroll and Related Expenses</span>
-            <span className="text-sm font-normal bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+            <span>Monthly Payroll vs Revenue</span>
+            <span className="text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
               All Months 2024
             </span>
           </CardTitle>
@@ -557,7 +557,8 @@ export default function Dashboard() {
               <BarChart
                 data={aggregatedData.monthlyTrends.map(trend => ({
                   month: trend.month,
-                  payroll: trend.payrollExpenses || 0
+                  payroll: trend.payrollExpenses || 0,
+                  revenue: trend.revenue || 0
                 }))}
                 margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
               >
@@ -565,13 +566,23 @@ export default function Dashboard() {
                 <XAxis dataKey="month" />
                 <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
                 <Tooltip 
-                  formatter={(value) => [`${formatCurrency(value as number)}`, 'Payroll Expenses']}
+                  formatter={(value, name) => {
+                    if (name === 'payroll') return [formatCurrency(value as number), 'Payroll & Related Expenses'];
+                    return [formatCurrency(value as number), 'Revenue'];
+                  }}
                   labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Legend />
+                <Bar 
+                  dataKey="revenue" 
+                  name="Revenue" 
+                  fill="#3b82f6" 
+                  radius={[4, 4, 0, 0]}
                 />
                 <Bar 
                   dataKey="payroll" 
                   name="Payroll & Related Expenses" 
-                  fill="#8b5cf6" 
+                  fill="#f97316" 
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
