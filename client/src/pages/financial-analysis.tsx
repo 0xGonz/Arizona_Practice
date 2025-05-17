@@ -44,12 +44,18 @@ export default function FinancialAnalysis() {
           </TabsTrigger>
         </TabsList>
         
-        {/* Tab content (using wrapper components to avoid duplicate UI elements) */}
+        {/* Tab content */}
         <div className="mt-4">
           {activeTab === 'employee' ? (
-            <EmployeeAnalysisContent />
+            /* Employee content wrapped to prevent duplicate UI elements */
+            <div className="analysis-content-wrapper">
+              <EmployeeAnalysis hideHeader={true} />
+            </div>
           ) : (
-            <BusinessAnalysisContent />
+            /* Business content wrapped to prevent duplicate UI elements */
+            <div className="analysis-content-wrapper">
+              <BusinessAnalysis hideHeader={true} />
+            </div>
           )}
         </div>
       </Tabs>

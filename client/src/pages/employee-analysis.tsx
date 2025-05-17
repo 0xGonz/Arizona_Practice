@@ -11,7 +11,11 @@ import { AnalysisTable } from '@/components/analysis/analysis-table';
 import { AnalysisTabs } from '@/components/analysis/analysis-tabs';
 import { useAnalysisStore } from '@/store/analysis-store';
 
-export default function EmployeeAnalysis() {
+interface EmployeeAnalysisProps {
+  hideHeader?: boolean;
+}
+
+export default function EmployeeAnalysis({ hideHeader = false }: EmployeeAnalysisProps) {
   const { filters } = useAnalysisStore();
   
   // Format date range for API query parameters
@@ -90,12 +94,16 @@ export default function EmployeeAnalysis() {
         <meta name="description" content="Analyze financial performance of clinic employees with interactive charts and filters" />
       </Helmet>
       
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Financial Analysis</h1>
-      </div>
-      
-      {/* Analysis Tabs */}
-      <AnalysisTabs />
+      {!hideHeader && (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Employee Analysis</h1>
+          </div>
+          
+          {/* Analysis Tabs */}
+          <AnalysisTabs />
+        </>
+      )}
       
       {/* Filters */}
       <FiltersBar entityType="employee" />
