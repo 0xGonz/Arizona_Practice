@@ -360,6 +360,8 @@ export class DatabaseStorage implements IStorage {
       
       // Insert new data
       for (const dept of departmentData) {
+        const profitMargin = dept.revenue > 0 ? ((dept.netIncome || 0) / dept.revenue) * 100 : 0;
+        
         await db.insert(departmentPerformance).values({
           name: dept.name,
           month: month,
@@ -367,7 +369,7 @@ export class DatabaseStorage implements IStorage {
           revenue: dept.revenue || 0,
           expenses: dept.expenses || 0,
           netIncome: dept.netIncome || 0,
-          percentageOfTotal: 0, // Calculate later if needed
+          profitMargin: profitMargin.toFixed(2),
           uploadId: uploadId,
           createdAt: new Date()
         });
@@ -394,17 +396,21 @@ export class DatabaseStorage implements IStorage {
       
       // Insert new data
       for (const doctor of doctorData) {
-        await db.insert(doctorPerformance).values({
+        const percentage = doctor.revenue > 0 ? ((doctor.netIncome || 0) / doctor.revenue) * 100 : 0;
+        
+        const doctorRecord = {
           name: doctor.name,
           month: month,
           year: new Date().getFullYear(),
           revenue: doctor.revenue || 0,
           expenses: doctor.expenses || 0,
           netIncome: doctor.netIncome || 0,
-          percentageOfTotal: 0, // Calculate later if needed
+          percentageOfTotal: percentage.toFixed(2),
           uploadId: uploadId,
           createdAt: new Date()
-        });
+        };
+        
+        await db.insert(doctorPerformance).values(doctorRecord);
         console.log(`Inserted doctor: ${doctor.name} for ${month}`);
       }
       
