@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process the CSV data for immediate use
       try {
-        const Papa = require('papaparse');
+        // Using the imported Papa from line 19 instead of require
         const parseResult = Papa.parse(fileContent, { 
           header: true, 
           skipEmptyLines: true,
