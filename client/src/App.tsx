@@ -112,7 +112,7 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Dashboard} />
+        <Route path="/" component={Monthly} />
         <Route path="/monthly" component={Monthly} />
         <Route path="/doctor-performance" component={DoctorPerformance} />
         <Route path="/department-analysis" component={DepartmentAnalysis} />
