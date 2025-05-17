@@ -245,7 +245,7 @@ export default function MonthlyImproved() {
             
             {/* Month header and summary */}
             <div className="mb-6">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-xl md:text-2xl font-semibold">
                 {month} {new Date().getFullYear()} - 
                 {viewType === 'e' ? ' Employee Expenses' : ' Other Business Expenses'}
               </h2>
@@ -256,36 +256,62 @@ export default function MonthlyImproved() {
               </p>
             </div>
             
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card className="shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-semibold">Revenue</CardTitle>
+            {/* KPI Cards - responsive grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+              <Card className="shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
+                <CardHeader className="pb-2 px-4 pt-4">
+                  <CardTitle className="text-lg font-semibold flex items-center">
+                    <span className="bg-blue-100 p-1.5 rounded-full mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                    </span>
+                    Revenue
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">
+                <CardContent className="px-4 pb-4">
+                  <div className="text-2xl md:text-3xl font-bold text-blue-600">
                     {formatCurrency(financialMetrics.revenue)}
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-semibold">Expenses</CardTitle>
+              <Card className="shadow-lg border-l-4 border-red-500 hover:shadow-xl transition-shadow">
+                <CardHeader className="pb-2 px-4 pt-4">
+                  <CardTitle className="text-lg font-semibold flex items-center">
+                    <span className="bg-red-100 p-1.5 rounded-full mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                    </span>
+                    Expenses
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-red-600">
+                <CardContent className="px-4 pb-4">
+                  <div className="text-2xl md:text-3xl font-bold text-red-600">
                     {formatCurrency(financialMetrics.expenses)}
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-semibold">Net Income</CardTitle>
+              <Card className="shadow-lg border-l-4 border-green-500 sm:col-span-2 md:col-span-1 hover:shadow-xl transition-shadow">
+                <CardHeader className="pb-2 px-4 pt-4">
+                  <CardTitle className="text-lg font-semibold flex items-center">
+                    <span className={`${financialMetrics.netIncome < 0 ? 'bg-red-100' : 'bg-green-100'} p-1.5 rounded-full mr-2`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={financialMetrics.netIncome < 0 ? 'text-red-600' : 'text-green-600'}>
+                        {financialMetrics.netIncome < 0 
+                          ? <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                          : <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        }
+                      </svg>
+                    </span>
+                    Net Income
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className={`text-3xl font-bold ${financialMetrics.netIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <CardContent className="px-4 pb-4">
+                  <div className={`text-2xl md:text-3xl font-bold ${financialMetrics.netIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
                     {formatCurrency(financialMetrics.netIncome)}
                   </div>
                 </CardContent>
@@ -294,14 +320,17 @@ export default function MonthlyImproved() {
             
             {/* Primary data table */}
             <Card className="shadow-lg border-t-4 border-blue-500">
-              <CardHeader className="bg-gray-50">
-                <CardTitle className="text-xl font-semibold">
-                  {viewType === 'e' ? 'Employee' : 'Other Business'} Financial Details
+              <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
+                <CardTitle className="text-xl font-semibold flex items-center justify-between">
+                  <span>{viewType === 'e' ? 'Employee' : 'Other Business'} Financial Details</span>
+                  <span className="text-sm font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    {month} {new Date().getFullYear()}
+                  </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {!hasSelectedData ? (
-                  <div className="py-12 text-center text-muted-foreground">
+                  <div className="py-12 text-center text-muted-foreground px-4">
                     <p className="mb-4 text-lg">
                       No data available for {viewType === 'e' ? 'employee' : 'other business'} expenses in {month}.
                     </p>
@@ -310,7 +339,7 @@ export default function MonthlyImproved() {
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-auto max-h-[800px]">
+                  <div className="overflow-auto max-h-[600px] md:max-h-[800px]">
                     <RecursiveLineItemTable 
                       data={lineItems} 
                       entityColumns={columnHeaders}

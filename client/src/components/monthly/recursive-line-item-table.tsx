@@ -48,24 +48,24 @@ export default function RecursiveLineItemTable({
     return (
       <>
         <tr className={cn(
-          "border-b border-neutral-border",
+          "border-b border-neutral-border hover:bg-muted/10 transition-colors",
           isTotal ? "font-semibold bg-muted/20" : "bg-card"
         )}>
           <td 
-            className="py-2 px-4 text-left" 
+            className="py-2 px-4 text-left font-medium whitespace-nowrap" 
             style={{ paddingLeft: `${indentPadding + 16}px` }}
           >
             {item.name}
           </td>
           
           {entityColumns.map(entity => (
-            <td key={`${item.id}-${entity}`} className="py-2 px-4 text-right">
+            <td key={`${item.id}-${entity}`} className="py-2 px-4 text-right whitespace-nowrap">
               {formatCurrency(item.entityValues?.[entity] || 0)}
             </td>
           ))}
           
           {summaryColumn !== 'All Employees' && (
-            <td className="py-2 px-4 text-right font-medium">
+            <td className="py-2 px-4 text-right font-medium whitespace-nowrap">
               {formatCurrency(item.summaryValue || 0)}
             </td>
           )}
@@ -82,15 +82,15 @@ export default function RecursiveLineItemTable({
   return (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-muted/50">
+        <table className="w-full table-auto min-w-[800px]">
+          <thead className="bg-muted/50 sticky top-0 z-10">
             <tr>
-              <th className="py-3 px-4 text-left font-medium">Line Item</th>
+              <th className="py-3 px-4 text-left font-medium whitespace-nowrap">Line Item</th>
               {entityColumns.map(entity => (
-                <th key={entity} className="py-3 px-4 text-right font-medium">{entity}</th>
+                <th key={entity} className="py-3 px-4 text-right font-medium whitespace-nowrap">{entity}</th>
               ))}
               {summaryColumn !== 'All Employees' && (
-                <th className="py-3 px-4 text-right font-medium">
+                <th className="py-3 px-4 text-right font-medium whitespace-nowrap">
                   {summaryColumn || 'Total'}
                 </th>
               )}
