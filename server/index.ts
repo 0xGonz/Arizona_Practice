@@ -39,7 +39,19 @@ app.use((req, res, next) => {
 
 (async () => {
   // Log server startup
-  log("Server starting without database")
+  if (process.env.DATABASE_URL) {
+    log("Server starting with database connection");
+    try {
+      // Import and push schema
+      const { pushSchema } = await import("./db");
+      await pushSchema();
+      log("Database schema setup complete");
+    } catch (error) {
+      log(`Database schema setup failed: ${error}`);
+    }
+  } else {
+    log("Server starting without database - using in-memory storage");
+  }
 
   const server = await registerRoutes(app);
 
