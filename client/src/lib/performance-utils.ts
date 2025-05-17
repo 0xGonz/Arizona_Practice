@@ -389,13 +389,6 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
     }
   });
   
-  // Include only departments found in the actual data
-  // This ensures we're only showing real data from CSV files
-  // If no departments were found in the data, the list will be empty
-  // Note: We do not add placeholder or sample data for missing departments
-    }
-  });
-  
   // Sort by revenue (descending)
   return result.sort((a, b) => b.revenue - a.revenue);
 }
