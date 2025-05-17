@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { DateRange } from 'react-day-picker';
+import { getCurrentYearDateRange } from '@/lib/data-utils';
 
 interface AnalysisFilters {
   range: DateRange;
@@ -10,16 +11,16 @@ interface AnalysisFilters {
 interface AnalysisStore {
   filters: AnalysisFilters;
   setDateRange: (range: DateRange) => void;
-  selectEntity: (id: string) => void;
+  selectEntity: (id: string, entityType?: 'employee' | 'business') => void;
   clearFilters: () => void;
 }
 
+// Initialize with current year date range by default
+const currentYearRange = getCurrentYearDateRange();
+
 export const useAnalysisStore = create<AnalysisStore>((set) => ({
   filters: {
-    range: {
-      from: undefined,
-      to: undefined
-    },
+    range: currentYearRange,
     selectedEmployee: '',
     selectedBusiness: '',
   },
@@ -33,9 +34,11 @@ export const useAnalysisStore = create<AnalysisStore>((set) => ({
   })),
   
   // Select an entity (either employee or business)
-  selectEntity: (id: string) => set((state) => {
-    // Determine which type of entity was selected based on current route/context
-    const isEmployee = window.location.pathname.includes('employee');
+  selectEntity: (id: string, entityType?: 'employee' | 'business') => set((state) => {
+    // Determine which type of entity was selected based on passed type or current route
+    const isEmployee = entityType 
+      ? entityType === 'employee'
+      : window.location.pathname.includes('employee');
 
     return {
       filters: {
@@ -49,10 +52,7 @@ export const useAnalysisStore = create<AnalysisStore>((set) => ({
   // Clear all filters
   clearFilters: () => set({
     filters: {
-      range: {
-        from: undefined,
-        to: undefined
-      },
+      range: currentYearRange, // Reset to current year instead of undefined
       selectedEmployee: '',
       selectedBusiness: '',
     }
