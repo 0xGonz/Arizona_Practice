@@ -19,7 +19,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden">
-        <main className="h-full overflow-y-auto bg-[#F5F7FA]">
+        <main className="h-full overflow-y-auto bg-[#F5F7FA] px-8">
           {children}
         </main>
       </div>
