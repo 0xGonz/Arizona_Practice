@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useFilterStore } from '@/store/filter-store';
 
 // Format currency values for display
 const formatCurrency = (value: number): string => {
@@ -53,9 +54,16 @@ export default function RecursiveLineItemTable({
   entityColumns,
   summaryColumn = undefined
 }: RecursiveLineItemTableProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showOnlyNegative, setShowOnlyNegative] = useState(false);
-  const [showSimplified, setShowSimplified] = useState(false);
+  // Use the persistent filter store instead of local state
+  const { 
+    searchTerm, 
+    showOnlyNegative, 
+    showSimplified,
+    setSearchTerm,
+    setShowOnlyNegative,
+    setShowSimplified,
+    resetFilters
+  } = useFilterStore();
   
   if (!data || data.length === 0) {
     return (
@@ -208,7 +216,8 @@ export default function RecursiveLineItemTable({
           <Switch 
             id="show-negative" 
             checked={showOnlyNegative} 
-            onCheckedChange={setShowOnlyNegative} 
+            onCheckedChange={setShowOnlyNegative}
+            className="data-[state=checked]:bg-red-500"
           />
           <Label htmlFor="show-negative" className="text-xs cursor-pointer">
             Show Only Negative Values
@@ -218,7 +227,8 @@ export default function RecursiveLineItemTable({
           <Switch 
             id="show-simplified" 
             checked={showSimplified} 
-            onCheckedChange={setShowSimplified} 
+            onCheckedChange={setShowSimplified}
+            className="data-[state=checked]:bg-blue-500"
           />
           <Label htmlFor="show-simplified" className="text-xs cursor-pointer">
             Show Simplified
@@ -227,11 +237,7 @@ export default function RecursiveLineItemTable({
         <Button
           variant="outline" 
           size="sm"
-          onClick={() => {
-            setSearchTerm('');
-            setShowOnlyNegative(false);
-            setShowSimplified(false);
-          }}
+          onClick={resetFilters}
           className="text-xs h-8"
         >
           Clear Filters
