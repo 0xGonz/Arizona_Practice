@@ -246,25 +246,47 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
       console.log(`Processing O-file data for ${month} to extract department data`);
       
       // Extract potential department names from line items
+      console.log(`Scanning ${monthData.lineItems.length} line items for department data`);
+      
+      // Log key line items to see what we have in the data
       monthData.lineItems.forEach((item: any) => {
-        if (item.name && typeof item.name === 'string' && 
-            (item.depth === 1 || item.depth === 2) &&
-            !item.name.toLowerCase().includes("total") &&
-            !item.name.toLowerCase().includes("revenue") &&
-            !item.name.toLowerCase().includes("expense") &&
-            !item.name.toLowerCase().includes("income")) {
-          
-          // Check for common department keywords
+        if (item.name && typeof item.name === 'string') {
+          console.log(`Found line item: ${item.name} (depth: ${item.depth})`);
+        }
+      });
+      
+      // Extract actual ancillary departments from line items
+      // Looking for specific revenue line items that match our department list
+      const revenueItems = monthData.lineItems.filter((item: any) => {
+        return item.name && 
+               typeof item.name === 'string' && 
+               item.depth === 1 &&
+               item.name.includes("Revenue") &&
+               !item.name.includes("Total");
+      });
+      
+      console.log("Found revenue sections:", revenueItems.map(i => i.name));
+      
+      // Look for lines under "Ancillary Income" sections
+      monthData.lineItems.forEach((item: any) => {
+        if (item.name && typeof item.name === 'string') {
+          // Department level items will be depth 2, with non-zero values, and not headers
           const name = item.name.trim();
-          if (name.includes("Pharmacy") || 
-              name.includes("DME") || 
-              name.includes("Procedure") || 
-              name.includes("MRI") || 
-              name.includes("Therapy") || 
-              name.includes("Imaging") ||
-              name.includes("CBD")) {
+          
+          // Check if it's likely a department name (using business domain knowledge)
+          const isDepartment = 
+            (item.depth === 2 || item.depth === 3) &&
+            item.summaryValue > 0 &&
+            !name.toLowerCase().includes("total") &&
+            !name.toLowerCase().includes("expense") &&
+            (name.includes("- CBD") || 
+             name.includes("- DME") || 
+             name.includes("- Pharmacy") ||
+             name.includes("ProMed") ||
+             name.includes("Ancillary"));
             
-            // Only add if not already in the list
+          if (isDepartment) {
+            console.log(`Found department: ${name} = ${item.summaryValue}`);
             if (!knownDepartments.includes(name)) {
               knownDepartments.push(name);
             }
@@ -272,37 +294,59 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
         }
       });
         
-      // If we didn't find any departments, look for specific items that contain
-      // financial data that might indicate departments
+      // If we didn't find any departments, look for specific line items in the CSV that 
+      // represent key company segments (ProMed Income, Ancillary Income, etc.)
       if (knownDepartments.length === 0) {
-        // Look for items with summaryValue that might represent departments
-        const potentialDepts = monthData.lineItems.filter((item: any) => 
-          item.summaryValue && 
-          item.depth === 1 && 
-          !item.name.toLowerCase().includes("total"));
-          
-        potentialDepts.forEach((item: any) => {
-          if (!knownDepartments.includes(item.name)) {
-            knownDepartments.push(item.name);
+        console.log("No specific departments found, looking for key income line items...");
+        
+        // Look for the most important financial items from the CSV
+        const IMPORTANT_ITEMS = [
+          "25001 - ProMed Income",
+          "40100 - Hospital On Call Revenue",
+          "40101 - Ancillary Income"
+        ];
+        
+        IMPORTANT_ITEMS.forEach(name => {
+          // Find this item in the CSV
+          const item = monthData.lineItems.find((i: any) => i.name === name);
+          if (item && item.summaryValue > 0) {
+            console.log(`Found important income item: ${name} = ${item.summaryValue}`);
+            if (!knownDepartments.includes(name)) {
+              knownDepartments.push(name);
+            }
           }
         });
+        
+        // Last resort - create general buckets if nothing was found
+        if (knownDepartments.length === 0) {
+          console.log("Creating fallback departments from general line items");
+          
+          // Find general revenue items
+          const revenueItems = monthData.lineItems.filter((item: any) => 
+            item.summaryValue > 0 && 
+            !item.name.toLowerCase().includes("total") &&
+            (item.depth === 1 || item.depth === 2) &&
+            (item.name.toLowerCase().includes("income") || 
+             item.name.toLowerCase().includes("revenue")));
+          
+          revenueItems.forEach((item: any) => {
+            if (!knownDepartments.includes(item.name)) {
+              console.log(`Adding fallback revenue item: ${item.name} = ${item.summaryValue}`);
+              knownDepartments.push(item.name);
+            }
+          });
+        }
       }
       
       // Process data for each found department
       knownDepartments.forEach((deptName) => {
-        // Find any line items that mention this department
+        // Find any line items that exactly match this department
         const deptItems = monthData.lineItems.filter((item: any) => {
-          const itemName = item.name.toLowerCase();
-          const searchName = deptName.toLowerCase();
-          
-          // Handle special cases for departments that might be named differently
-          if (searchName === "physical therapy" && itemName.includes("therapy")) return true;
-          if (searchName === "imaging" && (itemName.includes("imaging") || itemName.includes("mri"))) return true;
-          if (searchName === "mobile mri" && (itemName.includes("mobile") && itemName.includes("mri"))) return true;
-          
-          // Standard search
-          return itemName.includes(searchName);
+          // Only match the exact department name - no approximations
+          return item.name === deptName;
         });
+        
+        console.log(`Found ${deptItems.length} items for department: ${deptName}`);
         
         // Extract financial data for this department
         let deptRevenue = 0;
