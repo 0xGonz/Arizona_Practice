@@ -300,11 +300,65 @@ export default function FinancialQueryPage() {
         </Card>
         
         <Card className="col-span-1 md:col-span-2">
-          <CardHeader>
-            <CardTitle>Query Results</CardTitle>
-            <CardDescription>
-              {data?.count ? `Found ${data.count} results` : 'No results yet'}
-            </CardDescription>
+          <CardHeader className="flex justify-between items-start">
+            <div>
+              <CardTitle>Query Results</CardTitle>
+              <CardDescription>
+                {data?.count ? `Found ${data.count} results` : 'No results yet'}
+              </CardDescription>
+            </div>
+            
+            {data?.count > 0 && (
+              <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    className="ml-auto" 
+                    size="sm"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Data
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      <div className="flex items-center">
+                        <AlertTriangle className="w-5 h-5 mr-2 text-destructive" /> 
+                        Delete Financial Data
+                      </div>
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      <p className="mb-2">
+                        This will permanently delete all financial data matching the current query filter:
+                      </p>
+                      <div className="bg-muted p-2 rounded text-xs mb-4 max-h-24 overflow-auto">
+                        <pre>{JSON.stringify(queryParams, null, 2)}</pre>
+                      </div>
+                      <p className="text-destructive font-semibold">This action cannot be undone.</p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        'Delete Data'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </CardHeader>
           <CardContent>
             {isLoading ? (
