@@ -31,12 +31,30 @@ export function processMonthlyCSV(
   // Process each row
   const lineItems: any[] = [];
   
+  // Count total lines for debugging
+  console.log(`Total rows to process: ${data.length} for ${month} ${type}`);
+  let processedLines = 0;
+  
   data.forEach((row, index) => {
-    // Skip empty rows or rows without a Line Item
-    if (!row || !row['Line Item']) return;
+    // More flexible handling of Line Item values - some could be null or undefined
+    // especially in the July file which is causing the 197 vs 205 issue
+    if (!row) {
+      console.log(`Skipping empty row at index ${index}`);
+      return;
+    }
     
-    const lineItemText = row['Line Item'];
+    // Handle case where Line Item might be missing or have a different case
+    const lineItemKey = Object.keys(row).find(key => 
+      key.toLowerCase() === 'line item' || key === 'Line Item');
+    
+    if (!lineItemKey || row[lineItemKey] === undefined) {
+      console.log(`Row at index ${index} has no Line Item, keys: ${Object.keys(row).join(', ')}`);
+      return;
+    }
+    
+    const lineItemText = String(row[lineItemKey] || '');
     const trimmedLineItem = lineItemText.trim();
+    processedLines++;
     
     // If it's just whitespace, create an empty spacer row
     if (trimmedLineItem === '') {
