@@ -12,7 +12,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
-import * as Papa from 'papaparse';
+import Papa from 'papaparse';
 
 export interface IStorage {
   storeCSVFile(

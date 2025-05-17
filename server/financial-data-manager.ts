@@ -9,7 +9,7 @@ import {
   financialValues,
   financialCategories
 } from "@shared/schema";
-import * as Papa from 'papaparse';
+import Papa from 'papaparse';
 
 /**
  * Advanced Financial Data Manager
