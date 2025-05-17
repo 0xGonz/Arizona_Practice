@@ -40,6 +40,14 @@ const KEY_FINANCIAL_METRICS = [
   'Net Income (Loss)'
 ];
 
+// Key metrics to highlight with specific colors
+const HIGHLIGHT_COLORS = {
+  'Total Revenue': 'bg-blue-50 border-l-4 border-blue-200',
+  'Total Operating Expenses': 'bg-red-50 border-l-4 border-red-200',
+  'Net Income': 'bg-green-50 border-l-4 border-green-200',
+  'Net Income (Loss)': 'bg-green-50 border-l-4 border-green-200'
+};
+
 export default function RecursiveLineItemTable({ 
   data, 
   entityColumns,
@@ -129,12 +137,17 @@ export default function RecursiveLineItemTable({
       }
     };
     
+    // Check if this is a key metric that needs highlighting
+    const isKeyMetric = Object.keys(HIGHLIGHT_COLORS).includes(item.name);
+    const highlightClass = isKeyMetric ? HIGHLIGHT_COLORS[item.name as keyof typeof HIGHLIGHT_COLORS] : '';
+    
     return (
       <>
         <tr className={cn(
           "border-b border-neutral-border hover:bg-muted/10 transition-colors",
-          isTotal ? "font-semibold bg-muted/20" : "bg-card",
-          item.depth === 0 ? "bg-gray-50" : ""
+          isTotal && !isKeyMetric ? "font-semibold bg-muted/20" : "bg-card",
+          item.depth === 0 ? "bg-gray-50" : "",
+          highlightClass // Apply highlight color if it's a key metric
         )}>
           <td 
             className="py-1 px-2 text-left whitespace-nowrap text-sm" 
