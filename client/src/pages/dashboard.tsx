@@ -147,21 +147,122 @@ export default function Dashboard() {
     // Calculate combined totals
     totalRevenue = totalERevenue + totalORevenue;
     totalExpenses = totalEExpenses + totalOExpenses;
+    totalNetIncome = totalENetIncome + totalONetIncome;
+    
+    // Initialize quarterly revenue tracking
+    const quarterlyRevenue = {
+      q1: 0, // Jan-Mar
+      q2: 0, // Apr-Jun
+      q3: 0, // Jul-Sep
+      q4: 0  // Oct-Dec
+    };
+    
+    // Track best and worst performing months
+    let bestMonth: any = null;
+    let worstMonth: any = null;
+    let highestExpenseMonth: any = null;
+    let totalMonthsWithData = 0;
+    let sumMonthlyExpenses = 0;
+    
+    // Process monthly data again for additional metrics
+    monthlyTrends.forEach(monthData => {
+      const monthName = monthData.month.toLowerCase();
+      
+      // Update best/worst month tracking
+      if (bestMonth === null || monthData.netIncome > bestMonth.netIncome) {
+        bestMonth = {
+          month: monthData.month,
+          netIncome: monthData.netIncome,
+          revenue: monthData.revenue,
+          expenses: monthData.expenses
+        };
+      }
+      
+      if (worstMonth === null || monthData.netIncome < worstMonth.netIncome) {
+        worstMonth = {
+          month: monthData.month,
+          netIncome: monthData.netIncome,
+          revenue: monthData.revenue,
+          expenses: monthData.expenses
+        };
+      }
+      
+      // Track highest expense month
+      if (highestExpenseMonth === null || monthData.expenses > highestExpenseMonth.expenses) {
+        highestExpenseMonth = {
+          month: monthData.month,
+          expenses: monthData.expenses
+        };
+      }
+      
+      // Add to average expense calculation
+      if (monthData.expenses > 0) {
+        totalMonthsWithData++;
+        sumMonthlyExpenses += monthData.expenses;
+      }
+      
+      // Add to quarterly data
+      // Convert abbreviated month names to full names for mapping
+      const fullMonthMap: {[key: string]: string} = {
+        'Jan': 'january', 'Feb': 'february', 'Mar': 'march',
+        'Apr': 'april', 'May': 'may', 'Jun': 'june',
+        'Jul': 'july', 'Aug': 'august', 'Sep': 'september',
+        'Oct': 'october', 'Nov': 'november', 'Dec': 'december'
+      };
+      
+      const fullMonth = fullMonthMap[monthData.month] || '';
+      
+      if (['january', 'february', 'march'].includes(fullMonth)) {
+        quarterlyRevenue.q1 += monthData.revenue;
+      } else if (['april', 'may', 'june'].includes(fullMonth)) {
+        quarterlyRevenue.q2 += monthData.revenue;
+      } else if (['july', 'august', 'september'].includes(fullMonth)) {
+        quarterlyRevenue.q3 += monthData.revenue;
+      } else if (['october', 'november', 'december'].includes(fullMonth)) {
+        quarterlyRevenue.q4 += monthData.revenue;
+      }
+    });
+    
+    // Calculate average monthly expenses
+    const averageMonthlyExpenses = totalMonthsWithData > 0 ? sumMonthlyExpenses / totalMonthsWithData : 0;
     
     // Total net income is sum of all monthly net incomes (not calculated from revenue - expenses)
     totalNetIncome = totalENetIncome + totalONetIncome;
     
     return {
-      totalERevenue,
-      totalEExpenses,
-      eNetIncome: totalENetIncome,
-      totalORevenue,
-      totalOExpenses,
-      oNetIncome: totalONetIncome,
+      // Monthly trend data for charts
+      monthlyTrends,
+      
+      // Quarterly data
+      quarterlyRevenue,
+      
+      // Best and worst month metrics
+      bestMonth,
+      worstMonth,
+      highestExpenseMonth,
+      averageMonthlyExpenses,
+      
+      // Yearly employee data
+      eData: {
+        revenue: totalERevenue,
+        expenses: totalEExpenses,
+        netIncome: totalENetIncome
+      },
+      
+      // Yearly business data
+      oData: {
+        revenue: totalORevenue,
+        expenses: totalOExpenses,
+        netIncome: totalONetIncome
+      },
+      
+      // Yearly totals (both combined)
       totalRevenue,
       totalExpenses,
       netIncome: totalNetIncome,
-      monthlyTrends
+      
+      // Avg profit margin (if revenue > 0)
+      profitMargin: totalRevenue > 0 ? (totalNetIncome / totalRevenue) * 100 : 0
     };
   }, [monthlyData]);
 
@@ -281,7 +382,7 @@ export default function Dashboard() {
         </Card>
       </div>
       
-      {/* Monthly Trend Chart */}
+      {/* Monthly Financial Trends */}
       <Card className="shadow-lg border-t-4 border-blue-500 mb-6">
         <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
           <CardTitle className="text-xl font-semibold flex items-center justify-between">
@@ -327,6 +428,136 @@ export default function Dashboard() {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quarterly Performance Analysis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Quarterly Revenue Breakdown */}
+        <Card className="shadow-md border-t-4 border-blue-400">
+          <CardHeader className="bg-gray-50 p-4">
+            <CardTitle className="text-lg font-semibold">Quarterly Revenue Breakdown</CardTitle>
+            <CardDescription>Revenue by quarter for 2024</CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={[
+                    { quarter: 'Q1', value: aggregatedData.quarterlyRevenue?.q1 || 0 },
+                    { quarter: 'Q2', value: aggregatedData.quarterlyRevenue?.q2 || 0 },
+                    { quarter: 'Q3', value: aggregatedData.quarterlyRevenue?.q3 || 0 },
+                    { quarter: 'Q4', value: aggregatedData.quarterlyRevenue?.q4 || 0 },
+                  ]}
+                  margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="quarter" />
+                  <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                  <Tooltip formatter={(value) => [`${formatCurrency(value as number)}`, 'Revenue']} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    name="Revenue"
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={{ r: 6, strokeWidth: 2 }}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Profit Margin Analysis */}
+        <Card className="shadow-md border-t-4 border-green-400">
+          <CardHeader className="bg-gray-50 p-4">
+            <CardTitle className="text-lg font-semibold">Profit Margin Analysis</CardTitle>
+            <CardDescription>Monthly profit margin percentage</CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={aggregatedData.monthlyTrends.map(month => ({
+                    month: month.month,
+                    margin: month.revenue > 0 ? (month.netIncome / month.revenue) * 100 : 0
+                  }))}
+                  margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
+                  <Tooltip formatter={(value) => [`${(value as number).toFixed(2)}%`, 'Profit Margin']} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="margin" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    dot={{ fill: '#10b981', r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Monthly Performance Highlights */}
+      <Card className="shadow-lg border-t-4 border-purple-500 mb-6">
+        <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
+          <CardTitle className="text-xl font-semibold">Monthly Performance Highlights</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Best Performing Month */}
+            <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+              <h3 className="text-lg font-semibold text-green-800">Best Performing Month</h3>
+              <div className="mt-2">
+                <p className="text-2xl font-bold text-green-700">
+                  {aggregatedData.bestMonth?.month || 'N/A'}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Net Income: {formatCurrency(aggregatedData.bestMonth?.netIncome || 0)}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Revenue: {formatCurrency(aggregatedData.bestMonth?.revenue || 0)}
+                </p>
+              </div>
+            </div>
+            
+            {/* Challenging Month */}
+            <div className="bg-red-50 rounded-lg p-4 border border-red-100">
+              <h3 className="text-lg font-semibold text-red-800">Most Challenging Month</h3>
+              <div className="mt-2">
+                <p className="text-2xl font-bold text-red-700">
+                  {aggregatedData.worstMonth?.month || 'N/A'}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Net Income: {formatCurrency(aggregatedData.worstMonth?.netIncome || 0)}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Revenue: {formatCurrency(aggregatedData.worstMonth?.revenue || 0)}
+                </p>
+              </div>
+            </div>
+            
+            {/* Expense Insights */}
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              <h3 className="text-lg font-semibold text-blue-800">Expense Insights</h3>
+              <div className="mt-2">
+                <p className="text-sm font-medium text-gray-700">Highest Expense Month:</p>
+                <p className="text-lg font-semibold text-blue-700">
+                  {aggregatedData.highestExpenseMonth?.month || 'N/A'}: {formatCurrency(aggregatedData.highestExpenseMonth?.expenses || 0)}
+                </p>
+                <p className="text-sm font-medium text-gray-700 mt-2">Average Monthly Expenses:</p>
+                <p className="text-lg font-semibold text-blue-700">
+                  {formatCurrency(aggregatedData.averageMonthlyExpenses || 0)}
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
