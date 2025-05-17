@@ -231,11 +231,9 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
   }[] = [];
   
   // Define the known department list based on actual data from O CSV files
-  const knownDepartments = [
-    "CBD", "Pharmacy", "DME", "Procedure Charges", "Imaging", 
-    "IncrediWear", "Massage Therapy", "MedShip", "Mobile MRI", 
-    "MRI", "NXT STIM", "Physical Therapy", "UDA", "Therapy"
-  ];
+  // We'll only use departments that are actually found in the CSV data
+  // Starting with an empty array and filling it only with what we find
+  const knownDepartments: string[] = [];
 
   // Find all available months
   const months = Object.keys(monthlyData || {});
@@ -247,7 +245,50 @@ export function extractDepartmentPerformanceData(monthlyData: any) {
     if (monthData?.lineItems && Array.isArray(monthData.lineItems)) {
       console.log(`Processing O-file data for ${month} to extract department data`);
       
-      // First approach: Directly search for known departments by name
+      // Extract potential department names from line items
+      monthData.lineItems.forEach((item: any) => {
+        if (item.name && typeof item.name === 'string' && 
+            (item.depth === 1 || item.depth === 2) &&
+            !item.name.toLowerCase().includes("total") &&
+            !item.name.toLowerCase().includes("revenue") &&
+            !item.name.toLowerCase().includes("expense") &&
+            !item.name.toLowerCase().includes("income")) {
+          
+          // Check for common department keywords
+          const name = item.name.trim();
+          if (name.includes("Pharmacy") || 
+              name.includes("DME") || 
+              name.includes("Procedure") || 
+              name.includes("MRI") || 
+              name.includes("Therapy") || 
+              name.includes("Imaging") ||
+              name.includes("CBD")) {
+            
+            // Only add if not already in the list
+            if (!knownDepartments.includes(name)) {
+              knownDepartments.push(name);
+            }
+          }
+        }
+      });
+        
+      // If we didn't find any departments, look for specific items that contain
+      // financial data that might indicate departments
+      if (knownDepartments.length === 0) {
+        // Look for items with summaryValue that might represent departments
+        const potentialDepts = monthData.lineItems.filter((item: any) => 
+          item.summaryValue && 
+          item.depth === 1 && 
+          !item.name.toLowerCase().includes("total"));
+          
+        potentialDepts.forEach((item: any) => {
+          if (!knownDepartments.includes(item.name)) {
+            knownDepartments.push(item.name);
+          }
+        });
+      }
+      
+      // Process data for each found department
       knownDepartments.forEach((deptName) => {
         // Find any line items that mention this department
         const deptItems = monthData.lineItems.filter((item: any) => {
