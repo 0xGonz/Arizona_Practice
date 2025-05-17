@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { CSVType, UploadStatus, MarginTrendPoint, RevenueMixItem, PerformerData, ComparisonData } from '@/types';
 import { processAnnualCSV, parseFinancialValue } from '@/lib/csv-parser';
 import { parseMonthlyCSV } from '@/lib/simplified-monthly-parser';
+import { apiRequest } from '@/lib/queryClient';
 
 // Helper functions to extract data from the CSV for dashboard displays
 function extractTotalRevenue(data: any[]): number {
@@ -265,6 +266,10 @@ interface DataStore {
     filename: string;
     month?: string;
   }[];
+  
+  // Server Data Sync
+  setUploadsFromServer: (uploads: any[]) => void;
+  loadCSVContent: (id: number) => Promise<void>;
 }
 
 // Load initial data from localStorage if available

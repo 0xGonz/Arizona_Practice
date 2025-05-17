@@ -12,6 +12,29 @@ import Upload from "@/pages/upload";
 import UploadHistory from "@/pages/upload-history";
 import FinancialQuery from "@/pages/financial-query";
 import NotFound from "@/pages/not-found";
+import { useStore } from "@/store/data-store";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+// This component will fetch data from server before rendering the app
+function DataInitializer({ children }: { children: React.ReactNode }) {
+  const { setUploadsFromServer } = useStore();
+  
+  // Fetch upload history from server
+  const { data: uploadData, isSuccess } = useQuery({
+    queryKey: ['/api/uploads'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  useEffect(() => {
+    if (isSuccess && uploadData) {
+      console.log("Loading data from server:", uploadData.length, "uploads");
+      setUploadsFromServer(uploadData);
+    }
+  }, [isSuccess, uploadData, setUploadsFromServer]);
+  
+  return <>{children}</>;
+}
 
 function Router() {
   return (
@@ -35,7 +58,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <DataInitializer>
+          <Router />
+        </DataInitializer>
       </TooltipProvider>
     </QueryClientProvider>
   );
