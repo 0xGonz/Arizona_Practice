@@ -493,30 +493,8 @@ export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' |
     'july', 'august', 'september', 'october', 'november', 'december'
   ];
   
-  // Map of accurate values for known months - these values are accurate
-  // for the uploaded data and verified from CSVs
-  const KNOWN_MONTH_VALUES: Record<string, Record<string, any>> = {
-    'january': {
-      revenue: 1160916.26,
-      expenses: 1134677.80,
-      net: 26238.46
-    },
-    'february': {
-      revenue: 922950.01, 
-      expenses: 837222.27,
-      net: 85727.74
-    }, 
-    'march': {
-      revenue: 1033361.24,  // Includes Hospital On Call Revenue of 27500
-      expenses: 944658.77,
-      net: 88702.47
-    },
-    'april': {
-      revenue: 902548.42,
-      expenses: 844246.90,
-      net: 58301.52
-    }
-  };
+  // We'll only use actual data from uploaded CSV files
+  const KNOWN_MONTH_VALUES: Record<string, Record<string, any>> = {};
   
   // Short month names for display
   const monthAbbrev: Record<string, string> = {
