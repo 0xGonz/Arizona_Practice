@@ -23,6 +23,7 @@ interface LineItem {
   summaryValue: number;
   entityValues: Record<string, number>;
   children?: LineItem[];
+  originalLineItem?: string; // Added to preserve original indentation
 }
 
 interface RecursiveLineItemTableProps {
@@ -34,7 +35,8 @@ interface RecursiveLineItemTableProps {
 // Key financial metrics we want to show in simplified view - exact matches only
 const KEY_FINANCIAL_METRICS = [
   'Total Revenue',
-  'Total Operating Expenses',
+  'Total Operating Expenses', 
+  'Net Income',
   'Net Income (Loss)'
 ];
 
@@ -97,17 +99,48 @@ export default function RecursiveLineItemTable({
       return null;
     }
     
+    // Determine how to display the line item based on depth
+    const getLineItemDisplay = () => {
+      if (item.depth === 0) {
+        // Top level items - use bold text
+        return <span className="font-bold">{item.name}</span>;
+      } else if (isTotal) {
+        // Total items - use semi-bold text regardless of depth
+        return <span className="font-semibold">{item.name}</span>;
+      } else if (item.depth === 1) {
+        // Primary categories - use medium weight text
+        return <span className="font-medium">{item.name}</span>;
+      } else if (item.depth >= 3) {
+        // Deep nested items - use smaller, lighter text with a bullet
+        return (
+          <span className="flex items-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5 inline-block"></span>
+            <span className="text-gray-600">{item.name}</span>
+          </span>
+        );
+      } else {
+        // Standard nested items - use small indentation marker
+        return (
+          <span className="flex items-center">
+            <span className="w-1 h-4 border-l border-b border-gray-300 mr-1.5 inline-block"></span>
+            {item.name}
+          </span>
+        );
+      }
+    };
+    
     return (
       <>
         <tr className={cn(
           "border-b border-neutral-border hover:bg-muted/10 transition-colors",
-          isTotal ? "font-semibold bg-muted/20" : "bg-card"
+          isTotal ? "font-semibold bg-muted/20" : "bg-card",
+          item.depth === 0 ? "bg-gray-50" : ""
         )}>
           <td 
-            className="py-1 px-2 text-left font-medium whitespace-nowrap text-sm" 
+            className="py-1 px-2 text-left whitespace-nowrap text-sm" 
             style={{ paddingLeft: `${indentPadding + 16}px` }}
           >
-            {item.name}
+            {getLineItemDisplay()}
           </td>
           
           {entityColumns.map(entity => {
