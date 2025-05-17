@@ -130,6 +130,7 @@ export default function Dashboard() {
       const monthNetIncome = monthENetIncome + monthONetIncome;
       
       // Add month to trends data for chart
+      // Create separate fields for positive/negative net income for area coloring
       monthlyTrends.push({
         month: month.charAt(0).toUpperCase() + month.slice(1, 3),
         revenue: monthRevenue,
@@ -140,7 +141,10 @@ export default function Dashboard() {
         oExpenses: monthOExpenses,
         netIncome: monthNetIncome,
         eNetIncome: monthENetIncome,
-        oNetIncome: monthONetIncome
+        oNetIncome: monthONetIncome,
+        // For colored areas - positive values go in one field, negative in another
+        positiveNetIncome: monthNetIncome > 0 ? monthNetIncome : 0,
+        negativeNetIncome: monthNetIncome < 0 ? monthNetIncome : 0
       });
     });
     
@@ -318,42 +322,41 @@ export default function Dashboard() {
                   stroke="#ef4444" 
                   strokeWidth={2}
                 />
-                {/* Split the net income into positive and negative areas */}
                 
-                {/* Horizontal zero line */}
+                {/* Zero reference line */}
                 <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
                 
-                {/* Positive net income area (above zero line) - green */}
-                <Area 
-                  type="monotone" 
-                  dataKey={(entry) => entry.netIncome > 0 ? entry.netIncome : 0}
-                  stroke="none"
-                  fill="#10b981"
-                  fillOpacity={0.4}
-                  name=""
-                  legendType="none"
-                />
-                
-                {/* Negative net income area (below zero line) - red */}
-                <Area 
-                  type="monotone" 
-                  dataKey={(entry) => entry.netIncome < 0 ? entry.netIncome : 0}
-                  stroke="none"
-                  fill="#ef4444"
-                  fillOpacity={0.4}
-                  name=""
-                  legendType="none"
-                />
-                
-                {/* Net Income line */}
+                {/* Net Income with color-coded line */}
                 <Line 
                   type="monotone" 
                   dataKey="netIncome"
                   name="Net Income"
                   stroke="#10b981"
                   strokeWidth={2}
-                  dot={{ fill: "#10b981" }}
+                  dot={false}
                   activeDot={{ r: 8 }}
+                />
+                
+                {/* Positive values area (green) */}
+                <Area 
+                  type="monotone" 
+                  dataKey="positiveNetIncome"
+                  stroke="none"
+                  fill="#10b981"
+                  fillOpacity={0.5}
+                  name=""
+                  legendType="none"
+                />
+                
+                {/* Negative values area (red) */}
+                <Area 
+                  type="monotone" 
+                  dataKey="negativeNetIncome"
+                  stroke="none"
+                  fill="#ef4444"
+                  fillOpacity={0.5}
+                  name=""
+                  legendType="none"
                 />
               </LineChart>
             </ResponsiveContainer>
