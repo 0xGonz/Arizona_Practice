@@ -6,6 +6,7 @@ import {
   monthlyFinancialData,
   doctorPerformance,
   departmentPerformance,
+  financialValues,
 } from '@shared/schema';
 
 const router = Router();
@@ -13,6 +14,23 @@ const router = Router();
 const rangeSchema = z.object({
   from: z.string(),
   to: z.string(),
+});
+
+// Get available months with data
+router.get('/analytics/months', async (_req, res) => {
+  try {
+    // Pull distinct months that exist in financial_values
+    const months = await db
+      .select({ month: doctorPerformance.month })
+      .from(doctorPerformance)
+      .groupBy(doctorPerformance.month)
+      .orderBy(doctorPerformance.month);
+    
+    res.json(months.map(m => m.month));
+  } catch (error) {
+    console.error('Error fetching available months:', error);
+    res.status(500).json({ error: 'Failed to fetch available months' });
+  }
 });
 
 // Employee Summary - aggregated data across all employees
