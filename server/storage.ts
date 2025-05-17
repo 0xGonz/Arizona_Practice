@@ -443,14 +443,14 @@ export class DatabaseStorage implements IStorage {
       // Insert new data
       await db.insert(monthlyFinancialData).values({
         month: month,
-        year: 2024, // Set the correct year for the data
-        totalRevenue: totalRevenue,
-        totalExpenses: totalExpenses,
-        netIncome: netIncome,
-        revenueMix: JSON.stringify(revenueMix),
-        marginTrend: JSON.stringify(marginTrend),
-        uploadId: uploadId,
-        createdAt: new Date()
+        year: new Date().getFullYear(),
+        total_revenue: totalRevenue.toString(),
+        total_expenses: totalExpenses.toString(),
+        net_income: netIncome.toString(),
+        revenue_mix: revenueMix,
+        margin_trend: marginTrend,
+        upload_id: uploadId,
+        created_at: new Date()
       });
       
       return true;
