@@ -5,6 +5,21 @@ import { z } from "zod";
 // Define types
 export type CSVFileType = 'annual' | 'monthly-e' | 'monthly-o';
 
+// Define CSV data types
+export type CSVRowType = 'header' | 'data' | 'total';
+
+// Table for storing structured CSV data
+export const csvData = pgTable("csv_data", {
+  id: serial("id").primaryKey(),
+  uploadId: integer("upload_id").references(() => csvUploads.id).notNull(),
+  rowIndex: integer("row_index").notNull(), // Position of row in the original CSV
+  rowType: text("row_type").notNull(), // 'header', 'data', 'total'
+  depth: integer("depth").default(0).notNull(), // Indentation level (0 for top level)
+  lineItem: text("line_item").notNull(), // Description or line item name
+  values: jsonb("values").notNull(), // Column values as JSON
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Table for storing uploaded CSV files
 export const csvUploads = pgTable("csv_uploads", {
   id: serial("id").primaryKey(),
