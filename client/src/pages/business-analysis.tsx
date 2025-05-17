@@ -88,7 +88,7 @@ export default function BusinessAnalysis({ hideHeader = false }: BusinessAnalysi
   const isLoading = filters.selectedBusiness ? isDetailLoading : isSummaryLoading;
   
   return (
-    <div className="container mx-auto py-6">
+    <div className="container px-4 md:px-6 py-6">
       <Helmet>
         <title>Business Line Analysis - Clinic Financial Dashboard</title>
         <meta name="description" content="Analyze financial performance of business lines and departments with interactive charts and filters" />

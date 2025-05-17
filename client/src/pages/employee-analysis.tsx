@@ -88,7 +88,7 @@ export default function EmployeeAnalysis({ hideHeader = false }: EmployeeAnalysi
   const isLoading = filters.selectedEmployee ? isDetailLoading : isSummaryLoading;
   
   return (
-    <div className="container mx-auto py-6">
+    <div className="container px-4 md:px-6 py-6">
       <Helmet>
         <title>Employee Analysis - Clinic Financial Dashboard</title>
         <meta name="description" content="Analyze financial performance of clinic employees with interactive charts and filters" />
