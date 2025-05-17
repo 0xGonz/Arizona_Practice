@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
-import { extractDoctorPerformanceData } from "@/lib/performance-utils";
+import { extractRealDoctorData } from "@/lib/real-doctor-data";
 import { extractMonthlyPerformanceTrend } from "@/lib/monthly-trend";
 import { Badge } from "@/components/ui/badge";
 
@@ -31,13 +31,13 @@ export default function DoctorPerformance() {
   // Keep "all" as the default view, don't auto-select first month
   // This comment left to document the change from previous behavior
   
-  // Extract doctor data from the monthly CSV files based on selected month
+  // Extract real doctor data from the monthly E-type CSV files based on selected month
   const doctorData = useMemo(() => {
-    console.log(`Extracting doctor data for month: ${selectedMonth}`);
+    console.log(`Extracting real doctor data for month: ${selectedMonth}`);
     
     // If "all" is selected, use all months data
     if (selectedMonth === "all") {
-      return extractDoctorPerformanceData(monthlyData);
+      return extractRealDoctorData(monthlyData);
     }
     
     // Otherwise, create a filtered version of monthlyData with just the selected month
@@ -45,7 +45,7 @@ export default function DoctorPerformance() {
       [selectedMonth]: monthlyData[selectedMonth] 
     };
     
-    return extractDoctorPerformanceData(filteredMonthlyData);
+    return extractRealDoctorData(filteredMonthlyData);
   }, [monthlyData, selectedMonth]);
 
   // Extract monthly performance trend
