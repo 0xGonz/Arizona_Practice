@@ -1,0 +1,113 @@
+CSV Parsing
+Monthly vs. Annual: The code has two parsers. Monthly CSVs are handled by parseMonthlyCSV in simplified-monthly-parser.ts, which returns a flat list of line items (each with name, depth, entityValues, and summaryValue). An annual parser (processAnnualCSV) exists in csv-parser.ts, but the app’s store does not actually use it; instead, dashboard data is derived via helper functions on the raw CSV.
+“Line Item” normalization: The upload logic (in csv-upload.tsx) robustly normalizes headers. It trims BOM/whitespace and, if no "Line Item" field is found, it searches other header names containing “line”, “item”, or “description” and renames the first match to 'Line Item'. Every row is then guaranteed to have a 'Line Item' (defaulting to "Unknown Item" if missing). This meets the requirement.
+Depth-based nesting: The parser computes a depth for each line by counting leading spaces (two spaces = one level). However, the current parseMonthlyCSV does not return a nested tree – it only returns a flat list. (The code for building a hierarchy exists elsewhere, but is not invoked here.) Thus depth is available, but no nested structure is output by the parser.
+Zustand Store (data-store.ts)
+Structured storage: The store’s processCSVData(type, data, month) (called from the upload component) saves the parsed results under monthlyData[month]. For monthly files, it does something like:
+ts
+Copy
+const updatedMonthlyData = {
+  ...state.monthlyData,
+  [month]: {
+    ...existingMonthData,
+    e: processedData   // or o: processedData
+  }
+};
+where processedData comes from parseMonthlyCSV. Therefore, monthlyData[month].e and .o will be objects containing { lineItems, entityColumns, summaryColumn, type } for that month. (No separate nested or meta fields are stored.)
+Flat, nested, meta: The spec asks for each month’s data to have flat, nested, and meta objects. Currently, the store only holds the flat data (lineItems) plus some metadata. There is no nested tree in the store. The UI code handles both formats: it looks for .flat (old format) or .lineItems (new format). This means the code can display either, but right now it will only use the flat list. (The review notes in the repo even recommended returning { flat, nested, meta }
+github.com
+github.com
+, but the code was not updated to do this.)
+Examples: In the store code we see:
+ts
+Copy
+const updatedMonthlyData = {
+  ...state.monthlyData,
+  [month]: { 
+    ...existingMonthData,
+    e: processedData  // holds {lineItems, entityColumns, summaryColumn, type}
+  }
+};
+There is no nested: buildHierarchy(...) here, nor a flat key. The store just keeps whatever the parser returned.
+Upload Page (csv-upload.tsx and upload.tsx)
+Parsing triggers: The upload component calls processCSVData(type, safeData, monthKey) after parsing and sanitizing the CSV. Both type="monthly-e" and "monthly-o" paths reach this call, passing in the file’s data and the selected month (lowercased). For example:
+js
+Copy
+processCSVData(type, safeData, monthKey);
+This ensures the store is updated for that month and type. No months are hardcoded – the monthKey is taken from the component’s props/state (e.g. "january") and used dynamically.
+Header normalization: As noted, the uploader ensures a 'Line Item' column exists, renaming other columns if needed. It also trims the header (transformHeader removes BOM and whitespace). This handles different formats. After this, it checks if (!('Line Item' in firstRow)) { /* rename logic */ } and then builds safeData where each row has 'Line Item'. This meets the “robust normalization” requirement.
+Routing to store: The code uses monthKey = month.toLowerCase().trim() and passes that to the store. The store then uses monthlyData[monthKey]. There are no switch statements per month – it directly uses the passed string. Thus uploaded data flows into the correct month slot without hardcoding.
+Dashboard Page
+KPI cards: The dashboard reads the uploaded annual data (from annualData in the store) to compute totals. For Total Revenue and Total Expenses, it finds rows by matching 'Line Item' and sums their 'Total' values via parseFinancialValue. For Net Income, it tries to find a Net Income row and parse its 'Total'; if missing, it falls back to (revenue - expenses). This is dynamic and uses the parsed values (via parseFinancialValue) so currency formatting is handled.
+Charts: The Revenue Mix and Net Margin charts use data prepared by store helper functions (generateRevenueMix, generateMarginTrend). These functions scan the annual rows and call parseFinancialValue on the relevant numeric fields. For example, generateRevenueMix filters row['Line Item'] containing “Revenue” and sums parseFinancialValue(row['Total']). The charts are then rendered with these numbers. In short, the dashboard correctly uses the parsed data for its metrics.
+Column name note: One assumption in the code is that the annual CSV has a column literally named "Total" (used in row['Total']). If the CSV uses a different header (e.g. "2024 Total"), the code would miss it. This should be checked. If needed, either the upload parser should rename the year-total column to "Total", or the dashboard code should adapt. (Currently, transformHeader only trims, so an actual header named "2024 Total" would remain as is.)
+Monthly View Page
+Hierarchy rendering: The Monthly view is meant to show a full P&L hierarchy. In the code, there is a <HierarchicalView> component that takes nested data. It is only shown if monthData.eNestedData.length > 0 or oNestedData.length > 0. However, because the store never saved a nested array, these are always empty. As a result, the UI always falls back to a flat table of line items. In other words, the hierarchical view is never actually displayed. To truly show a nested P&L, the code would need to build the hierarchy (e.g. via buildHierarchy) either in the parser or in the UI. Currently that step is missing.
+Month and view toggles: The page uses tabs to switch between months and buttons to switch between “Employees (E)” and “Other (O)” data. It correctly reads from monthlyData[month].e or .o depending on these controls. For example, changing the month tab sets activeMonth, and the data shown is taken from monthlyData[activeMonth]. Similarly, a button toggles activeViewType between 'e' and 'o'. The code then chooses eData vs oData accordingly. This dynamic switching works as intended (no hardcoded conditions per month or type).
+Doctor Performance Page
+Data source: This page is currently using hardcoded mock data (the doctorData array) instead of reading from the store or CSV. At top it defines:
+js
+Copy
+const doctorData = [
+  { name: "Dr. Jennifer Smith", revenue: 95450, expenses: 72340, net: 23110 },
+  // ...
+];
+This violates the requirement to use real data from uploads. In particular, doctor names should come from meta.entityColumns of the parsed data, and revenues/expenses should be aggregated from the CSV. None of that is implemented. The page simply maps over doctorData for its charts.
+Aggregation and toggles: There is no logic to aggregate revenue/expense per doctor from the CSV, nor any dynamic toggling by month or type. The UI is static (except for filtering by doctor name, but only among the hardcoded names).
+Issue: The presence of static doctor data means all doctor-related functionality is broken. The doctors’ names are not sourced from the uploaded file, and no calculations are done. This does not meet the spec. A proper implementation would remove the hardcoded array and instead compute, e.g., for each doctor-column in the CSV:
+ts
+Copy
+let totalsByDoctor = {};
+for each row in monthlyData[month].e.lineItems:
+  for each doctor in entityColumns:
+    totalsByDoctor[doctor].revenue += parseFinancialValue(row.entityValues[doctor]);
+    // similarly for expenses if expenses are in e/o
+and then render that.
+Department Analysis Page
+Data source: Similarly, this page also uses hardcoded sample data (departmentData array) instead of any uploaded data. E.g.:
+js
+Copy
+const departmentData = [
+  { name: "Cardiology", revenue: 405780, expenses: 325120, net: 80660 },
+  // ...
+];
+This is not coming from the CSV at all.
+Aggregation and toggles: No dynamic logic here either. The charts use departmentData directly. There is no month selection or real data, no summing of departments from the CSV.
+Issue: This page also fails the requirements. The department names should come from the data (e.g. by parsing line items or a “department” column) and revenues/expenses should be summed from the uploaded CSV. The hardcoded data should be removed and replaced with actual computations.
+Hardcoded Sample Data
+We found two places with hardcoded financial data: the Doctor Performance and Department Analysis pages (lines 7–14 in each). These are clearly placeholders. The spec’s last point is to confirm removal of hardcoded data, so these must be addressed. Right now they remain in the code, meaning those pages are non-functional.
+Summary of Issues and Recommendations
+CSV Parsing: Works for most cases. Ensure that the annual CSV’s total column matches what the code expects (rename or adapt if needed). The monthly parser computes depth correctly; if nested output is desired, consider using buildHierarchy on the flat list.
+Store Structure: The store only keeps flat data (lineItems) and lacks a nested tree. If a hierarchical view is intended, update processCSVData to include nested data (as in the suggested format from the review notes
+github.com
+). Otherwise, the UI’s hierarchical component will never show.
+Upload Page: Correctly triggers parsing for both monthly-E and -O, and normalizes headers well. No issues here.
+Dashboard: Computes KPIs and feeds charts correctly from the data. Just verify that column naming ("Total") aligns with actual CSV headers.
+Monthly View: Switching months and viewType works. However, the P&L hierarchy is not shown because monthlyData lacks nested structure. To fix, either store nested data or have the UI build the tree (e.g. using the existing buildHierarchy).
+Doctor Performance: Broken. It uses static data and ignores uploads. It must be rewritten to use the uploaded CSV: doctor names from entityColumns and their revenues/expenses aggregated from the data. The sample array should be removed.
+Department Analysis: Broken for the same reason. Remove the static departmentData and instead compute department totals from the CSV (using appropriate line item filtering).
+Hardcoded data: Remove all hardcoded sample data arrays (doctors, departments) from the codebase. Replace with dynamic logic or state.
+Addressing points 6–8 is critical. The current pages for doctors and departments do not fulfill their intended role. Citations: We have cited relevant lines from the repository for each point (see 
+github.com
+github.com
+). These show the parser logic, store updates, upload normalization, and the presence of hardcoded data.
+
+
+Sources
+
+
+
+
+
+
+
+
+
+Search
+
+Deep research
+
+
+
+
+Ch
