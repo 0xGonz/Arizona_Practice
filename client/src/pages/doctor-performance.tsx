@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
-import { extractDoctorPerformanceData, extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
+import { extractDoctorPerformanceData } from "@/lib/performance-utils";
+import { extractMonthlyPerformanceTrend } from "@/lib/monthly-trend";
 import { Badge } from "@/components/ui/badge";
 
 export default function DoctorPerformance() {

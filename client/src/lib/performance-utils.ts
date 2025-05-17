@@ -591,10 +591,6 @@ export function extractMonthlyPerformanceTrend(monthlyData: any, fileType: 'e' |
     const monthB = Object.keys(monthAbbrev).find(m => monthAbbrev[m] === b.month) || '';
     return monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
   });
-      
-      if (monthData?.lineItems) {
-        console.log(`Using ${otherType} data as fallback for month ${month} in trend chart`);
-      }
     }
     
     let monthRevenue = 0;

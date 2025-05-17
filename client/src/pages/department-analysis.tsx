@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
 import { extractDepartmentPerformanceData } from "@/lib/department-utils-new";
-import { extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
+import { extractMonthlyPerformanceTrend } from "@/lib/monthly-trend";
 import { Badge } from "@/components/ui/badge";
 
 export default function DepartmentAnalysis() {
