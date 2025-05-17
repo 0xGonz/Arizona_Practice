@@ -315,8 +315,7 @@ const saveToLocalStorage = (state: any) => {
 export const useStore = create<DataStore>((set, get) => ({
   // Initialize with localStorage data or defaults
   ...(loadFromLocalStorage() || {
-    uploadStatus: { annual: false, monthly: {} },
-    annualData: null,
+    uploadStatus: { monthly: {} },
     monthlyData: {},
     revenueMix: [],
     marginTrend: [],
@@ -344,46 +343,7 @@ export const useStore = create<DataStore>((set, get) => ({
   
   // Process CSV data and update store
   processCSVData: (type, data, month) => set(state => {
-    if (type === 'annual') {
-      // Process annual data
-      try {
-        const processedData = processAnnualCSV(data);
-        const generatedRevenueMix = generateRevenueMix(data);
-        const generatedMarginTrend = generateMarginTrend(data);
-        const generatedTopPerformers = generateTopPerformers(data);
-        const generatedBottomPerformers = generateBottomPerformers(data);
-        const generatedAncillaryComparison = generateAncillaryComparison(data);
-        
-        const newState = { 
-          annualData: data,
-          revenueMix: generatedRevenueMix,
-          marginTrend: generatedMarginTrend,
-          topPerformers: generatedTopPerformers,
-          bottomPerformers: generatedBottomPerformers,
-          ancillaryComparison: generatedAncillaryComparison,
-          uploadStatus: {
-            ...state.uploadStatus,
-            annual: true
-          },
-          uploadHistory: [
-            ...state.uploadHistory,
-            {
-              type: 'annual',
-              date: new Date(),
-              filename: 'Annual-Data.csv'
-            }
-          ]
-        };
-        
-        // Save to localStorage
-        saveToLocalStorage(newState);
-        
-        return newState;
-      } catch (error) {
-        console.error('Error processing annual data:', error);
-        return state;
-      }
-    } else if (type.startsWith('monthly-') && month) {
+    if (type.startsWith('monthly-') && month) {
       // Process monthly data
       try {
         // Parse the raw data to extract entity columns and line items
