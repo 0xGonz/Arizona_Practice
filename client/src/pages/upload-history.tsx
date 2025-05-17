@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Fragment } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useStore } from "@/store/data-store";
 import { Button } from "@/components/ui/button";
@@ -176,7 +176,7 @@ export default function UploadHistory() {
                             const isExpanded = expandedItem === itemKey;
                             
                             return (
-                              <React.Fragment key={index}>
+                              <Fragment key={index}>
                                 <tr className="border-b">
                                   <td className="py-3 px-4">
                                     <div className="flex items-center">
@@ -229,43 +229,45 @@ export default function UploadHistory() {
                                         
                                         <div className="overflow-x-auto max-h-80 overflow-y-auto">
                                           {annualData && annualData.length > 0 ? (
-                                            <table className="w-full text-sm">
-                                              <thead className="bg-slate-200">
-                                                <tr>
-                                                  {Object.keys(annualData[0]).map((key, idx) => (
-                                                    <th key={idx} className="py-2 px-3 text-left font-medium">
-                                                      {key}
-                                                    </th>
-                                                  ))}
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                {annualData.slice(0, 10).map((row, rowIdx) => (
-                                                  <tr key={rowIdx} className="border-b border-slate-200">
-                                                    {Object.entries(row).map(([key, value], cellIdx) => (
-                                                      <td key={cellIdx} className="py-2 px-3">
-                                                        {String(value)}
-                                                      </td>
+                                            <>
+                                              <table className="w-full text-sm">
+                                                <thead className="bg-slate-200">
+                                                  <tr>
+                                                    {Object.keys(annualData[0]).map((key, idx) => (
+                                                      <th key={idx} className="py-2 px-3 text-left font-medium">
+                                                        {key}
+                                                      </th>
                                                     ))}
                                                   </tr>
-                                                ))}
-                                              </tbody>
-                                            </table>
+                                                </thead>
+                                                <tbody>
+                                                  {annualData.slice(0, 10).map((row, rowIdx) => (
+                                                    <tr key={rowIdx} className="border-b border-slate-200">
+                                                      {Object.entries(row).map(([key, value], cellIdx) => (
+                                                        <td key={cellIdx} className="py-2 px-3">
+                                                          {String(value)}
+                                                        </td>
+                                                      ))}
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                              
+                                              {annualData.length > 10 && (
+                                                <div className="mt-2 text-sm text-neutral-500 text-center">
+                                                  Showing 10 of {annualData.length} rows. Visit the Dashboard to see full analysis.
+                                                </div>
+                                              )}
+                                            </>
                                           ) : (
                                             <p className="text-neutral-500">No data available to preview.</p>
-                                          )}
-                                          
-                                          {annualData && annualData.length > 10 && (
-                                            <div className="mt-2 text-sm text-neutral-500 text-center">
-                                              Showing 10 of {annualData.length} rows. Visit the Dashboard to see full analysis.
-                                            </div>
                                           )}
                                         </div>
                                       </div>
                                     </td>
                                   </tr>
                                 )}
-                              </tbody>
+                              </Fragment>
                             );
                           })}
                         </tbody>
@@ -302,7 +304,8 @@ export default function UploadHistory() {
                               const fileData = getFileData(item.type as CSVType, item.month);
                               
                               return (
-                                <tr key={index} className="border-b">
+                                <Fragment key={index}>
+                                  <tr className="border-b">
                                     <td className="py-3 px-4">
                                       <Badge variant={item.type.includes('e') ? 'default' : 'outline'}>
                                         {getTypeDisplay(item.type)}
@@ -359,35 +362,35 @@ export default function UploadHistory() {
                                           
                                           <div className="overflow-x-auto max-h-80 overflow-y-auto">
                                             {fileData && fileData.raw && fileData.raw.length > 0 ? (
-                                              <table className="w-full text-sm">
-                                                <thead className="bg-slate-200">
-                                                  <tr>
-                                                    {Object.keys(fileData.raw[0]).map((key, idx) => (
-                                                      <th key={idx} className="py-2 px-3 text-left font-medium">
-                                                        {key}
-                                                      </th>
-                                                    ))}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {fileData.raw.slice(0, 10).map((row, rowIdx) => (
-                                                    <tr key={rowIdx} className="border-b border-slate-200">
-                                                      {Object.entries(row).map(([key, value], cellIdx) => (
-                                                        <td key={cellIdx} className="py-2 px-3">
-                                                          {String(value)}
-                                                        </td>
+                                              <>
+                                                <table className="w-full border-collapse text-sm">
+                                                  <thead>
+                                                    <tr className="bg-slate-100">
+                                                      {Object.keys(fileData.raw[0]).map((header, idx) => (
+                                                        <th key={idx} className="p-2 text-left border-b font-medium">{header}</th>
                                                       ))}
                                                     </tr>
-                                                  ))}
-                                                </tbody>
-                                              </table>
+                                                  </thead>
+                                                  <tbody>
+                                                    {fileData.raw.slice(0, 10).map((row, rowIdx) => (
+                                                      <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                                        {Object.values(row).map((cell, cellIdx) => (
+                                                          <td key={cellIdx} className="p-2 border-b">{String(cell)}</td>
+                                                        ))}
+                                                      </tr>
+                                                    ))}
+                                                  </tbody>
+                                                </table>
+                                                
+                                                {fileData.raw.length > 10 && (
+                                                  <div className="mt-2 text-sm text-neutral-500 text-center">
+                                                    Showing 10 of {fileData.raw.length} rows. Visit the Monthly view to see full analysis.
+                                                  </div>
+                                                )}
+                                              </>
                                             ) : (
-                                              <p className="text-neutral-500">No data available to preview.</p>
-                                            )}
-                                            
-                                            {fileData && fileData.raw && fileData.raw.length > 10 && (
-                                              <div className="mt-2 text-sm text-neutral-500 text-center">
-                                                Showing 10 of {fileData.raw.length} rows. Visit the Monthly view to see full analysis.
+                                              <div className="text-center py-4 text-neutral-500">
+                                                No data available for preview.
                                               </div>
                                             )}
                                           </div>
@@ -395,7 +398,7 @@ export default function UploadHistory() {
                                       </td>
                                     </tr>
                                   )}
-                                </tbody>
+                                </Fragment>
                               );
                             })}
                           </tbody>
@@ -409,74 +412,25 @@ export default function UploadHistory() {
             <TabsContent value="data" className="mt-0">
               <Card>
                 <CardHeader>
-                  <CardTitle>Data Overview</CardTitle>
+                  <CardTitle>Uploaded Data</CardTitle>
                   <CardDescription>
-                    View the parsed data from your uploaded CSV files
+                    View all uploaded data organized by type and month
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {annualData ? (
+                  {Object.keys(groupedHistory).length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No data available to display</p>
+                  ) : (
                     <div className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2">Annual Data Summary</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <Card>
-                            <CardHeader className="py-4 px-5">
-                              <CardTitle className="text-sm">Total Rows</CardTitle>
-                            </CardHeader>
-                            <CardContent className="py-2 px-5">
-                              <p className="text-2xl font-bold">{annualData?.length || 0}</p>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card>
-                            <CardHeader className="py-4 px-5">
-                              <CardTitle className="text-sm">Line Items</CardTitle>
-                            </CardHeader>
-                            <CardContent className="py-2 px-5">
-                              <p className="text-2xl font-bold">
-                                {annualData?.filter(row => row['Line Item'])?.length || 0}
-                              </p>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card>
-                            <CardHeader className="py-4 px-5">
-                              <CardTitle className="text-sm">Months</CardTitle>
-                            </CardHeader>
-                            <CardContent className="py-2 px-5">
-                              <p className="text-2xl font-bold">
-                                {annualData && annualData.length > 0 
-                                  ? Object.keys(annualData[0]).filter(key => 
-                                      key.includes('Jan') || 
-                                      key.includes('Feb') || 
-                                      key.includes('Mar') || 
-                                      key.includes('Apr') || 
-                                      key.includes('May') || 
-                                      key.includes('Jun') || 
-                                      key.includes('Jul') || 
-                                      key.includes('Aug') || 
-                                      key.includes('Sep') || 
-                                      key.includes('Oct') || 
-                                      key.includes('Nov') || 
-                                      key.includes('Dec')
-                                    ).length 
-                                  : 0}
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </div>
-                      
-                      {/* Sample data */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2">Sample Data (First 5 Rows)</h3>
-                        <div className="overflow-x-auto rounded-lg border">
-                          {annualData && annualData.length > 0 ? (
+                      {/* Annual data section */}
+                      {annualData && annualData.length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-lg mb-2">Annual Data</h3>
+                          <div className="overflow-x-auto">
                             <table className="w-full text-sm">
-                              <thead className="bg-slate-100">
+                              <thead className="bg-slate-200">
                                 <tr>
-                                  {Object.keys(annualData[0]).slice(0, 5).map((key, idx) => (
+                                  {Object.keys(annualData[0]).map((key, idx) => (
                                     <th key={idx} className="py-2 px-3 text-left font-medium">
                                       {key}
                                     </th>
@@ -484,10 +438,10 @@ export default function UploadHistory() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {annualData.slice(0, 5).map((row, rowIdx) => (
-                                  <tr key={rowIdx} className="border-t">
-                                    {Object.entries(row).slice(0, 5).map(([key, value], cellIdx) => (
-                                      <td key={cellIdx} className="py-2 px-3">
+                                {annualData.map((row, rowIdx) => (
+                                  <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                    {Object.entries(row).map(([key, value], cellIdx) => (
+                                      <td key={cellIdx} className="py-2 px-3 border-b border-slate-200">
                                         {String(value)}
                                       </td>
                                     ))}
@@ -495,101 +449,117 @@ export default function UploadHistory() {
                                 ))}
                               </tbody>
                             </table>
-                          ) : (
-                            <div className="p-4 text-neutral-500">No annual data available.</div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Monthly data sections */}
+                      {Object.keys(monthlyData).map(month => (
+                        <div key={month}>
+                          <h3 className="font-medium text-lg mb-2 flex items-center">
+                            <Calendar className="w-4 h-4 mr-2" />
+                            {month.charAt(0).toUpperCase() + month.slice(1)} Data
+                          </h3>
+                          
+                          {/* E-type monthly data */}
+                          {monthlyData[month]?.e && monthlyData[month].e.lineItems && (
+                            <div className="mb-4">
+                              <h4 className="text-sm font-medium text-neutral-600 mb-2">
+                                Monthly Employee Data
+                              </h4>
+                              
+                              <div className="overflow-x-auto mb-4">
+                                {/* Table for entity data if available */}
+                                {monthlyData[month].e.meta && monthlyData[month].e.meta.entityColumns && (
+                                  <table className="w-full text-sm mb-4">
+                                    <thead className="bg-slate-100">
+                                      <tr>
+                                        <th className="py-2 px-3 text-left font-medium">Line Item</th>
+                                        {monthlyData[month].e.meta.entityColumns.map((header: string) => (
+                                          <th key={header} className="py-2 px-3 text-left font-medium">{header}</th>
+                                        ))}
+                                        {monthlyData[month].e.meta.summaryColumn && (
+                                          <th className="py-2 px-3 text-left font-medium">{monthlyData[month].e.meta.summaryColumn}</th>
+                                        )}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {monthlyData[month].e.lineItems.map((item: any, index: number) => (
+                                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                          <td className="py-2 px-3 border-b font-medium" style={{ paddingLeft: `${(item.depth || 0) * 15 + 12}px` }}>
+                                            {item.name}
+                                          </td>
+                                          {monthlyData[month].e.meta.entityColumns.map((header: string) => (
+                                            <td key={header} className="py-2 px-3 border-b">
+                                              {item.values[header] !== undefined ? formatCurrency(item.values[header]) : '-'}
+                                            </td>
+                                          ))}
+                                          {monthlyData[month].e.meta.summaryColumn && (
+                                            <td className="py-2 px-3 border-b font-medium">
+                                              {item.values[monthlyData[month].e.meta.summaryColumn] !== undefined
+                                                ? formatCurrency(item.values[monthlyData[month].e.meta.summaryColumn])
+                                                : '-'}
+                                            </td>
+                                          )}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* O-type monthly data */}
+                          {monthlyData[month]?.o && monthlyData[month].o.lineItems && (
+                            <div>
+                              <h4 className="text-sm font-medium text-neutral-600 mb-2">
+                                Monthly Business Data
+                              </h4>
+                              
+                              <div className="overflow-x-auto">
+                                {/* Table for entity data if available */}
+                                {monthlyData[month].o.meta && monthlyData[month].o.meta.entityColumns && (
+                                  <table className="w-full text-sm mb-4">
+                                    <thead className="bg-slate-100">
+                                      <tr>
+                                        <th className="py-2 px-3 text-left font-medium">Line Item</th>
+                                        {monthlyData[month].o.meta.entityColumns.map((header: string) => (
+                                          <th key={header} className="py-2 px-3 text-left font-medium">{header}</th>
+                                        ))}
+                                        {monthlyData[month].o.meta.summaryColumn && (
+                                          <th className="py-2 px-3 text-left font-medium">{monthlyData[month].o.meta.summaryColumn}</th>
+                                        )}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {monthlyData[month].o.lineItems.map((item: any, index: number) => (
+                                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                          <td className="py-2 px-3 border-b font-medium" style={{ paddingLeft: `${(item.depth || 0) * 15 + 12}px` }}>
+                                            {item.name}
+                                          </td>
+                                          {monthlyData[month].o.meta.entityColumns.map((header: string) => (
+                                            <td key={header} className="py-2 px-3 border-b">
+                                              {item.values[header] !== undefined ? formatCurrency(item.values[header]) : '-'}
+                                            </td>
+                                          ))}
+                                          {monthlyData[month].o.meta.summaryColumn && (
+                                            <td className="py-2 px-3 border-b font-medium">
+                                              {item.values[monthlyData[month].o.meta.summaryColumn] !== undefined
+                                                ? formatCurrency(item.values[monthlyData[month].o.meta.summaryColumn])
+                                                : '-'}
+                                            </td>
+                                          )}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">No annual data has been uploaded yet.</p>
-                      <p className="mt-2">
-                        <Link href="/upload">
-                          <Button variant="outline" className="mt-4">
-                            <FileSpreadsheet className="w-4 h-4 mr-2" />
-                            Go to Upload Page
-                          </Button>
-                        </Link>
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Monthly Data Overview */}
-                  {Object.keys(monthlyData).length > 0 && (
-                    <div className="mt-8 pt-8 border-t">
-                      <h3 className="text-lg font-semibold mb-4">Monthly Data Overview</h3>
-                      <div className="grid grid-cols-1 gap-4">
-                        {Object.entries(monthlyData).map(([month, data]) => (
-                          <Card key={month}>
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-base flex items-center">
-                                <Calendar className="w-4 h-4 mr-2" />
-                                {month.charAt(0).toUpperCase() + month.slice(1)}
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <h4 className="text-sm font-medium mb-2">Employee (E) Data</h4>
-                                  {data.e ? (
-                                    <div>
-                                      <p className="text-sm">
-                                        <span className="font-medium">Rows:</span> {data.e.raw?.length || 0}
-                                      </p>
-                                      <p className="text-sm">
-                                        <span className="font-medium">Providers:</span> {data.e.meta?.entityColumns?.length || 0}
-                                      </p>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="mt-2"
-                                        onClick={() => {
-                                          setExpandedItem(`monthly-e-${month}`);
-                                          setActiveTab("list");
-                                        }}
-                                      >
-                                        <Eye className="w-3 h-3 mr-1" />
-                                        View Details
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">Not uploaded</p>
-                                  )}
-                                </div>
-                                
-                                <div>
-                                  <h4 className="text-sm font-medium mb-2">Other Business (O) Data</h4>
-                                  {data.o ? (
-                                    <div>
-                                      <p className="text-sm">
-                                        <span className="font-medium">Rows:</span> {data.o.raw?.length || 0}
-                                      </p>
-                                      <p className="text-sm">
-                                        <span className="font-medium">Business Units:</span> {data.o.meta?.entityColumns?.length || 0}
-                                      </p>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="mt-2"
-                                        onClick={() => {
-                                          setExpandedItem(`monthly-o-${month}`);
-                                          setActiveTab("list");
-                                        }}
-                                      >
-                                        <Eye className="w-3 h-3 mr-1" />
-                                        View Details
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-muted-foreground">Not uploaded</p>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
