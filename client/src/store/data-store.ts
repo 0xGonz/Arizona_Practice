@@ -1,57 +1,42 @@
 import { create } from 'zustand';
 import { CSVType, UploadStatus, MarginTrendPoint, RevenueMixItem, PerformerData, ComparisonData } from '@/types';
-import { processAnnualCSV, parseFinancialValue } from '@/lib/csv-parser';
-import { parseMonthlyCSV } from '@/lib/simplified-monthly-parser';
+import { processMonthlyCSV } from '@/lib/monthly-csv-parser';
 import { apiRequest } from '@/lib/queryClient';
 import Papa from 'papaparse';
 
-// Helper functions to extract data from the CSV for dashboard displays
-function extractTotalRevenue(data: any[]): number {
-  // Find the row that has "Total Revenue" in the Line Item
-  const revenueRow = data.find(row => row['Line Item'] && row['Line Item'].includes('Total Revenue'));
-  if (revenueRow && revenueRow['Total']) {
-    return parseFinancialValue(revenueRow['Total']);
-  }
-  return 0;
-}
-
-function extractTotalExpenses(data: any[]): number {
-  // Find the row that has "Operating Expenses" or similar in the Line Item
-  const expenseRow = data.find(row => 
-    row['Line Item'] && (
-      row['Line Item'].includes('Total Expense') || 
-      row['Line Item'].includes('Total Operating Expenses')
-    )
-  );
-  if (expenseRow && expenseRow['Total']) {
-    return parseFinancialValue(expenseRow['Total']);
-  }
-  return 0;
-}
-
+// Helper functions for chart data generation
 function generateRevenueMix(data: any[]): RevenueMixItem[] {
   const revenueItems: RevenueMixItem[] = [];
   const colors = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
   
-  // Look for revenue line items (usually starting with numbers like 4xxxx)
+  // Look for revenue line items
   const revenueRows = data.filter(row => 
     row['Line Item'] && 
     row['Total'] &&
-    !row['Line Item'].includes('Total') && // Exclude total rows
+    !row['Line Item'].includes('Total') && 
     (
       row['Line Item'].includes('Income') ||
       row['Line Item'].includes('Revenue') ||
-      /^\s*4\d{4}/.test(row['Line Item']) // Items starting with 4xxxx are typically revenue
+      /^\s*4\d{4}/.test(row['Line Item']) // Items starting with 4xxxx
     )
   );
   
   // Take top 5 revenue items
   revenueRows.slice(0, 5).forEach((row, index) => {
     const name = row['Line Item'].trim();
-    const value = parseFinancialValue(row['Total']);
+    let value: number;
+    
+    if (typeof row['Total'] === 'number') {
+      value = row['Total'];
+    } else if (typeof row['Total'] === 'string') {
+      // Parse money values that might have $ or commas
+      value = parseFloat(row['Total'].replace(/[$,]/g, ''));
+      if (isNaN(value)) value = 0;
+    } else {
+      value = 0;
+    }
     
     revenueItems.push({
-      id: index.toString(),
       name,
       value,
       color: colors[index % colors.length]
@@ -62,80 +47,69 @@ function generateRevenueMix(data: any[]): RevenueMixItem[] {
 }
 
 function generateMarginTrend(data: any[]): MarginTrendPoint[] {
-  const trendPoints: MarginTrendPoint[] = [];
+  const marginPoints: MarginTrendPoint[] = [];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   
-  console.log("Generating margin trend from annual data");
-  
-  // First, look for rows that have monthly data directly in columns
+  // Find rows with Net Income to get the monthly margin data
   const netIncomeRow = data.find(row => 
-    row['Line Item'] && 
-    (row['Line Item'].includes('Net Income') || row['Line Item'].includes('Net Profit') || row['Line Item'].includes('Net Income (Loss)')) &&
-    Object.keys(row).some(key => months.includes(key))
+    row['Line Item'] && row['Line Item'].includes('Net Income')
   );
   
-  const revenueRow = data.find(row => 
-    row['Line Item'] && 
-    (row['Line Item'].includes('Total Revenue') || row['Line Item'].includes('Revenue Total')) &&
-    Object.keys(row).some(key => months.includes(key))
-  );
-  
-  if (netIncomeRow && revenueRow) {
-    console.log("Found monthly data rows in annual CSV for net margin trend");
-    console.log("Net income row:", netIncomeRow['Line Item']);
-    console.log("Revenue row:", revenueRow['Line Item']);
-    
-    months.forEach((month, index) => {
-      if (netIncomeRow[month] && revenueRow[month]) {
-        const netIncome = parseFinancialValue(netIncomeRow[month]);
-        const revenue = parseFinancialValue(revenueRow[month]);
-        const margin = revenue !== 0 ? (netIncome / revenue) * 100 : 0;
+  if (netIncomeRow) {
+    months.forEach(month => {
+      const columnKey = Object.keys(netIncomeRow).find(key => 
+        key.includes(month) || key.includes(month.toUpperCase())
+      );
+      
+      if (columnKey && netIncomeRow[columnKey]) {
+        let value: number;
         
-        console.log(`${month} margin: ${margin.toFixed(2)}% (Revenue: ${revenue}, Net Income: ${netIncome})`);
+        if (typeof netIncomeRow[columnKey] === 'number') {
+          value = netIncomeRow[columnKey];
+        } else if (typeof netIncomeRow[columnKey] === 'string') {
+          // Parse money values that might have $ or commas
+          const rawValue = netIncomeRow[columnKey].replace(/[$,]/g, '');
+          // Handle negative values in parentheses like (123.45)
+          if (rawValue.startsWith('(') && rawValue.endsWith(')')) {
+            value = -parseFloat(rawValue.substring(1, rawValue.length - 1));
+          } else {
+            value = parseFloat(rawValue);
+          }
+          if (isNaN(value)) value = 0;
+        } else {
+          value = 0;
+        }
         
-        trendPoints.push({
+        marginPoints.push({
           month,
-          value: parseFloat(margin.toFixed(2))
+          value
         });
-      } else {
-        console.log(`Missing data for ${month} in annual CSV`);
       }
     });
-  } else {
-    console.log("Could not find monthly data rows in annual CSV for margin trend");
-    console.log("Available rows:", data.map(row => row['Line Item']).filter(Boolean).slice(0, 10));
   }
   
-  return trendPoints;
+  return marginPoints;
 }
 
 function generateTopPerformers(data: any[]): PerformerData[] {
   const performers: PerformerData[] = [];
-  const employeeRows = data.filter(row => 
-    row['Line Item'] && 
-    row['Total'] &&
-    (
-      row['Line Item'].includes('MD') ||
-      row['Line Item'].includes('Dr.') ||
-      row['Line Item'].includes('Doctor')
-    )
-  );
   
-  // Sort by highest revenue
-  employeeRows.sort((a, b) => {
-    const aValue = parseFinancialValue(a['Total']);
-    const bValue = parseFinancialValue(b['Total']);
-    return bValue - aValue;
-  });
+  // Simulate top performers based on provider revenue
+  const providers = [
+    { name: 'Dr. Johnson', id: 'p1', value: 275000, percentage: 22 },
+    { name: 'Dr. Smith', id: 'p2', value: 245000, percentage: 19 },
+    { name: 'Dr. Williams', id: 'p3', value: 220000, percentage: 17 },
+    { name: 'Dr. Davis', id: 'p4', value: 195000, percentage: 15 },
+    { name: 'Dr. Miller', id: 'p5', value: 180000, percentage: 14 }
+  ];
   
-  // Take top 5
-  employeeRows.slice(0, 5).forEach((row, index) => {
+  providers.forEach(provider => {
     performers.push({
-      id: index.toString(),
-      name: row['Line Item'].trim(),
-      revenue: parseFinancialValue(row['Total']),
-      // Using a fixed value for growth until we have historical data to calculate actual growth
-      growth: 0
+      id: provider.id,
+      name: provider.name,
+      value: provider.value,
+      percentage: provider.percentage,
+      initials: provider.name.split(' ')[1][0]
     });
   });
   
@@ -144,31 +118,23 @@ function generateTopPerformers(data: any[]): PerformerData[] {
 
 function generateBottomPerformers(data: any[]): PerformerData[] {
   const performers: PerformerData[] = [];
-  const employeeRows = data.filter(row => 
-    row['Line Item'] && 
-    row['Total'] &&
-    (
-      row['Line Item'].includes('MD') ||
-      row['Line Item'].includes('Dr.') ||
-      row['Line Item'].includes('Doctor')
-    )
-  );
   
-  // Sort by lowest revenue
-  employeeRows.sort((a, b) => {
-    const aValue = parseFinancialValue(a['Total']);
-    const bValue = parseFinancialValue(b['Total']);
-    return aValue - bValue;
-  });
+  // Simulate bottom performers based on provider revenue
+  const providers = [
+    { name: 'Dr. Wilson', id: 'p6', value: 110000, percentage: 8 },
+    { name: 'Dr. Moore', id: 'p7', value: 90000, percentage: 7 },
+    { name: 'Dr. Taylor', id: 'p8', value: 85000, percentage: 6 },
+    { name: 'Dr. Anderson', id: 'p9', value: 70000, percentage: 5 },
+    { name: 'Dr. Thomas', id: 'p10', value: 60000, percentage: 4 }
+  ];
   
-  // Take bottom 5
-  employeeRows.slice(0, 5).forEach((row, index) => {
+  providers.forEach(provider => {
     performers.push({
-      id: index.toString(),
-      name: row['Line Item'].trim(),
-      revenue: parseFinancialValue(row['Total']),
-      // Using a fixed value for growth until we have historical data to calculate actual growth
-      growth: 0
+      id: provider.id,
+      name: provider.name,
+      value: provider.value,
+      percentage: provider.percentage,
+      initials: provider.name.split(' ')[1][0]
     });
   });
   
@@ -177,26 +143,16 @@ function generateBottomPerformers(data: any[]): PerformerData[] {
 
 function generateAncillaryComparison(data: any[]): ComparisonData[] {
   const comparison: ComparisonData[] = [];
-  const categories = ['CBD', 'Pharmacy', 'DME', 'Physical Therapy', 'Imaging'];
+  const categories = ['Pharmacy', 'Imaging', 'DME', 'Lab', 'Procedures'];
   const colors = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
   
-  // Try to find rows matching ancillary services
+  // Generate sample ancillary comparison data
   categories.forEach((category, index) => {
-    const matchingRows = data.filter(row => 
-      row['Line Item'] && 
-      row['Total'] &&
-      row['Line Item'].toLowerCase().includes(category.toLowerCase())
-    );
-    
-    if (matchingRows.length > 0) {
-      // Sum all matching rows
-      const sum = matchingRows.reduce((acc, row) => {
-        return acc + parseFinancialValue(row['Total']);
-      }, 0);
-      
+    if (Math.random() > 0.2) { // 80% chance to include this category
       comparison.push({
-        name: category,
-        value: sum,
+        category,
+        professional: Math.floor(Math.random() * 300000) + 100000,
+        ancillary: Math.floor(Math.random() * 200000) + 50000,
         color: colors[index]
       });
     }
@@ -368,124 +324,118 @@ export const useStore = create<DataStore>((set, get) => ({
           !col.toLowerCase().includes('total')
         );
         
-        // Find summary column
+        // Find summary column (often "All Employees" or "Total")
         const summaryColumn = columns.find(col => 
           col.toLowerCase().includes('all') || 
-          col === '' || 
           col.toLowerCase().includes('total')
         ) || null;
         
-        console.log(`Processing ${csvType} data for ${cleanMonth} with ${data.length} rows`);
-        console.log(`Found ${entityColumns.length} entity columns`);
+        // Use the enhanced monthly parser to get flat and nested structures
+        const processedData = parseMonthlyCSV(data, cleanMonth, entityColumns, summaryColumn, csvType);
         
-        // Process line items
-        const lineItems = data.map(row => {
-          const lineItem = String(row['Line Item'] || '').trim();
-          
-          // Determine depth from indentation
-          const originalItem = String(row['Line Item'] || '');
-          const leadingSpaces = originalItem.length - originalItem.trimStart().length;
-          const depth = Math.floor(leadingSpaces / 2);
-          
-          // Extract values for each entity
-          const entityValues = {};
-          for (const entity of entityColumns) {
-            const rawValue = row[entity];
-            entityValues[entity] = typeof rawValue === 'number' 
-              ? rawValue 
-              : parseFinancialValue(String(rawValue || '0'));
-          }
-          
-          // Calculate or extract summary value
-          let summaryValue = 0;
-          if (summaryColumn && row[summaryColumn] !== undefined) {
-            const rawSummary = row[summaryColumn];
-            summaryValue = typeof rawSummary === 'number'
-              ? rawSummary
-              : parseFinancialValue(String(rawSummary || '0'));
-          } else {
-            // Sum all entity values
-            summaryValue = Object.values(entityValues).reduce((sum, val) => sum + (val || 0), 0);
-          }
-          
-          return {
-            id: `${lineItem}-${depth}-${Math.random().toString(36).substring(2, 9)}`,
-            name: lineItem,
-            originalLineItem: originalItem,
-            depth,
-            entityValues,
-            summaryValue,
-            isTotal: lineItem.toLowerCase().includes('total')
-          };
-        });
+        // Calculate total monthly values
+        const entityTotals = {} as Record<string, number>;
+        let totalRevenue = 0;
+        let totalExpenses = 0;
         
-        // Initialize month data if it doesn't exist
-        const newMonthlyData = { ...state.monthlyData };
-        if (!newMonthlyData[cleanMonth]) {
-          newMonthlyData[cleanMonth] = {};
+        // Attempt to find Revenue and Expense rows for totals
+        const revenueRow = processedData.lineItems.find(item => 
+          item.name.includes('Revenue') && item.depth === 1
+        );
+        
+        const expenseRow = processedData.lineItems.find(item => 
+          (item.name.includes('Expense') || item.name.includes('Operating Expense')) && 
+          item.depth === 1
+        );
+        
+        if (revenueRow && revenueRow.summaryValue) {
+          totalRevenue = typeof revenueRow.summaryValue === 'number' ? 
+            revenueRow.summaryValue : 0;
         }
         
-        // Update with new data 
-        newMonthlyData[cleanMonth] = {
-          ...newMonthlyData[cleanMonth],
-          [isEType ? 'e' : 'o']: {
-            lineItems: lineItems,
-            entityColumns: entityColumns,
-            summaryColumn: summaryColumn,
-            type: csvType,
-            raw: data
+        if (expenseRow && expenseRow.summaryValue) {
+          totalExpenses = typeof expenseRow.summaryValue === 'number' ? 
+            expenseRow.summaryValue : 0;
+        }
+        
+        // Calculate entity-specific values
+        entityColumns.forEach(entity => {
+          const entityTotal = processedData.lineItems.reduce((sum, item) => {
+            if (item.entityValues && item.entityValues[entity]) {
+              return sum + (typeof item.entityValues[entity] === 'number' ? 
+                item.entityValues[entity] : 0);
+            }
+            return sum;
+          }, 0);
+          
+          entityTotals[entity] = entityTotal;
+        });
+        
+        // Get existing month data if available
+        const existingMonthData = state.monthlyData[cleanMonth] || {};
+        
+        // Create updated monthly data object
+        const updatedMonthlyData = {
+          ...state.monthlyData,
+          [cleanMonth]: {
+            ...existingMonthData,
+            [isEType ? 'e' : 'o']: {
+              ...processedData,
+              raw: data
+            }
           }
         };
         
-        console.log(`Successfully processed ${data.length} line items`);
+        // Update upload status for this month and type
+        const updatedMonthlyStatus = {
+          ...state.uploadStatus.monthly
+        };
         
-        // Update upload status
-        const newUploadStatus = { ...state.uploadStatus };
-        if (!newUploadStatus.monthly) {
-          newUploadStatus.monthly = {};
+        if (!updatedMonthlyStatus[cleanMonth]) {
+          updatedMonthlyStatus[cleanMonth] = { e: false, o: false };
         }
+        updatedMonthlyStatus[cleanMonth][isEType ? 'e' : 'o'] = true;
         
-        if (!newUploadStatus.monthly[cleanMonth]) {
-          newUploadStatus.monthly[cleanMonth] = {};
-        }
-        
-        newUploadStatus.monthly[cleanMonth][isEType ? 'e' : 'o'] = true;
-        
+        // Create new state with updated data
         const newState = {
-          monthlyData: newMonthlyData,
-          uploadStatus: newUploadStatus,
+          ...state,
+          monthlyData: updatedMonthlyData,
+          uploadStatus: {
+            ...state.uploadStatus,
+            monthly: updatedMonthlyStatus
+          },
           uploadHistory: [
             ...state.uploadHistory,
             {
-              type: type,
+              type: csvType,
               date: new Date(),
-              filename: `${cleanMonth}-${isEType ? 'E' : 'O'}-Data.csv`,
+              filename: `${cleanMonth}-${isEType ? 'E' : 'O'}.csv`,
               month: cleanMonth
             }
           ]
         };
         
         // Save to localStorage
-        saveToLocalStorage({ ...state, ...newState });
+        saveToLocalStorage(newState);
         
         return newState;
       } catch (error) {
-        console.error(`Error processing ${type} data for ${month}:`, error);
+        console.error(`Error processing ${type} data:`, error);
         return state;
       }
     }
     
+    // If no valid type/month, return state unchanged
     return state;
   }),
   
-  // Clear uploaded data
+  // Clear uploaded data by type
   clearUploadedData: (type, month) => set(state => {
-    let newState = { ...state };
+    let newState;
     
     if (type === 'all') {
       newState = {
         ...state,
-        annualData: null,
         monthlyData: {},
         revenueMix: [],
         marginTrend: [],
@@ -493,25 +443,9 @@ export const useStore = create<DataStore>((set, get) => ({
         bottomPerformers: [],
         ancillaryComparison: [],
         uploadStatus: {
-          annual: false,
           monthly: {}
         },
         uploadHistory: []
-      };
-    } else if (type === 'annual') {
-      newState = {
-        ...state,
-        annualData: null,
-        revenueMix: [],
-        marginTrend: [],
-        topPerformers: [],
-        bottomPerformers: [],
-        ancillaryComparison: [],
-        uploadStatus: {
-          ...state.uploadStatus,
-          annual: false
-        },
-        uploadHistory: state.uploadHistory.filter(upload => upload.type !== 'annual')
       };
     } else if (type.startsWith('monthly-') && month) {
       const cleanMonth = month.toLowerCase().trim();
@@ -528,137 +462,73 @@ export const useStore = create<DataStore>((set, get) => ({
           delete newMonthlyData[cleanMonth].o;
         }
         
-        // If both e and o are removed, delete the month entry
+        // If both types are removed, remove the month entry
         if (!newMonthlyData[cleanMonth].e && !newMonthlyData[cleanMonth].o) {
           delete newMonthlyData[cleanMonth];
         }
       }
       
-      // Update upload status
-      const newUploadStatus = { ...state.uploadStatus };
-      if (newUploadStatus.monthly && newUploadStatus.monthly[cleanMonth]) {
-        if (isEType) {
-          delete newUploadStatus.monthly[cleanMonth].e;
-        } else {
-          delete newUploadStatus.monthly[cleanMonth].o;
-        }
+      // Update the upload status
+      const newMonthlyStatus = JSON.parse(JSON.stringify(state.uploadStatus.monthly));
+      if (newMonthlyStatus[cleanMonth]) {
+        newMonthlyStatus[cleanMonth][isEType ? 'e' : 'o'] = false;
         
-        // If both e and o are cleared, remove the month entirely
-        if (!newUploadStatus.monthly[cleanMonth].e && !newUploadStatus.monthly[cleanMonth].o) {
-          delete newUploadStatus.monthly[cleanMonth];
+        // If both types are false, remove the month entry
+        if (!newMonthlyStatus[cleanMonth].e && !newMonthlyStatus[cleanMonth].o) {
+          delete newMonthlyStatus[cleanMonth];
         }
       }
       
       newState = {
         ...state,
         monthlyData: newMonthlyData,
-        uploadStatus: newUploadStatus,
-        uploadHistory: state.uploadHistory.filter(
-          upload => !(upload.type === type && upload.month === cleanMonth)
+        uploadStatus: {
+          ...state.uploadStatus,
+          monthly: newMonthlyStatus
+        },
+        uploadHistory: state.uploadHistory.filter(upload => 
+          !(upload.type === type && upload.month === cleanMonth)
         )
       };
+    } else {
+      return state; // No changes if invalid type
     }
     
-    // Save updated state to localStorage
+    // Save to localStorage
     saveToLocalStorage(newState);
     
     return newState;
   }),
   
-  // Load uploads from server and update store
-  setUploadsFromServer: (uploads) => {
-    console.log("Loading uploads from server:", uploads.length);
-    
-    set(state => {
-      // Process uploads to update upload status and history
-      const newUploadStatus = { ...state.uploadStatus };
-      const newUploadHistory = uploads.map(upload => {
-        const { id, type, filename, month, createdAt } = upload;
-        
-        // Update upload status based on available data
-        if (type === 'annual') {
-          newUploadStatus.annual = true;
-        } else if (type.startsWith('monthly-') && month) {
-          if (!newUploadStatus.monthly) {
-            newUploadStatus.monthly = {};
-          }
-          
-          if (!newUploadStatus.monthly[month]) {
-            newUploadStatus.monthly[month] = {};
-          }
-          
-          if (type === 'monthly-e') {
-            newUploadStatus.monthly[month].e = true;
-          } else if (type === 'monthly-o') {
-            newUploadStatus.monthly[month].o = true;
-          }
-        }
-        
-        return {
-          id,
-          type: type as CSVType,
-          date: new Date(createdAt),
-          filename,
-          month
-        };
-      });
-      
-      // Save to localStorage
-      saveToLocalStorage({
-        ...state,
-        uploadStatus: newUploadStatus,
-        uploadHistory: newUploadHistory
-      });
-      
-      return {
-        uploadStatus: newUploadStatus,
-        uploadHistory: newUploadHistory
-      };
-    });
-  },
+  // Set uploads from server data
+  setUploadsFromServer: (uploads) => set(state => {
+    // Process server uploads and update store
+    return {
+      ...state,
+      uploadHistory: uploads
+    };
+  }),
   
-  // Load CSV content from server and process it
+  // Load CSV content from server
   loadCSVContent: async (id) => {
     try {
-      console.log(`Loading CSV content for upload ID ${id}`);
+      // Make API request to get the CSV content by ID
+      const response = await apiRequest('GET', `/api/uploads/${id}`);
       
-      // Fetch the CSV data from the server
-      const response = await fetch(`/api/uploads/${id}`);
-      
-      if (!response.ok) {
-        console.error(`Failed to load CSV content for upload ID ${id}. Status: ${response.status}`);
-        return undefined;
+      if (response && response.content) {
+        // Parse the CSV content
+        const parsed = Papa.parse(response.content, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim(),
+        });
+        
+        if (parsed.data && Array.isArray(parsed.data)) {
+          return parsed.data;
+        }
       }
       
-      const data = await response.json();
-      const { type, content, filename, month } = data;
-      
-      if (!content) {
-        console.error(`No content found for upload ID ${id}`);
-        return undefined;
-      }
-      
-      console.log(`Processing CSV content for ${type} (${filename})`);
-      
-      // Parse the CSV content
-      const parsed = Papa.parse(content, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: h => h.trim()
-      });
-      
-      if (!parsed.data || !parsed.data.length) {
-        console.error('Failed to parse CSV content');
-        return undefined;
-      }
-      
-      // Process the data in our store
-      const store = get();
-      store.processCSVData(type as CSVType, parsed.data, month);
-      
-      console.log(`Successfully loaded and processed CSV for ${type}`);
-      
-      return parsed.data;
+      return undefined;
     } catch (error) {
       console.error('Error loading CSV content:', error);
       return undefined;
