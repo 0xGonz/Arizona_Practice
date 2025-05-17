@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useStore } from "@/store/data-store";
-import { SimpleFinancialOverview } from "@/components/data-analysis/simple-financial-overview";
+import { NewFinancialOverview } from "@/components/data-analysis/new-financial-overview";
 import {
   Tabs,
   TabsContent,

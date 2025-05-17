@@ -40,7 +40,16 @@ export function SimpleFinancialOverview({ monthlyData, selectedMonth }: SimpleFi
     }
     
     const data = dataType === "e" ? monthData.e : monthData.o;
-    if (!data || !data.lineItems || !data.entityColumns) {
+    if (!data) {
+      return {
+        barChartData: { revenue: 0, expenses: 0, netIncome: 0 },
+        tableData: []
+      };
+    }
+    
+    // Verify we have line items array
+    if (!data.lineItems || !Array.isArray(data.lineItems) || data.lineItems.length === 0) {
+      console.log(`No line items found for ${selectedMonth} ${dataType} data`);
       return {
         barChartData: { revenue: 0, expenses: 0, netIncome: 0 },
         tableData: []
