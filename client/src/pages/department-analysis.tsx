@@ -140,7 +140,7 @@ export default function DepartmentAnalysis() {
       )}
 
       {hasData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* Monthly Trend View */}
           <Card>
             <CardHeader>
@@ -179,85 +179,6 @@ export default function DepartmentAnalysis() {
                   <p>No monthly trend data available. Please upload monthly data for more months.</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-
-
-          {/* Profitability Chart */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Department Profitability</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={450}>
-                <BarChart 
-                  data={filteredData}
-                  margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45} 
-                    textAnchor="end" 
-                    height={80}
-                    interval={0}
-                    tick={{ fontSize: 12 }}
-                    tickMargin={15}
-                  />
-                  <YAxis 
-                    tickFormatter={(value) => `$${value.toLocaleString()}`} 
-                    width={80}
-                  />
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                  <Legend 
-                    layout="horizontal" 
-                    verticalAlign="bottom" 
-                    align="center"
-                    wrapperStyle={{ paddingTop: 15 }}
-                  />
-                  <Bar dataKey="revenue" name="Revenue" fill="#42A5F5" />
-                  <Bar dataKey="expenses" name="Expenses" fill="#EF5350" />
-                  <Bar dataKey="net" name="Net Income" fill="#66BB6A" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Comparison Table */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Department Comparison</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b border-neutral-border">
-                      <th className="text-left py-3 px-4 font-medium">Department</th>
-                      <th className="text-right py-3 px-4 font-medium">Revenue</th>
-                      <th className="text-right py-3 px-4 font-medium">Expenses</th>
-                      <th className="text-right py-3 px-4 font-medium">Net Income</th>
-                      <th className="text-right py-3 px-4 font-medium">Margin %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {departmentData.map((dept, index) => (
-                      <tr key={index} className="border-b border-neutral-border">
-                        <td className="py-3 px-4 font-medium">{dept.name}</td>
-                        <td className="text-right py-3 px-4 numeric">${dept.revenue.toLocaleString()}</td>
-                        <td className="text-right py-3 px-4 numeric">${dept.expenses.toLocaleString()}</td>
-                        <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
-                          ${Math.abs(dept.net).toLocaleString()}{dept.net < 0 ? ' (Loss)' : ''}
-                        </td>
-                        <td className={`text-right py-3 px-4 numeric font-medium ${dept.net >= 0 ? 'text-positive' : 'text-negative'}`}>
-                          {dept.revenue > 0 ? ((dept.net / dept.revenue) * 100).toFixed(1) : '0.0'}%
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </CardContent>
           </Card>
         </div>
