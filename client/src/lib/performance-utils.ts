@@ -795,8 +795,13 @@ export function extractMonthlySummaryData(monthlyData: any) {
   };
 
   // Process each month for both E and O file types
-  Object.keys(monthlyData || {}).forEach(month => {
+  // Make sure we process all months in order
+  const availableMonths = Object.keys(monthlyData || {});
+  console.log("Processing all available months for monthly summary:", availableMonths);
+  
+  availableMonths.forEach(month => {
     const lowerMonth = month.toLowerCase();
+    console.log(`Processing monthly summary for: ${month}`);
     
     // Use known accurate values if available
     if (KNOWN_MONTH_VALUES[lowerMonth]) {
