@@ -326,46 +326,37 @@ export default function Dashboard() {
                 {/* Zero reference line */}
                 <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
                 
-                {/* Positive net income area (green) */}
-                <Area 
-                  connectNulls
-                  type="monotone"
-                  dataKey={(entry) => entry.netIncome > 0 ? entry.netIncome : null}
-                  stroke="#10b981"
-                  fill="#10b981" 
-                  fillOpacity={0.4}
-                  activeDot={false}
-                  legendType="none"
-                  name=""
-                  baseValue={0}
-                />
-                
-                {/* Negative net income area (red) */}
-                <Area 
-                  connectNulls
-                  type="monotone"
-                  dataKey={(entry) => entry.netIncome < 0 ? entry.netIncome : null}
-                  stroke="#ef4444"
-                  fill="#ef4444" 
-                  fillOpacity={0.4}
-                  activeDot={false}
-                  legendType="none"
-                  name=""
-                  baseValue={0}
-                />
-                
-                {/* Net Income line */}
+                {/* Net Income line - MUST come first so it appears on top */}
                 <Line
                   type="monotone"
                   dataKey="netIncome"
                   name="Net Income" 
-                  stroke={(entry) => entry === 0 ? "#888" : entry > 0 ? "#10b981" : "#ef4444"}
+                  stroke="#10b981"
                   strokeWidth={3}
-                  dot={{ 
-                    fill: (entry) => entry === 0 ? "#888" : entry > 0 ? "#10b981" : "#ef4444", 
-                    stroke: (entry) => entry === 0 ? "#888" : entry > 0 ? "#10b981" : "#ef4444"
-                  }}
-                  activeDot={{ r: 8 }}
+                  dot={{ r: 5, fill: "#10b981" }}
+                  activeDot={{ r: 8, fill: "#10b981" }}
+                />
+                
+                {/* Green positive net income area */}
+                <Area 
+                  type="monotone"
+                  dataKey="positiveNetIncome"
+                  stroke="none"
+                  fill="#10b981" 
+                  fillOpacity={0.4}
+                  legendType="none"
+                  name=""
+                />
+                
+                {/* Red negative net income area */}
+                <Area 
+                  type="monotone"
+                  dataKey="negativeNetIncome"
+                  stroke="none"
+                  fill="#ef4444" 
+                  fillOpacity={0.4}
+                  legendType="none"
+                  name=""
                 />
               </LineChart>
             </ResponsiveContainer>
