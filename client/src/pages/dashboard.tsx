@@ -53,6 +53,7 @@ export default function Dashboard() {
       let monthORevenue = 0;
       let monthOExpenses = 0;
       let monthONetIncome = 0;
+      let monthPayrollExpenses = 0;
       
       // Process employee (E) data if available
       if (monthData?.e?.lineItems) {
@@ -75,6 +76,16 @@ export default function Dashboard() {
           (item.name === "Net Income (Loss)" || item.name === "Net Income") && 
           (item.isTotal || item.depth === 1)
         );
+        
+        // Look for Payroll and Related Expenses
+        const payrollExpenseLine = monthData.e.lineItems.find(item => 
+          item.name.includes("Payroll and Related Expense") || 
+          item.name.includes("Total Payroll and Related Expense")
+        );
+        
+        if (payrollExpenseLine) {
+          monthPayrollExpenses += Math.abs(payrollExpenseLine.summaryValue || 0);
+        }
         
         monthERevenue = revenueLine?.summaryValue || 0;
         monthEExpenses = expenseLine?.summaryValue || 0;
@@ -110,6 +121,16 @@ export default function Dashboard() {
           (item.name === "Net Income (Loss)" || item.name === "Net Income") && 
           (item.isTotal || item.depth === 1)
         );
+        
+        // Look for Payroll and Related Expenses
+        const payrollExpenseLine = monthData.o.lineItems.find(item => 
+          item.name.includes("Payroll and Related Expense") || 
+          item.name.includes("Total Payroll and Related Expense")
+        );
+        
+        if (payrollExpenseLine) {
+          monthPayrollExpenses += Math.abs(payrollExpenseLine.summaryValue || 0);
+        }
         
         monthORevenue = revenueLine?.summaryValue || 0;
         monthOExpenses = expenseLine?.summaryValue || 0;
@@ -511,59 +532,41 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Monthly Performance Highlights */}
+      {/* Monthly Payroll and Related Expenses */}
       <Card className="shadow-lg border-t-4 border-purple-500 mb-6">
         <CardHeader className="bg-gray-50 px-4 py-4 sm:px-6">
-          <CardTitle className="text-xl font-semibold">Monthly Performance Highlights</CardTitle>
+          <CardTitle className="text-xl font-semibold flex items-center justify-between">
+            <span>Monthly Payroll and Related Expenses</span>
+            <span className="text-sm font-normal bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+              All Months 2024
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Best Performing Month */}
-            <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-              <h3 className="text-lg font-semibold text-green-800">Best Performing Month</h3>
-              <div className="mt-2">
-                <p className="text-2xl font-bold text-green-700">
-                  {aggregatedData.bestMonth?.month || 'N/A'}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Net Income: {formatCurrency(aggregatedData.bestMonth?.netIncome || 0)}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  Revenue: {formatCurrency(aggregatedData.bestMonth?.revenue || 0)}
-                </p>
-              </div>
-            </div>
-            
-            {/* Challenging Month */}
-            <div className="bg-red-50 rounded-lg p-4 border border-red-100">
-              <h3 className="text-lg font-semibold text-red-800">Most Challenging Month</h3>
-              <div className="mt-2">
-                <p className="text-2xl font-bold text-red-700">
-                  {aggregatedData.worstMonth?.month || 'N/A'}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Net Income: {formatCurrency(aggregatedData.worstMonth?.netIncome || 0)}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  Revenue: {formatCurrency(aggregatedData.worstMonth?.revenue || 0)}
-                </p>
-              </div>
-            </div>
-            
-            {/* Expense Insights */}
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-              <h3 className="text-lg font-semibold text-blue-800">Expense Insights</h3>
-              <div className="mt-2">
-                <p className="text-sm font-medium text-gray-700">Highest Expense Month:</p>
-                <p className="text-lg font-semibold text-blue-700">
-                  {aggregatedData.highestExpenseMonth?.month || 'N/A'}: {formatCurrency(aggregatedData.highestExpenseMonth?.expenses || 0)}
-                </p>
-                <p className="text-sm font-medium text-gray-700 mt-2">Average Monthly Expenses:</p>
-                <p className="text-lg font-semibold text-blue-700">
-                  {formatCurrency(aggregatedData.averageMonthlyExpenses || 0)}
-                </p>
-              </div>
-            </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={aggregatedData.monthlyTrends.map(trend => ({
+                  month: trend.month,
+                  payroll: trend.payrollExpenses || 0
+                }))}
+                margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                <Tooltip 
+                  formatter={(value) => [`${formatCurrency(value as number)}`, 'Payroll Expenses']}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Bar 
+                  dataKey="payroll" 
+                  name="Payroll & Related Expenses" 
+                  fill="#8b5cf6" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
