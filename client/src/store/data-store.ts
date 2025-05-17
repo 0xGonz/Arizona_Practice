@@ -345,7 +345,7 @@ export const useStore = create<DataStore>((set, get) => ({
   }),
   
   // Process CSV data and update store
-  processCSVData: (type, data, month) => set(state => {
+  processCSVData: (type, data, month) => set(async (state) => {
     if (type === 'annual') {
       // Process annual data
       try {
@@ -388,9 +388,21 @@ export const useStore = create<DataStore>((set, get) => ({
     } else if (type.startsWith('monthly-') && month) {
       // Process monthly data
       try {
-        const { result: processedData, nestedData, metadata } = parseMonthlyCSV(data, type);
+        // Import the processMonthlyCSV function from our lib
+        const { processMonthlyCSV } = await import('../lib/monthly-csv-parser');
+        
+        // Process the monthly CSV data
+        const csvType = type as 'monthly-e' | 'monthly-o';
+        const processed = processMonthlyCSV(data, csvType);
+        
+        // Clean the month name for consistency
         const cleanMonth = month.toLowerCase().trim();
         const isEType = type === 'monthly-e';
+        
+        console.log(`Processing monthly-${isEType ? 'e' : 'o'} CSV with:`, {
+          totalRows: data.length,
+          entityColumns: processed.meta.entityColumns
+        });
         
         // Initialize month data if it doesn't exist
         const newMonthlyData = { ...state.monthlyData };
@@ -398,17 +410,20 @@ export const useStore = create<DataStore>((set, get) => ({
           newMonthlyData[cleanMonth] = {};
         }
         
-        // Update with new data
+        // Update with new data using the properly processed data structure
         newMonthlyData[cleanMonth] = {
           ...newMonthlyData[cleanMonth],
           [isEType ? 'e' : 'o']: {
-            lineItems: processedData,
-            entityColumns: metadata.entityColumns,
-            summaryColumn: metadata.summaryColumn,
-            type: type,
-            raw: data
+            lineItems: processed.flat, // Use the flat representation for compatibility
+            entityColumns: processed.meta.entityColumns,
+            summaryColumn: processed.meta.summaryColumn,
+            type: csvType,
+            raw: data,
+            nested: processed.nested // Keep the nested data for hierarchical display
           }
         };
+        
+        console.log(`Successfully processed ${data.length} line items`);
         
         // Update upload status
         const newUploadStatus = { ...state.uploadStatus };
