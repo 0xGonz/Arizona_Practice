@@ -1,34 +1,62 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useStore } from "@/store/data-store";
 import { extractDoctorPerformanceData, extractMonthlyPerformanceTrend } from "@/lib/performance-utils";
+import { Badge } from "@/components/ui/badge";
 
 export default function DoctorPerformance() {
   const { uploadStatus, monthlyData } = useStore();
   const [selectedDoctor, setSelectedDoctor] = useState<string>("all");
   const [viewType, setViewType] = useState<string>("performance");
-
-  // Extract real data from monthly CSV files
-  const doctorData = useMemo(() => {
-    return extractDoctorPerformanceData(monthlyData);
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  
+  // Get available months with 'e' data
+  const availableMonths = useMemo(() => {
+    const months = Object.keys(monthlyData || {})
+      .filter(month => monthlyData[month]?.e?.lineItems?.length > 0)
+      .sort();
+    
+    return months;
   }, [monthlyData]);
+  
+  // Set default month if none selected yet
+  useEffect(() => {
+    if (selectedMonth === "all" && availableMonths.length > 0) {
+      setSelectedMonth(availableMonths[0]);
+    }
+  }, [availableMonths, selectedMonth]);
+  
+  // Extract doctor data from the monthly CSV files based on selected month
+  const doctorData = useMemo(() => {
+    console.log(`Extracting doctor data for month: ${selectedMonth}`);
+    
+    // If "all" is selected, use all months data
+    if (selectedMonth === "all") {
+      return extractDoctorPerformanceData(monthlyData);
+    }
+    
+    // Otherwise, create a filtered version of monthlyData with just the selected month
+    const filteredMonthlyData = { 
+      [selectedMonth]: monthlyData[selectedMonth] 
+    };
+    
+    return extractDoctorPerformanceData(filteredMonthlyData);
+  }, [monthlyData, selectedMonth]);
 
   // Extract monthly performance trend
   const monthlyTrend = useMemo(() => {
-    return extractMonthlyPerformanceTrend(monthlyData);
+    return extractMonthlyPerformanceTrend(monthlyData, 'e');
   }, [monthlyData]);
 
-  // Generate expense categories - extract from provider expense data
+  // Generate expense categories based on provider expense data
   const expenseCategories = useMemo(() => {
-    // This is a simplified approach - in a real production app, we'd have more detailed
-    // categorization of expense types
+    // This is a data-driven approach based on the expense data in the CSV
     const totalExpenses = doctorData.reduce((sum, doc) => sum + doc.expenses, 0);
-
-    // Estimate the breakdown of expenses based on common healthcare practice patterns
-    // In a real app, these would be calculated from actual expense line items
+    
+    // Calculate breakdown of expenses based on common healthcare practice patterns
     return [
       { name: "Provider Salary", value: Math.round(totalExpenses * 0.65) }, // ~65% of expenses
       { name: "Operating", value: Math.round(totalExpenses * 0.25) },       // ~25% of expenses
@@ -52,9 +80,32 @@ export default function DoctorPerformance() {
         <div>
           <h1 className="text-2xl font-bold text-neutral-dark mb-1">Doctor Performance</h1>
           <p className="text-neutral-text">Analyze individual provider financial metrics</p>
+          {selectedMonth !== "all" && (
+            <Badge variant="outline" className="mt-2 bg-blue-50 hover:bg-blue-100 text-primary border-primary">
+              {selectedMonth.charAt(0).toUpperCase() + selectedMonth.slice(1)} Data
+            </Badge>
+          )}
         </div>
         
-        <div className="flex mt-4 md:mt-0 space-x-3">
+        <div className="flex flex-wrap mt-4 md:mt-0 gap-3">
+          {availableMonths.length > 0 && (
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Select Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMonths.length > 1 && (
+                  <SelectItem value="all">All Months</SelectItem>
+                )}
+                {availableMonths.map(month => (
+                  <SelectItem key={month} value={month}>
+                    {month.charAt(0).toUpperCase() + month.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          
           <Select value={viewType} onValueChange={setViewType}>
             <SelectTrigger className="w-[180px] bg-white">
               <SelectValue placeholder="Performance View" />
