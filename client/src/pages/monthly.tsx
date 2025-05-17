@@ -515,22 +515,42 @@ export default function Monthly() {
               
               {/* Line Item Breakdown Table */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Line Item Breakdown (Hierarchical View)</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Line Item Breakdown</CardTitle>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setDataViewMode('processed')}
+                      className={`px-3 py-1 text-sm rounded ${
+                        dataViewMode === 'processed' ? 'bg-primary text-white' : 'bg-muted'
+                      }`}
+                    >
+                      Processed View
+                    </button>
+                    <button
+                      onClick={() => setDataViewMode('raw')}
+                      className={`px-3 py-1 text-sm rounded ${
+                        dataViewMode === 'raw' ? 'bg-primary text-white' : 'bg-muted'
+                      }`}
+                    >
+                      Raw CSV Data
+                    </button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {selectedView === 'employees' && monthData.eNestedData.length > 0 ? (
-                    <HierarchicalView 
-                      data={monthData.eNestedData} 
-                      columnHeaders={columnHeaders} 
-                      isNested={true}
-                    />
-                  ) : selectedView === 'other' && monthData.oNestedData.length > 0 ? (
-                    <HierarchicalView 
-                      data={monthData.oNestedData} 
-                      columnHeaders={columnHeaders}
-                      isNested={true}
-                    />
+                  {dataViewMode === 'processed' ? (
+                    // Processed hierarchical view
+                    selectedView === 'employees' && monthData.eNestedData.length > 0 ? (
+                      <HierarchicalView 
+                        data={monthData.eNestedData} 
+                        columnHeaders={columnHeaders} 
+                        isNested={true}
+                      />
+                    ) : selectedView === 'other' && monthData.oNestedData.length > 0 ? (
+                      <HierarchicalView 
+                        data={monthData.oNestedData} 
+                        columnHeaders={columnHeaders}
+                        isNested={true}
+                      />
                   ) : columnHeaders.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
@@ -593,6 +613,18 @@ export default function Monthly() {
                     <div className="text-center p-4 text-muted-foreground">
                       No data available for this month.
                     </div>
+                  )
+                  ) : (
+                    // Raw CSV data view
+                    selectedView === 'employees' && monthlyData[monthLower]?.e?.raw?.length > 0 ? (
+                      <RawCSVView data={monthlyData[monthLower].e.raw} />
+                    ) : selectedView === 'other' && monthlyData[monthLower]?.o?.raw?.length > 0 ? (
+                      <RawCSVView data={monthlyData[monthLower].o.raw} />
+                    ) : (
+                      <div className="text-center p-4 text-muted-foreground">
+                        No raw CSV data available for this month.
+                      </div>
+                    )
                   )}
                 </CardContent>
               </Card>
