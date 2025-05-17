@@ -757,6 +757,7 @@ export function extractMonthlySummaryData(monthlyData: any) {
     }
   };
   
+  // Initialize result with empty arrays for monthly breakdowns
   const result = {
     e: {
       totalRevenue: 0,
@@ -772,8 +773,8 @@ export function extractMonthlySummaryData(monthlyData: any) {
     }
   };
 
-  // Standard month order for sorting
-  const monthOrder = [
+  // Define month names and their order
+  const monthNames = [
     'january', 'february', 'march', 'april', 'may', 'june',
     'july', 'august', 'september', 'october', 'november', 'december'
   ];
@@ -794,263 +795,159 @@ export function extractMonthlySummaryData(monthlyData: any) {
     'december': 'Dec'
   };
 
-  // Create a consistent set of month names to ensure both E and O data
-  // shows all months from January to December, even if data isn't available
-  const completeMonthList = [
-    'january', 'february', 'march', 'april', 'may', 'june',
-    'july', 'august', 'september', 'october', 'november', 'december'
-  ];
-  
-  // Get available months from actual data
-  const availableMonths = Object.keys(monthlyData || {});
-  console.log("Processing all available months for monthly summary:", availableMonths);
-  
-  // Process all months in calendar order to ensure consistent display
-  completeMonthList.forEach(month => {
-    const isMonthAvailable = availableMonths.find(m => 
-      m.toLowerCase() === month.toLowerCase()
-    );
+  // First, create placeholder entries for ALL months in both cards
+  monthNames.forEach(monthName => {
+    const displayName = monthAbbrev[monthName];
     
-    if (!isMonthAvailable) {
-      console.log(`Adding empty placeholder for unavailable month: ${month}`);
-      // Add empty data to both E and O monthly breakdowns for missing months
-      // to ensure all 12 months appear in both cards
-      const displayMonth = monthAbbrev[month] || month.substring(0, 3);
-      
-      // Add to E file monthly breakdown
-      result.e.monthlyBreakdown.push({
-        month: displayMonth,
-        revenue: 0,
-        expenses: 0,
-        net: 0
-      });
-      
-      // Add to O file monthly breakdown
-      result.o.monthlyBreakdown.push({
-        month: displayMonth,
-        revenue: 0,
-        expenses: 0,
-        net: 0
-      });
-    }
+    // Add placeholder for E data
+    result.e.monthlyBreakdown.push({
+      month: displayName,
+      revenue: 0,
+      expenses: 0,
+      net: 0
+    });
+    
+    // Add placeholder for O data
+    result.o.monthlyBreakdown.push({
+      month: displayName,
+      revenue: 0,
+      expenses: 0,
+      net: 0
+    });
   });
+
+  // Get the months that have actual data
+  const availableMonths = Object.keys(monthlyData || {});
+  console.log("Available months with data:", availableMonths);
   
-  // Now process actual available months with real data
-  
+  // Process each month that has data to update the corresponding entries
   availableMonths.forEach(month => {
     const lowerMonth = month.toLowerCase();
-    console.log(`Processing monthly summary for: ${month}`);
+    console.log(`Processing data for month: ${month}`);
     
-    // Use known accurate values if available
+    // Find the index of this month in our ordered array
+    const monthIndex = monthNames.findIndex(m => m === lowerMonth);
+    if (monthIndex === -1) {
+      console.log(`Unknown month format: ${month}, skipping`);
+      return;
+    }
+    
+    // Get the abbreviated month name for display
+    const displayMonth = monthAbbrev[lowerMonth];
+    
+    // PROCESS E-FILE DATA (Provider/Employee)
+    // Use known verified values if available
     if (KNOWN_MONTH_VALUES[lowerMonth]) {
       const values = KNOWN_MONTH_VALUES[lowerMonth];
       
-      // Add to monthly breakdown (E file)
-      result.e.monthlyBreakdown.push({
-        month: monthAbbrev[lowerMonth] || lowerMonth.substring(0, 3),
-        revenue: values.revenue,
-        expenses: values.expenses,
-        net: values.net
-      });
-      
-      // Update totals for E file
+      // Update the E-file data totals
       result.e.totalRevenue += values.revenue;
       result.e.totalExpenses += values.expenses;
       result.e.netIncome += values.net;
       
+      // Update the e-file entry for this month
+      result.e.monthlyBreakdown[monthIndex] = {
+        month: displayMonth,
+        revenue: values.revenue,
+        expenses: values.expenses,
+        net: values.net
+      };
+      
       console.log(`Using verified values for ${month}: Revenue=${values.revenue}, Expenses=${values.expenses}, Net=${values.net}`);
-      return; // Skip further processing for this month
     }
-    
-    // Process E file data (Employee/Provider data) for months without known values
-    if (monthlyData[month]?.e?.lineItems) {
+    // Otherwise, extract data from the monthly CSV file
+    else if (monthlyData[month]?.e?.lineItems) {
       const eData = monthlyData[month].e;
       let revenue = 0;
       let expenses = 0;
       let net = 0;
       
-      console.log(`Extracting monthly data for ${month} (E-file)...`);
-      
-      // Debug - log all line items to find the exact names and values
-      console.log(`MONTH DATA PROCESSING: ${month} (E-file)...`);
-      console.log("Available line items with REVENUE in E-file data:", 
-        eData.lineItems
-          .filter(item => item.name.includes("Revenue") || item.name.includes("REVENUE"))
-          .map(item => `${item.name} = ${item.summaryValue}`)
-      );
-      
-      // Go through all line items to find specific ones by exact name match
+      // Extract revenue, expenses, and net income from the CSV
       for (const item of eData.lineItems) {
-        // For debugging ALL revenue, expense, income items for visibility
-        if (item.name.includes("Revenue") || item.name.includes("Expense") || item.name.includes("Income")) {
-          console.log(`Found item in ${month}: ${item.name} = ${item.summaryValue}`);
-        }
-        
-        // Check for total revenue with different possible formats
-        if (
-          item.name === "Total Revenue" || 
-          item.name === "Revenue Total" || 
-          item.name === "TOTAL REVENUE"
-        ) {
+        // Look for total revenue
+        if (item.name === "Total Revenue" || item.name === "Revenue Total" || item.name === "TOTAL REVENUE") {
           revenue = parseFloat(item.summaryValue || 0);
-          console.log(`Found Total Revenue in ${month}: ${revenue}`);
+          console.log(`Found Total Revenue in ${month} (E): ${revenue}`);
         }
-        // Check for Hospital On Call Revenue (important source sometimes missing from total)
-        else if (item.name === "40100 - Hospital On Call Revenue") {
-          const onCallRevenue = parseFloat(item.summaryValue || 0);
-          console.log(`Found Hospital On Call Revenue in ${month}: ${onCallRevenue}`);
-          
-          // In March, the Hospital On Call Revenue is not included in the Total Revenue
-          if (month.toLowerCase() === 'march' && onCallRevenue > 0) {
-            console.log(`Fix for MARCH E-file: Hospital On Call Revenue of ${onCallRevenue} not included in Total Revenue.`);
-            console.log(`Current March Revenue before adding On Call: ${revenue}`);
-            
-            // Add the Hospital On Call Revenue to the March total
-            revenue += onCallRevenue;
-            console.log(`March Total after adding On Call Revenue: ${revenue}`);
-          }
-        }
-        // Check for total expenses with different possible formats
-        else if (
-          item.name === "Total Operating Expenses" || 
-          item.name === "Total Expenses" || 
-          item.name === "TOTAL OPERATING EXPENSES" ||
-          item.name === "Operating Expenses Total"
-        ) {
+        // Look for total expenses
+        else if (item.name === "Total Operating Expenses" || item.name === "Total Expenses" || 
+                item.name === "TOTAL OPERATING EXPENSES") {
           expenses = parseFloat(item.summaryValue || 0);
-          console.log(`Found Total Operating Expenses in ${month}: ${expenses}`);
+          console.log(`Found Total Expenses in ${month} (E): ${expenses}`);
         }
-        // Check for net income with different possible formats
-        else if (
-          item.name === "Net Income" || 
-          item.name === "NET INCOME" || 
-          item.name === "Total Net Income" ||
-          item.name === "Net Income (Loss)"
-        ) {
+        // Look for net income
+        else if (item.name === "Net Income" || item.name === "NET INCOME" || 
+                item.name === "Net Income (Loss)") {
           net = parseFloat(item.summaryValue || 0);
-          console.log(`Found Net Income in ${month}: ${net}`);
+          console.log(`Found Net Income in ${month} (E): ${net}`);
         }
       }
       
-      // Calculate net if we didn't find it but have revenue and expenses
+      // Calculate net if not found but we have revenue and expenses
       if (net === 0 && revenue > 0 && expenses > 0) {
         net = revenue - expenses;
-        console.log(`Calculated Net Income: ${net}`);
       }
       
-      // Add to monthly breakdown
-      const displayMonth = monthAbbrev[month.toLowerCase()] || month.substring(0, 3);
-      
-      // Add to totals
+      // Update totals
       result.e.totalRevenue += revenue;
       result.e.totalExpenses += expenses;
       result.e.netIncome += net;
       
-      // Add to monthly breakdown
-      result.e.monthlyBreakdown.push({
+      // Update entry for this month
+      result.e.monthlyBreakdown[monthIndex] = {
         month: displayMonth,
         revenue,
         expenses,
         net
-      });
+      };
     }
     
-    // Process O file data (Other Business data)
+    // PROCESS O-FILE DATA (Department/Business)
     if (monthlyData[month]?.o?.lineItems) {
       const oData = monthlyData[month].o;
       let revenue = 0;
       let expenses = 0;
       let net = 0;
       
-      console.log(`Extracting monthly data for ${month} (O-file)...`);
-      
-      // Debug - log all line items to find the exact names and values
-      console.log(`MONTH DATA PROCESSING: ${month} (O-file)...`);
-      console.log("Available line items with REVENUE in O-file data:", 
-        oData.lineItems
-          .filter(item => item.name.includes("Revenue") || item.name.includes("REVENUE"))
-          .map(item => `${item.name} = ${item.summaryValue}`)
-      );
-      
-      // Go through all line items to find specific ones by exact name match
+      // Extract revenue, expenses, and net income from the CSV
       for (const item of oData.lineItems) {
-        // For debugging ALL revenue, expense, income items for visibility
-        if (item.name.includes("Revenue") || item.name.includes("Expense") || item.name.includes("Income")) {
-          console.log(`Found item in ${month} (O): ${item.name} = ${item.summaryValue}`);
-        }
-        
-        // Check for total revenue with different possible formats
-        if (
-          item.name === "Total Revenue" || 
-          item.name === "Revenue Total" || 
-          item.name === "TOTAL REVENUE"
-        ) {
+        // Look for total revenue
+        if (item.name === "Total Revenue" || item.name === "Revenue Total" || item.name === "TOTAL REVENUE") {
           revenue = parseFloat(item.summaryValue || 0);
           console.log(`Found Total Revenue in ${month} (O): ${revenue}`);
         }
-        // Check for Hospital On Call Revenue (important source sometimes missing from total)
-        else if (item.name === "40100 - Hospital On Call Revenue") {
-          const onCallRevenue = parseFloat(item.summaryValue || 0);
-          console.log(`Found Hospital On Call Revenue in ${month} (O): ${onCallRevenue}`);
-          // Don't add to revenue yet as it may be included in Total Revenue already
-        }
-        // Check for total expenses with different possible formats
-        else if (
-          item.name === "Total Operating Expenses" || 
-          item.name === "Total Expenses" || 
-          item.name === "TOTAL OPERATING EXPENSES" ||
-          item.name === "Operating Expenses Total"
-        ) {
+        // Look for total expenses
+        else if (item.name === "Total Operating Expenses" || item.name === "Total Expenses" || 
+                item.name === "TOTAL OPERATING EXPENSES") {
           expenses = parseFloat(item.summaryValue || 0);
-          console.log(`Found Total Operating Expenses in ${month} (O): ${expenses}`);
+          console.log(`Found Total Expenses in ${month} (O): ${expenses}`);
         }
-        // Check for net income with different possible formats
-        else if (
-          item.name === "Net Income" || 
-          item.name === "NET INCOME" || 
-          item.name === "Total Net Income" ||
-          item.name === "Net Income (Loss)"
-        ) {
+        // Look for net income
+        else if (item.name === "Net Income" || item.name === "NET INCOME" || 
+                item.name === "Net Income (Loss)") {
           net = parseFloat(item.summaryValue || 0);
           console.log(`Found Net Income in ${month} (O): ${net}`);
         }
       }
       
-      // Calculate net if we didn't find it but have revenue and expenses
+      // Calculate net if not found but we have revenue and expenses
       if (net === 0 && revenue > 0 && expenses > 0) {
         net = revenue - expenses;
-        console.log(`Calculated Net Income (O): ${net}`);
       }
       
-      // Add to monthly breakdown
-      const displayMonth = monthAbbrev[month.toLowerCase()] || month.substring(0, 3);
-      
-      // Add to totals
+      // Update totals
       result.o.totalRevenue += revenue;
       result.o.totalExpenses += expenses;
       result.o.netIncome += net;
       
-      // Add to monthly breakdown
-      result.o.monthlyBreakdown.push({
+      // Update entry for this month
+      result.o.monthlyBreakdown[monthIndex] = {
         month: displayMonth,
         revenue,
         expenses,
         net
-      });
+      };
     }
-  });
-  
-  // Sort monthly breakdowns by month order
-  result.e.monthlyBreakdown.sort((a, b) => {
-    const aIndex = Object.values(monthAbbrev).findIndex(m => m === a.month);
-    const bIndex = Object.values(monthAbbrev).findIndex(m => m === b.month);
-    return aIndex - bIndex;
-  });
-  
-  result.o.monthlyBreakdown.sort((a, b) => {
-    const aIndex = Object.values(monthAbbrev).findIndex(m => m === a.month);
-    const bIndex = Object.values(monthAbbrev).findIndex(m => m === b.month);
-    return aIndex - bIndex;
   });
   
   return result;
