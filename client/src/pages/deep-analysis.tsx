@@ -104,16 +104,15 @@ const DeepAnalysis = () => {
           
           // Add to result if we have data
           result.push({
-              provider,
-              month,
-              fileType: 'Doctor',
-              type: 'e',
-              revenue,
-              expenses,
-              netIncome,
-              profitMargin: revenue > 0 ? (netIncome / revenue) * 100 : 0
-            });
-          }
+            provider,
+            month,
+            fileType: 'Doctor',
+            type: 'e',
+            revenue,
+            expenses,
+            netIncome,
+            profitMargin: revenue > 0 ? (netIncome / revenue) * 100 : 0
+          });
         });
       }
       
@@ -242,6 +241,11 @@ const DeepAnalysis = () => {
   
   // Top performing doctors by revenue
   const topDoctors = useMemo(() => {
+    if (!doctorData || !Array.isArray(doctorData) || doctorData.length === 0) {
+      console.warn("No doctor data available for top doctors");
+      return [];
+    }
+    
     return [...doctorData]
       .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 10);
