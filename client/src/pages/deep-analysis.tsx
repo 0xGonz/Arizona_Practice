@@ -402,7 +402,7 @@ const DeepAnalysis = () => {
       console.log(`Month: ${month} - Revenue: ${eRevenue + oRevenue}, Expenses: ${eExpenses + oExpenses}, NetIncome: ${eNetIncome + oNetIncome}`);
       
       return {
-        month,
+        month: month.charAt(0).toUpperCase() + month.slice(1),
         doctorRevenue: eRevenue,
         doctorExpenses: eExpenses,
         doctorNetIncome: eNetIncome,
