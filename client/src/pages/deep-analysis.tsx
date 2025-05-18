@@ -630,8 +630,8 @@ const DeepAnalysis = () => {
                       <Bar 
                         dataKey={(entry) => {
                           // Find the payroll amount for this month
-                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
-                          const businessPayroll = payrollData?.businessPayroll || 0;
+                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
+                          const businessPayroll = payrollData ? payrollData.businessPayroll : 0;
                           // Return the amount that represents only non-payroll expenses
                           return Math.max(0, entry.businessExpenses - businessPayroll);
                         }}
@@ -641,8 +641,8 @@ const DeepAnalysis = () => {
                       />
                       <Bar 
                         dataKey={(entry) => {
-                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
-                          return payrollData?.businessPayroll || 0;
+                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
+                          return payrollData ? payrollData.businessPayroll : 0;
                         }}
                         name="Business Payroll" 
                         fill={COLORS.payrollBusiness} 
@@ -665,8 +665,8 @@ const DeepAnalysis = () => {
                       <Bar 
                         dataKey={(entry) => {
                           // Find the payroll amount for this month
-                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
-                          const totalPayroll = (payrollData?.doctorPayroll || 0) + (payrollData?.businessPayroll || 0);
+                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
+                          const totalPayroll = payrollData ? (payrollData.doctorPayroll + payrollData.businessPayroll) : 0;
                           // Return the amount that represents only non-payroll expenses
                           return Math.max(0, entry.totalExpenses - totalPayroll);
                         }}
@@ -676,9 +676,9 @@ const DeepAnalysis = () => {
                       />
                       <Bar 
                         dataKey={(entry) => {
-                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
                           // Calculate the sum of doctor and business payroll to ensure we get accurate numbers
-                          return (payrollData?.doctorPayroll || 0) + (payrollData?.businessPayroll || 0);
+                          return payrollData ? (payrollData.doctorPayroll + payrollData.businessPayroll) : 0;
                         }} 
                         name="Total Payroll" 
                         fill={COLORS.payroll} 
