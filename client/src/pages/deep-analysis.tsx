@@ -607,12 +607,12 @@ const DeepAnalysis = () => {
                   <Legend />
                   <Bar 
                     dataKey="revenue" 
-                    name="Revenue" 
+                    name="Total Revenue" 
                     fill={COLORS.revenue}
                   />
                   <Bar 
                     dataKey="otherExpenses"
-                    name="Other Expenses" 
+                    name="Total Operating Expenses" 
                     fill={COLORS.expenses} 
                     stackId="expenses" 
                   />
