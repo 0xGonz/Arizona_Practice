@@ -362,15 +362,30 @@ const DeepAnalysis = () => {
           console.log(`Warning: 'Net Income' not found in O file for ${month}`);
         }
 
-        // Find the 'Total Payroll and Related Expense' line item
+        // Find the 'Total Payroll and Related Expenses' line item - expanded pattern matching
         const payrollLine = oData.lineItems.find(
-          item => item.name === "Total Payroll and Related Expense" || 
+          item => item.name === "Total Payroll and Related Expenses" || 
+                 item.name === "Total Payroll & Related Expenses" ||
+                 item.name === "Total Payroll and Related Expense" || 
                  item.name === "Total Payroll & Related Expense" ||
-                 (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
+                 (item.name.toLowerCase().includes("total") && 
+                  item.name.toLowerCase().includes("payroll") && 
+                  item.name.toLowerCase().includes("related"))
         );
         if (payrollLine) {
-          businessPayroll = payrollLine.summaryValue || 0;
-          console.log(`Found O Payroll expense in ${month}: ${businessPayroll}`);
+          businessPayroll = Math.abs(payrollLine.summaryValue || payrollLine.total || 0);
+          console.log(`Found O Payroll expense in ${month}: ${businessPayroll} from line item '${payrollLine.name}'`);
+        } else {
+          // Try to find any payroll-related line item as a fallback
+          const anyPayrollLine = oData.lineItems.find(
+            item => item.name.toLowerCase().includes("payroll")
+          );
+          if (anyPayrollLine) {
+            businessPayroll = Math.abs(anyPayrollLine.summaryValue || anyPayrollLine.total || 0);
+            console.log(`Found fallback O Payroll expense in ${month}: ${businessPayroll} from line item '${anyPayrollLine.name}'`);
+          } else {
+            console.log(`No payroll line found in O file for ${month}`);
+          }
         }
         
         console.log(`Found Revenue for O data in ${month}: ${businessRevenue}`);
