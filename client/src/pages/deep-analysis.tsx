@@ -35,6 +35,7 @@ const DeepAnalysis = () => {
   // Get available months and sort them chronologically (January to December)
   const availableMonths = useMemo(() => {
     const months = getAvailableMonths();
+    console.log("Available months in data store:", months);
     
     // Define month order for proper sorting
     const monthOrder = {
@@ -53,11 +54,14 @@ const DeepAnalysis = () => {
     };
     
     // Sort months chronologically
-    return months.sort((a, b) => {
+    const sortedMonths = months.sort((a, b) => {
       const aMonth = a.toLowerCase();
       const bMonth = b.toLowerCase();
       return monthOrder[aMonth] - monthOrder[bMonth];
     });
+
+    console.log("Sorted months:", sortedMonths);
+    return sortedMonths;
   }, [getAvailableMonths]);
   const [selectedView, setSelectedView] = useState<'doctors' | 'business'>('doctors');
 
@@ -495,22 +499,22 @@ const DeepAnalysis = () => {
           <h2 className="text-2xl font-bold">Comprehensive Financial Performance</h2>
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
             <button 
+              className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'combined' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setDataView('combined')}
+            >
+              Total (E+O)
+            </button>
+            <button 
               className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'doctor' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               onClick={() => setDataView('doctor')}
             >
-              Doctors (E)
+              Doctor Data (E)
             </button>
             <button 
               className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'business' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               onClick={() => setDataView('business')}
             >
-              Business (O)
-            </button>
-            <button 
-              className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'combined' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={() => setDataView('combined')}
-            >
-              Combined
+              Business Data (O)
             </button>
           </div>
         </div>
