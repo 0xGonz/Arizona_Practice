@@ -362,10 +362,23 @@ export const useStore = create<DataStore>((set, get) => ({
     // DEBUG: Print out all line items to see exact names available
     console.log(`${month} ${fileType} file line items:`, data?.lineItems.map(item => item.name));
     
-    // DEBUG: List all available providers for this month/file type
-    if (data?.lineItems?.length > 0 && data.lineItems[0].entityValues) {
-      console.log(`All available ${fileType} providers in ${month}:`, 
-                  Object.keys(data.lineItems[0].entityValues));
+    // DEBUG: List all available providers for this month/file type and log each one clearly
+    if (data?.lineItems?.length > 0 && data.lineItems[0]?.entityValues) {
+      const availableProviders = Object.keys(data.lineItems[0].entityValues);
+      console.log(`All available ${fileType} providers in ${month}:`, availableProviders);
+      
+      // Specifically log if we're looking for the exact business units we want
+      if (fileType === 'o') {
+        const targetBusinessUnits = [
+          'MedShip', 'Therapy, Physical', 'Imaging', 'Pharmacy', 'MRI', 
+          'DME', 'NXT STIM', 'UDA', 'Procedure Charges', 'ProMed'
+        ];
+        
+        targetBusinessUnits.forEach(unit => {
+          const found = availableProviders.includes(unit);
+          console.log(`Business Unit "${unit}" available in ${month}: ${found ? 'YES' : 'NO'}`);
+        });
+      }
     }
     
     // First and foremost, look specifically for "Total Payroll and Related Expense"

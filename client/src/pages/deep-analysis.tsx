@@ -187,9 +187,52 @@ const DeepAnalysis = () => {
 
   // Get top businesses by revenue
   const topBusinesses = useMemo(() => {
-    // Group businesses by name and sum their metrics
+    // Debug available business units
+    console.log("All business providers:", providerData.businessData.map(b => b.provider));
+    
+    // Create a mapping of standardized business unit names to their possible variations in CSV files
+    const businessNameMappings = {
+      'MedShip': ['medship', 'med ship', 'medship,inc', 'med-ship'],
+      'Therapy, Physical': ['therapy', 'physical', 'therapy physical', 'physical therapy'],
+      'Imaging': ['imaging', 'image', 'img'],
+      'Pharmacy': ['pharmacy', 'pharm', 'rx', 'pharma'],
+      'MRI': ['mri', 'm.r.i.', 'magnetic'],
+      'DME': ['dme', 'd.m.e.', 'durable', 'equipment'],
+      'NXT STIM': ['nxt', 'stim', 'nxtstim', 'nxt-stim'],
+      'UDA': ['uda', 'u.d.a.', 'urgent', 'urgent delivery'],
+      'Procedure Charges': ['procedure', 'procedures', 'proc', 'charges'],
+      'ProMed': ['promed', 'pro med', 'pro-med', 'prof med']
+    };
+    
+    // Function to standardize business names
+    const standardizeBusinessName = (name) => {
+      const nameLower = name.toLowerCase();
+      
+      for (const [standard, variations] of Object.entries(businessNameMappings)) {
+        if (variations.some(v => nameLower.includes(v))) {
+          return standard;
+        }
+      }
+      
+      // If no match found, return the original name
+      return name;
+    };
+    
+    // First standardize all business names
+    const standardizedBusinessData = providerData.businessData.map(business => ({
+      ...business,
+      originalName: business.provider,
+      provider: standardizeBusinessName(business.provider)
+    }));
+    
+    // Log standardized names for debugging
+    console.log("Standardized business names:", standardizedBusinessData.map(b => 
+      `${b.originalName} -> ${b.provider}`
+    ));
+    
+    // Group businesses by standardized name and sum their metrics
     const businessMap = new Map();
-    providerData.businessData.forEach(business => {
+    standardizedBusinessData.forEach(business => {
       if (!businessMap.has(business.provider)) {
         businessMap.set(business.provider, {
           provider: business.provider,
@@ -219,28 +262,19 @@ const DeepAnalysis = () => {
       }
     });
     
-    // Create a predefined list of business units to ensure they all appear
-    const requiredBusinessUnits = [
-      'MedShip',
-      'Therapy, Physical',
-      'Imaging',
-      'Pharmacy',
-      'MRI',
-      'DME',
-      'NXT STIM',
-      'UDA',
-      'Procedure Charges',
-      'ProMed'
-    ];
+    // The standard list of business units we want to display
+    const requiredBusinessUnits = Object.keys(businessNameMappings);
     
-    // Map of business names to their data
-    const businessDataMap = new Map(Array.from(businessMap.values()).map(b => [b.provider, b]));
+    // Debug what we found after standardization
+    console.log("Found business units after standardization:", 
+      Array.from(businessMap.keys()).join(', ')
+    );
     
     // Create the final array with all required business units
     return requiredBusinessUnits.map(unitName => {
       // If we have data for this unit, use it
-      if (businessDataMap.has(unitName)) {
-        return businessDataMap.get(unitName);
+      if (businessMap.has(unitName)) {
+        return businessMap.get(unitName);
       }
       // Otherwise create placeholder with zero values
       return {
