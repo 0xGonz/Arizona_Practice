@@ -262,43 +262,62 @@ const DeepAnalysis = () => {
       if (monthData?.e) {
         const eData = monthData.e;
         
-        // Find the 'Total Revenue' line item
+        // Find the 'Total Revenue' line item - EXACT match
         const totalRevenueLine = eData.lineItems.find(
-          item => item.name.toLowerCase().includes('total revenue')
+          item => item.name === 'Total Revenue'
         );
         if (totalRevenueLine) {
-          doctorRevenue = totalRevenueLine.total || 0;
+          doctorRevenue = Math.abs(totalRevenueLine.summaryValue || totalRevenueLine.total || 0);
+          console.log(`Found Revenue for E data in ${month}: ${doctorRevenue}`);
         }
         
-        // Find the 'Total Expenses' line item
+        // Find the 'Total Operating Expenses' line item - EXACT match
         const totalExpensesLine = eData.lineItems.find(
-          item => item.name.toLowerCase().includes('total expenses')
+          item => item.name === 'Total Operating Expenses'
         );
         if (totalExpensesLine) {
-          doctorExpenses = totalExpensesLine.total || 0;
+          doctorExpenses = Math.abs(totalExpensesLine.summaryValue || totalExpensesLine.total || 0);
+          console.log(`Found Expenses for E data in ${month}: ${doctorExpenses}`);
         }
         
-        // Find the 'Net Income' line item or calculate it
+        // Find the 'Net Income' line item - EXACT match
         const netIncomeLine = eData.lineItems.find(
-          item => item.name.toLowerCase() === 'net income'
+          item => item.name === 'Net Income'
         );
         if (netIncomeLine) {
-          doctorNetIncome = netIncomeLine.total || 0;
+          doctorNetIncome = Math.abs(netIncomeLine.summaryValue || netIncomeLine.total || 0);
+          console.log(`Found Net Income for E data in ${month}: ${doctorNetIncome}`);
         } else {
+          // Only as fallback - calculate it
           doctorNetIncome = doctorRevenue - doctorExpenses;
           console.log(`Warning: 'Net Income' not found in E file for ${month}`);
           console.log(`Calculated Net Income for E data in ${month}: ${doctorNetIncome} (Revenue ${doctorRevenue} - Expenses ${doctorExpenses})`);
         }
 
-        // Find the 'Total Payroll and Related Expense' line item
+        // Find the 'Total Payroll and Related Expenses' line item - expanded pattern matching
         const payrollLine = eData.lineItems.find(
-          item => item.name === "Total Payroll and Related Expense" || 
+          item => item.name === "Total Payroll and Related Expenses" || 
+                 item.name === "Total Payroll & Related Expenses" ||
+                 item.name === "Total Payroll and Related Expense" || 
                  item.name === "Total Payroll & Related Expense" ||
-                 (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
+                 (item.name.toLowerCase().includes("total") && 
+                  item.name.toLowerCase().includes("payroll") && 
+                  item.name.toLowerCase().includes("related"))
         );
         if (payrollLine) {
-          doctorPayroll = payrollLine.summaryValue || 0;
-          console.log(`Found E Payroll expense in ${month}: ${doctorPayroll}`);
+          doctorPayroll = Math.abs(payrollLine.summaryValue || payrollLine.total || 0);
+          console.log(`Found E Payroll expense in ${month}: ${doctorPayroll} from line item '${payrollLine.name}'`);
+        } else {
+          // Try to find any payroll-related line item as a fallback
+          const anyPayrollLine = eData.lineItems.find(
+            item => item.name.toLowerCase().includes("payroll")
+          );
+          if (anyPayrollLine) {
+            doctorPayroll = Math.abs(anyPayrollLine.summaryValue || anyPayrollLine.total || 0);
+            console.log(`Found fallback E Payroll expense in ${month}: ${doctorPayroll} from line item '${anyPayrollLine.name}'`);
+          } else {
+            console.log(`No payroll line found in E file for ${month}`);
+          }
         }
         
         console.log(`Found Revenue for E data in ${month}: ${doctorRevenue}`);
@@ -312,29 +331,33 @@ const DeepAnalysis = () => {
         
         console.log(`O file total line items for ${month}:`, oData.lineItems.map(i => i.name));
         
-        // Find the 'Total Revenue' line item
+        // Find the 'Total Revenue' line item - EXACT match
         const totalRevenueLine = oData.lineItems.find(
-          item => item.name.toLowerCase().includes('total revenue')
+          item => item.name === 'Total Revenue'
         );
         if (totalRevenueLine) {
-          businessRevenue = totalRevenueLine.total || 0;
+          businessRevenue = Math.abs(totalRevenueLine.summaryValue || totalRevenueLine.total || 0);
+          console.log(`Found Revenue for O data in ${month}: ${businessRevenue}`);
         }
         
-        // Find the 'Total Expenses' line item
+        // Find the 'Total Operating Expenses' line item - EXACT match
         const totalExpensesLine = oData.lineItems.find(
-          item => item.name.toLowerCase().includes('total expenses')
+          item => item.name === 'Total Operating Expenses'
         );
         if (totalExpensesLine) {
-          businessExpenses = totalExpensesLine.total || 0;
+          businessExpenses = Math.abs(totalExpensesLine.summaryValue || totalExpensesLine.total || 0);
+          console.log(`Found Expenses for O data in ${month}: ${businessExpenses}`);
         }
         
-        // Find the 'Net Income' line item or calculate it
+        // Find the 'Net Income' line item - EXACT match
         const netIncomeLine = oData.lineItems.find(
-          item => item.name.toLowerCase() === 'net income'
+          item => item.name === 'Net Income'
         );
         if (netIncomeLine) {
-          businessNetIncome = netIncomeLine.total || 0;
+          businessNetIncome = Math.abs(netIncomeLine.summaryValue || netIncomeLine.total || 0);
+          console.log(`Found Net Income for O data in ${month}: ${businessNetIncome}`);
         } else {
+          // Only as fallback - calculate it
           businessNetIncome = businessRevenue - businessExpenses;
           console.log(`Warning: 'Net Income' not found in O file for ${month}`);
         }
