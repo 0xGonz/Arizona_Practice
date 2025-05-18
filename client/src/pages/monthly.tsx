@@ -368,15 +368,30 @@ export default function Monthly() {
           columnValues[header] = totalValue;
         });
         
-        // Use summaryValue for the total
-        let totalSummaryValue = 0;
+        // Calculate the total by summing up individual entity values
+        // This ensures that even if summaryValue is 0, we'll still get an accurate total
         matchingRows.forEach(row => {
-          if (typeof row.summaryValue === 'number') {
-            totalSummaryValue += row.summaryValue;
+          let rowTotal = 0;
+          
+          // Sum up all entity values for this row
+          if (row.entityValues) {
+            Object.values(row.entityValues).forEach((value: any) => {
+              if (typeof value === 'number') {
+                rowTotal += value;
+              }
+            });
+            
+            // If the summaryValue is 0 but we calculated a positive total from entities,
+            // use the calculated total instead
+            const effectiveValue = (row.summaryValue === 0 && rowTotal > 0) 
+              ? rowTotal 
+              : (typeof row.summaryValue === 'number' ? row.summaryValue : 0);
+              
+            // Add to the overall total for this category
+            allEmployeeValues['All Employees'] = 
+              (allEmployeeValues['All Employees'] || 0) + effectiveValue;
           }
         });
-        
-        allEmployeeValues['All Employees'] = totalSummaryValue;
       } else {
         // Old format handling with direct column access
         monthData.columnHeaders.forEach(header => {
