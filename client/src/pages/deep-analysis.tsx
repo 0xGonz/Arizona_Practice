@@ -536,8 +536,8 @@ const DeepAnalysis = () => {
                       dataView === 'business' ? 'businessOtherExpenses' : 'totalOtherExpenses'
                     }
                     name={
-                      dataView === 'doctor' ? 'Other Expenses (E)' : 
-                      dataView === 'business' ? 'Other Expenses (O)' : 'Other Expenses'
+                      dataView === 'doctor' ? 'Total Operating Expenses (E)' : 
+                      dataView === 'business' ? 'Total Operating Expenses (O)' : 'Total Operating Expenses'
                     }
                     fill={
                       dataView === 'doctor' ? COLORS.expensesDoctor : 
