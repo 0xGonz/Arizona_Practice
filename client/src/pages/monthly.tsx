@@ -233,79 +233,74 @@ export default function Monthly() {
       return defaultMetrics;
     }
     
-    // DIRECT APPROACH: Just find these specific values in your CSV data
-    // This is the simplest approach that doesn't try to calculate anything
+    // First find the Total column - this is the most important step
+    console.log(`Looking for Total column value in line items`);
     
-    // These are the exact names from your CSV files
-    // First look for exact line item name matches
-    let revenueItem = lineItems.find(item => 
+    // Look for specific line items by their exact names - much more reliable
+    const revenueLineItem = lineItems.find(item => 
       item.name === 'Total Revenue' || 
       item.name === 'Total Service Revenue'
     );
     
-    let expensesItem = lineItems.find(item => 
+    const expensesLineItem = lineItems.find(item => 
       item.name === 'Total Operating Expenses' || 
       item.name === 'Total Expenses' ||
       item.name === 'Total Payroll and Related Expense' ||
       item.name === 'Payroll and Related Expense'
     );
     
-    let netIncomeItem = lineItems.find(item => 
+    const netIncomeLineItem = lineItems.find(item => 
       item.name === 'Net Income' || 
-      item.name === 'Net Income (Loss)'
+      item.name === 'Net Income (Loss)' ||
+      item.name === 'Net Operating Income'
     );
     
-    // If we didn't find the exact names, try case-insensitive search
-    if (!revenueItem) {
-      revenueItem = lineItems.find(item => 
-        item.name && item.name.toLowerCase().includes('total revenue')
-      );
-    }
-    
-    if (!expensesItem) {
-      expensesItem = lineItems.find(item => 
-        item.name && (
-          item.name.toLowerCase().includes('total operating expenses') ||
-          item.name.toLowerCase().includes('total payroll')
-        )
-      );
+    // Get the appropriate values for each from the Total column
+    // We use calculateTotalValue which prefers the Total column value
+    const getTotalColumnValue = (item: any): number => {
+      if (!item) return 0;
       
-      // If still not found, look for any expenses line item
-      if (!expensesItem) {
-        const possibleExpenses = lineItems.filter(item => 
-          item.name && (
-            item.name.toLowerCase().includes('expense') ||
-            item.name.toLowerCase().includes('payroll')
-          )
-        ).sort((a, b) => b.summaryValue - a.summaryValue);
-        
-        if (possibleExpenses.length > 0) {
-          expensesItem = possibleExpenses[0];
-        }
+      // First check if there's a Total column value
+      if (item && item.entityValues && item.entityValues['Total']) {
+        console.log(`Found Total column value for ${item.name}: ${item.entityValues['Total']}`);
+        return item.entityValues['Total'];
       }
-    }
+      
+      // Next check if there's an All Employees column value (common in monthly-e files)
+      if (item && item.entityValues && item.entityValues['All Employees']) {
+        console.log(`Found All Employees column value for ${item.name}: ${item.entityValues['All Employees']}`);
+        return item.entityValues['All Employees'];
+      }
+      
+      // Next try using the summaryValue which is also the Total column
+      if (item && typeof item.summaryValue === 'number' && item.summaryValue !== 0) {
+        console.log(`Using summaryValue (${item.summaryValue}) for ${item.name}`);
+        return item.summaryValue;
+      }
+      
+      // Finally sum the entity values as a last resort
+      if (item && item.entityValues) {
+        const sum = Object.values(item.entityValues).reduce((total: number, val: any) => {
+          return total + (typeof val === 'number' ? val : 0);
+        }, 0);
+        console.log(`Calculated sum of entity values for ${item.name}: ${sum}`);
+        return sum;
+      }
+      
+      return 0;
+    };
     
-    if (!netIncomeItem) {
-      netIncomeItem = lineItems.find(item => 
-        item.name && (
-          item.name.toLowerCase().includes('net income') ||
-          item.name.toLowerCase().includes('profit')
-        )
-      );
-    }
+    // Get the Total column values for our key financial metrics
+    const revenueAmount = getTotalColumnValue(revenueLineItem);
+    const expensesAmount = getTotalColumnValue(expensesLineItem);
+    const netIncomeAmount = getTotalColumnValue(netIncomeLineItem);
     
-    console.log(`Found Revenue Item: ${revenueItem?.name || 'None'}`);
-    console.log(`Found Expenses Item: ${expensesItem?.name || 'None'}`);
-    console.log(`Found Net Income Item: ${netIncomeItem?.name || 'None'}`);
+    console.log(`Found Revenue Item: ${revenueLineItem?.name || 'None'}`);
+    console.log(`Found Expenses Item: ${expensesLineItem?.name || 'None'}`);
+    console.log(`Found Net Income Item: ${netIncomeLineItem?.name || 'None'}`);
+    console.log(`Total Column Values - Revenue: ${revenueAmount}, Expenses: ${expensesAmount}, Net Income: ${netIncomeAmount}`);
     
-    // Just get the direct values from these line items - no calculations
-    const revenueAmount = revenueItem?.summaryValue || 0;
-    const expensesAmount = expensesItem?.summaryValue || 0;
-    const netIncomeAmount = netIncomeItem?.summaryValue || 0;
-    
-    console.log(`EXACT VALUES - Revenue: ${revenueAmount}, Expenses: ${expensesAmount}, Net Income: ${netIncomeAmount}`);
-    
-    // Only fall back to calculation if net income isn't found or is zero
+    // Only calculate net income as a fallback if we couldn't find it in the data
     const finalNetIncome = (netIncomeAmount === 0 && revenueAmount > 0 && expensesAmount > 0) 
       ? (revenueAmount - expensesAmount)
       : netIncomeAmount;
