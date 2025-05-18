@@ -314,12 +314,32 @@ export default function Monthly() {
         };
       }
       
-      // Extract matching rows
-      const matchingRows = data.filter(row => {
-        if (!row['Line Item']) return false;
-        const lineItem = row['Line Item'].toLowerCase();
-        return searchTerms.some(term => lineItem.includes(term.toLowerCase()));
-      });
+      // Check if using the new format with summaryValue and entityValues
+      const isNewFormat = data.length > 0 && 
+                         data[0].hasOwnProperty('summaryValue') && 
+                         data[0].hasOwnProperty('entityValues');
+      
+      let matchingRows;
+      
+      if (isNewFormat) {
+        // Use the new format data structure
+        matchingRows = data.filter(row => {
+          if (!row.name) return false;
+          const lineItem = row.name.toLowerCase();
+          return searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+        });
+        
+        console.log(`Found ${matchingRows.length} ${category} rows in new format`);
+      } else {
+        // Use the old format data structure
+        matchingRows = data.filter(row => {
+          if (!row['Line Item']) return false;
+          const lineItem = row['Line Item'].toLowerCase();
+          return searchTerms.some(term => lineItem.includes(term.toLowerCase()));
+        });
+        
+        console.log(`Found ${matchingRows.length} ${category} rows in old format`);
+      }
       
       if (matchingRows.length === 0) {
         return {
@@ -334,25 +354,51 @@ export default function Monthly() {
       const columnValues = {};
       const allEmployeeValues = {};
       
-      monthData.columnHeaders.forEach(header => {
-        let totalValue = 0;
-        
-        matchingRows.forEach(row => {
-          totalValue += safeExtractValue(row, header);
+      if (isNewFormat) {
+        // New format handling with entityValues
+        monthData.columnHeaders.forEach(header => {
+          let totalValue = 0;
+          
+          matchingRows.forEach(row => {
+            if (row.entityValues && typeof row.entityValues[header] === 'number') {
+              totalValue += row.entityValues[header];
+            }
+          });
+          
+          columnValues[header] = totalValue;
         });
         
-        columnValues[header] = totalValue;
-      });
-      
-      // If we have an "All Employees" column, use that for summary
-      if (data[0] && data[0]['All Employees'] !== undefined) {
-        let totalValue = 0;
-        
+        // Use summaryValue for the total
+        let totalSummaryValue = 0;
         matchingRows.forEach(row => {
-          totalValue += safeExtractValue(row, 'All Employees');
+          if (typeof row.summaryValue === 'number') {
+            totalSummaryValue += row.summaryValue;
+          }
         });
         
-        allEmployeeValues['All Employees'] = totalValue;
+        allEmployeeValues['All Employees'] = totalSummaryValue;
+      } else {
+        // Old format handling with direct column access
+        monthData.columnHeaders.forEach(header => {
+          let totalValue = 0;
+          
+          matchingRows.forEach(row => {
+            totalValue += safeExtractValue(row, header);
+          });
+          
+          columnValues[header] = totalValue;
+        });
+        
+        // If we have an "All Employees" column, use that for summary
+        if (data[0] && data[0]['All Employees'] !== undefined) {
+          let totalValue = 0;
+          
+          matchingRows.forEach(row => {
+            totalValue += safeExtractValue(row, 'All Employees');
+          });
+          
+          allEmployeeValues['All Employees'] = totalValue;
+        }
       }
       
       // Create category item with calculated values
