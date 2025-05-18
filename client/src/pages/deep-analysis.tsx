@@ -637,8 +637,8 @@ const DeepAnalysis = () => {
                     fill={COLORS.revenue}
                   />
                   <Bar 
-                    dataKey="expenses"
-                    name="Total Operating Expenses" 
+                    dataKey="otherExpenses"
+                    name="Other Operating Expenses" 
                     fill={COLORS.expenses} 
                     stackId="expenses" 
                   />
@@ -646,7 +646,7 @@ const DeepAnalysis = () => {
                     dataKey="payroll"
                     name="Total Payroll and Related Expense" 
                     fill={selectedView === 'doctors' ? COLORS.payrollDoctor : COLORS.payrollBusiness} 
-                    stackId="payroll-stack" 
+                    stackId="expenses" 
                   />
                   <Bar 
                     dataKey="netIncome" 
