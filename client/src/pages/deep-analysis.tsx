@@ -100,6 +100,8 @@ const DeepAnalysis = () => {
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
+          // Calculate what percentage of expenses is payroll
+          const payrollPercentage = expenses > 0 ? (payroll / expenses) * 100 : 0;
           
           doctorData.push({
             provider,
@@ -109,6 +111,7 @@ const DeepAnalysis = () => {
             payroll,
             otherExpenses: expenses - payroll,
             profitMargin,
+            payrollPercentage,
             month
           });
         });
@@ -139,6 +142,8 @@ const DeepAnalysis = () => {
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
+          // Calculate what percentage of expenses is payroll
+          const payrollPercentage = expenses > 0 ? (payroll / expenses) * 100 : 0;
           
           businessData.push({
             provider,
@@ -148,6 +153,7 @@ const DeepAnalysis = () => {
             payroll,
             otherExpenses: expenses - payroll,
             profitMargin,
+            payrollPercentage,
             month
           });
         });
@@ -631,7 +637,7 @@ const DeepAnalysis = () => {
                     fill={COLORS.revenue}
                   />
                   <Bar 
-                    dataKey="otherExpenses"
+                    dataKey="expenses"
                     name="Total Operating Expenses" 
                     fill={COLORS.expenses} 
                     stackId="expenses" 
@@ -640,7 +646,7 @@ const DeepAnalysis = () => {
                     dataKey="payroll"
                     name="Total Payroll and Related Expense" 
                     fill={selectedView === 'doctors' ? COLORS.payrollDoctor : COLORS.payrollBusiness} 
-                    stackId="expenses" 
+                    stackId="payroll-stack" 
                   />
                   <Bar 
                     dataKey="netIncome" 
