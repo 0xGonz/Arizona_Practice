@@ -465,7 +465,7 @@ const DeepAnalysis = () => {
     business: '#10b981', // Emerald for business data
     combined: '#f59e0b', // Amber for combined data
     expenses: '#ef4444', // Red for expenses
-    netIncome: '#3b82f6', // Blue for net income
+    netIncome: '#f59e0b', // Yellow/orange for net income
     revenue: '#8b5cf6', // Purple for revenue
     payroll: '#ec4899', // Pink for payroll
     payrollDoctor: '#9333ea', // Darker purple for doctor payroll
@@ -545,8 +545,8 @@ const DeepAnalysis = () => {
                   {dataView === 'doctor' && (
                     <>
                       <Bar dataKey="doctorRevenue" name="Doctor Revenue" fill={COLORS.revenue} />
-                      <Bar dataKey="doctorExpenses" name="Doctor Expenses" fill={COLORS.expenses} />
-                      <Bar dataKey="doctorPayroll" name="Doctor Payroll" fill={COLORS.payrollDoctor} />
+                      <Bar dataKey="doctorExpenses" name="Doctor Total Expenses" fill={COLORS.expenses} stackId="expenses" />
+                      <Bar dataKey="doctorPayroll" name="Doctor Payroll" fill={COLORS.payrollDoctor} stackId="expenses" />
                       <Line 
                         type="monotone" 
                         dataKey="doctorNetIncome" 
@@ -561,8 +561,8 @@ const DeepAnalysis = () => {
                   {dataView === 'business' && (
                     <>
                       <Bar dataKey="businessRevenue" name="Business Revenue" fill={COLORS.revenue} />
-                      <Bar dataKey="businessExpenses" name="Business Expenses" fill={COLORS.expenses} />
-                      <Bar dataKey="businessPayroll" name="Business Payroll" fill={COLORS.payrollBusiness} />
+                      <Bar dataKey="businessExpenses" name="Business Total Expenses" fill={COLORS.expenses} stackId="expenses" />
+                      <Bar dataKey="businessPayroll" name="Business Payroll" fill={COLORS.payrollBusiness} stackId="expenses" />
                       <Line 
                         type="monotone" 
                         dataKey="businessNetIncome" 
