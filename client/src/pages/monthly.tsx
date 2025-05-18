@@ -260,38 +260,57 @@ export default function Monthly() {
       item.name === 'Net Operating Income'
     );
     
-    // Get the appropriate values for each from the Total column
-    // We use calculateTotalValue which prefers the Total column value
+    // Enhanced function to get the correct Total column value
     const getTotalColumnValue = (item: any): number => {
-      if (!item) return 0;
-      
-      // First check if there's a Total column value
-      if (item && item.entityValues && item.entityValues['Total']) {
-        console.log(`Found Total column value for ${item.name}: ${item.entityValues['Total']}`);
-        return item.entityValues['Total'];
+      if (!item) {
+        console.log(`Item not found, returning 0`);
+        return 0;
       }
       
-      // Next check if there's an All Employees column value (common in monthly-e files)
-      if (item && item.entityValues && item.entityValues['All Employees']) {
-        console.log(`Found All Employees column value for ${item.name}: ${item.entityValues['All Employees']}`);
-        return item.entityValues['All Employees'];
-      }
+      console.log(`Examining item: ${item.name}, isTotal: ${item.isTotal}`);
+      console.log(`Item details:`, JSON.stringify({
+        name: item.name,
+        hasEntityValues: !!item.entityValues,
+        entityValueKeys: item.entityValues ? Object.keys(item.entityValues).join(', ') : 'none',
+        summaryValue: item.summaryValue,
+        isTotal: item.isTotal
+      }));
       
-      // Next try using the summaryValue which is also the Total column
-      if (item && typeof item.summaryValue === 'number' && item.summaryValue !== 0) {
-        console.log(`Using summaryValue (${item.summaryValue}) for ${item.name}`);
+      // FIRST PRIORITY: If this is a line item with isTotal flag, use its summary value directly
+      if (item.isTotal === true && typeof item.summaryValue === 'number') {
+        console.log(`Using isTotal item's summaryValue for ${item.name}: ${item.summaryValue}`);
         return item.summaryValue;
       }
       
-      // Finally sum the entity values as a last resort
-      if (item && item.entityValues) {
-        const sum = Object.values(item.entityValues).reduce((total: number, val: any) => {
-          return total + (typeof val === 'number' ? val : 0);
-        }, 0);
-        console.log(`Calculated sum of entity values for ${item.name}: ${sum}`);
-        return sum;
+      // Try finding the Total column specifically
+      if (item.entityValues && 'Total' in item.entityValues) {
+        console.log(`Found literal 'Total' column value for ${item.name}: ${item.entityValues['Total']}`);
+        return item.entityValues['Total'];
       }
       
+      // IMPORTANT: For monthly-e files, the "Total" is often in the "All Employees" column
+      if (item.entityValues && 'All Employees' in item.entityValues) {
+        console.log(`Found 'All Employees' column (equivalent to Total) for ${item.name}: ${item.entityValues['All Employees']}`);
+        return item.entityValues['All Employees'];
+      }
+      
+      // Fallback to using summaryValue
+      if (typeof item.summaryValue === 'number') {
+        console.log(`Using summaryValue for ${item.name}: ${item.summaryValue}`);
+        return item.summaryValue;
+      }
+      
+      // Last resort: calculate the total from all entity values
+      if (item.entityValues && Object.keys(item.entityValues).length > 0) {
+        const total = Object.values(item.entityValues).reduce((sum: number, val: any) => {
+          const numValue = typeof val === 'number' ? val : 0;
+          return sum + numValue;
+        }, 0);
+        console.log(`Calculated total from entity values for ${item.name}: ${total}`);
+        return total;
+      }
+      
+      console.log(`No valid value found for ${item.name}, returning 0`);
       return 0;
     };
     
