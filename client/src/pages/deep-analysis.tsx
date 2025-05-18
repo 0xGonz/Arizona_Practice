@@ -643,53 +643,88 @@ const DeepAnalysis = () => {
           <CardContent className="p-4">
             <div className="h-[600px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
+                <ComposedChart
                   data={selectedView === 'doctors' ? 
-                    // Use the top 10 doctors by revenue directly from the consolidated data
-                    topDoctors.slice(0, 10)
+                    // Filter for specific doctors from E files
+                    topDoctors.filter(d => [
+                      'Dr Heiner', 'Dr Noori', 'Dr Diep', 'Dr Anderson', 'Dr Killian', 
+                      'Dr Wright', 'Barnes, James', 'Aggarwal, Nitish', 'Sitzer, Tiarra', "O'Haver"
+                    ].includes(d.provider))
                     : 
-                    // Use the top 10 business units by revenue directly from the consolidated data
-                    topBusinesses.slice(0, 10)
+                    // Filter for specific business units from O files
+                    topBusinesses.filter(b => [
+                      'MedShip', 'Therapy, Physical', 'Imaging', 'Pharmacy', 'MRI', 
+                      'DME', 'NXT STIM', 'UDA', 'Procedure Charges', 'ProMed'
+                    ].includes(b.provider))
                   }
                   margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis dataKey="provider" interval={0} angle={-45} textAnchor="end" height={100} />
-                  <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                  <YAxis yAxisId="left" tickFormatter={(value) => formatCurrency(value)} />
+                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} />
                   <Tooltip 
                     formatter={(value, name) => {
-                      if (name === 'revenue') return formatCurrency(value as number);
-                      if (name === 'expenses') return formatCurrency(value as number);
-                      if (name === 'netIncome') return formatCurrency(value as number);
-                      if (name === 'profitMargin') return `${(value as number).toFixed(1)}%`;
+                      if (name === 'Total Revenue' || name === 'Total Operating Expenses' || 
+                          name === 'Total Payroll' || name === 'Net Income') 
+                        return formatCurrency(value as number);
+                      if (name === 'Profit Margin %') return `${(value as number).toFixed(1)}%`;
                       return value;
                     }}
-                    labelFormatter={(label) => `Provider: ${label}`}
+                    labelFormatter={(label) => selectedView === 'doctors' ? `Provider: ${label}` : `Business Unit: ${label}`}
                   />
                   <Legend />
+                  
+                  {/* Revenue Bar */}
                   <Bar 
                     dataKey="revenue" 
                     name="Total Revenue" 
                     fill={COLORS.revenue}
+                    yAxisId="left"
                   />
+                  
+                  {/* Operating Expenses Bar Stack */}
                   <Bar 
                     dataKey="otherExpenses"
-                    name="Other Operating Expenses" 
-                    fill={COLORS.expenses} 
+                    name="Total Operating Expenses" 
+                    fill={selectedView === 'doctors' ? COLORS.expensesDoctor : COLORS.expensesBusiness}
+                    yAxisId="left"
                     stackId="expenses" 
                   />
+                  
+                  {/* Payroll Bar - Stacked on top of Other Expenses */}
                   <Bar 
                     dataKey="payroll"
-                    name="Total Payroll and Related Expense" 
-                    fill={selectedView === 'doctors' ? COLORS.payrollDoctor : COLORS.payrollBusiness} 
+                    name="Total Payroll" 
+                    fill={selectedView === 'doctors' ? COLORS.payrollDoctor : COLORS.payrollBusiness}
+                    yAxisId="left" 
                     stackId="expenses" 
                   />
-                  <Bar 
+                  
+                  {/* Net Income Line */}
+                  <Line
+                    type="monotone"
                     dataKey="netIncome" 
                     name="Net Income" 
-                    fill={COLORS.netIncome}
+                    stroke={COLORS.netIncome}
+                    strokeWidth={3}
+                    yAxisId="left"
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
-                </BarChart>
+                  
+                  {/* Profit Margin Line */}
+                  <Line
+                    type="monotone"
+                    dataKey="profitMargin"
+                    name="Profit Margin %"
+                    stroke="#8884d8"
+                    strokeDasharray="5 5"
+                    strokeWidth={2}
+                    yAxisId="right"
+                    dot={{ r: 4 }}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
