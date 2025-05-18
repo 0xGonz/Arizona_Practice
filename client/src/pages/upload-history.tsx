@@ -385,27 +385,29 @@ export default function UploadHistory() {
                                             </Button>
                                           </div>
                                           
-                                          <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                                          <div className="max-h-80 overflow-y-auto relative">
                                             {fileData && fileData.raw && fileData.raw.length > 0 ? (
                                               <React.Fragment key={`monthly-data-${month}-${index}`}>
-                                                <table className="w-full border-collapse text-sm">
-                                                  <thead>
-                                                    <tr className="bg-slate-100">
-                                                      {Object.keys(fileData.raw[0]).map((header, idx) => (
-                                                        <th key={idx} className="p-2 text-left border-b font-medium">{header}</th>
-                                                      ))}
-                                                    </tr>
-                                                  </thead>
-                                                  <tbody>
-                                                    {fileData.raw.slice(0, 10).map((row, rowIdx) => (
-                                                      <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                                                        {Object.values(row).map((cell, cellIdx) => (
-                                                          <td key={cellIdx} className="p-2 border-b">{String(cell)}</td>
+                                                <div className="overflow-x-auto pb-4" style={{ maxWidth: '100%' }}>
+                                                  <table className="min-w-full border-collapse text-sm table-fixed" style={{ width: 'auto' }}>
+                                                    <thead>
+                                                      <tr className="bg-slate-100 sticky top-0 z-10">
+                                                        {Object.keys(fileData.raw[0]).map((header, idx) => (
+                                                          <th key={idx} className="p-2 text-left border-b font-medium whitespace-nowrap" style={{ minWidth: '150px' }}>{header}</th>
                                                         ))}
                                                       </tr>
-                                                    ))}
-                                                  </tbody>
-                                                </table>
+                                                    </thead>
+                                                    <tbody>
+                                                      {fileData.raw.slice(0, 10).map((row, rowIdx) => (
+                                                        <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                                          {Object.values(row).map((cell, cellIdx) => (
+                                                            <td key={cellIdx} className="p-2 border-b whitespace-nowrap overflow-hidden text-ellipsis">{String(cell)}</td>
+                                                          ))}
+                                                        </tr>
+                                                      ))}
+                                                    </tbody>
+                                                  </table>
+                                                </div>
                                                 
                                                 {fileData.raw.length > 10 && (
                                                   <div className="mt-2 text-sm text-neutral-500 text-center">
