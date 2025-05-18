@@ -1,0 +1,70 @@
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at UploadHistory (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/upload-history.tsx?t=1747579188827:30:103)
+    at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f15596:323:16)
+    at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f15596:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx?t=1747579236366:20:34)
+    at Router
+    at DataInitializer (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/App.tsx?t=1747579236366&v=a6DMO-awTAiaVz_qFzPEF:35:28)
+    at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-P23V4H6I.js?v=95f15596:48:15)
+    at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=95f15596:61:5)
+    at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=95f15596:2805:3)
+    at App
+    at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=95f15596:44:25)
+    at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=95f15596:42:18)
+Successfully loaded CSV content for upload ID 29, found 205 rows
+Processing 205 rows of monthly-e data for january
+Processing monthly-e data for january with 205 rows
+Found 13 entity columns
+Total rows to process: 205 for january monthly-e
+Successfully processed 205 rows for january monthly-e
+Final line item count: 146
+Error saving data to localStorage: 
+DOMException {}
+
+Loading monthly-o data for january from upload ID 30 (most recent of 2)
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at UploadHistory (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/upload-history.tsx?t=1747579188827:30:103)
+    at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f15596:323:16)
+    at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f15596:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx?t=1747579236366:20:34)
+    at Router
+    at DataInitializer (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/App.tsx?t=1747579236366&v=a6DMO-awTAiaVz_qFzPEF:35:28)
+    at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-P23V4H6I.js?v=95f15596:48:15)
+    at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=95f15596:61:5)
+    at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=95f15596:2805:3)
+    at App
+    at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=95f15596:44:25)
+    at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=95f15596:42:18)
+Successfully loaded CSV content for upload ID 30, found 205 rows
+Processing 205 rows of monthly-o data for january
+Processing monthly-o data for january with 205 rows
+Found 12 entity columns
+Total rows to process: 205 for january monthly-o
+Successfully processed 205 rows for january monthly-o
+Final line item count: 146
+Error saving data to localStorage: 
+DOMException {}
+
+Completed initial data load from server
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at UploadHistory (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/pages/upload-history.tsx?t=1747579188827:30:103)
+    at Route (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f15596:323:16)
+    at Switch (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f15596:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/components/layout/layout.tsx?t=1747579236366:20:34)
+    at Router
+    at DataInitializer (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/src/App.tsx?t=1747579236366&v=a6DMO-awTAiaVz_qFzPEF:35:28)
+    at Provider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-P23V4H6I.js?v=95f15596:48:15)
+    at TooltipProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=95f15596:61:5)
+    at QueryClientProvider (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=95f15596:2805:3)
+    at App
+    at V (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=95f15596:44:25)
+    at J (https://8756e596-3251-46b9-a770-82ca5d853cb8-00-1awbjhqwhhqhr.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=95f15596:42:18)
