@@ -519,20 +519,8 @@ const DeepAnalysis = () => {
                   {dataView === 'doctor' && (
                     <>
                       <Bar dataKey="doctorRevenue" name="Doctor Revenue" fill={COLORS.revenue} />
-                      <Bar name="Doctor Expenses" fill={COLORS.expenses}>
-                        {monthlyPerformance.map((entry, index) => {
-                          const month = entry.month;
-                          const payrollData = monthlyPayroll.find(item => item?.month === month);
-                          const doctorPayroll = payrollData?.doctorPayroll || 0;
-                          const doctorExpenses = entry.doctorExpenses || 0;
-                          const nonPayrollExpenses = doctorExpenses - doctorPayroll;
-                          
-                          return [
-                            <Cell key={`payroll-${index}`} fill={COLORS.payrollDoctor} value={doctorPayroll} />,
-                            <Cell key={`other-expense-${index}`} fill={COLORS.expenses} value={nonPayrollExpenses} />
-                          ];
-                        }).flat()}
-                      </Bar>
+                      <Bar dataKey="doctorExpenses" name="Doctor Expenses" fill={COLORS.expenses} />
+                      <Bar dataKey="doctorPayroll" name="Doctor Payroll" fill={COLORS.payrollDoctor} />
                       <Line 
                         type="monotone" 
                         dataKey="doctorNetIncome" 
@@ -547,20 +535,8 @@ const DeepAnalysis = () => {
                   {dataView === 'business' && (
                     <>
                       <Bar dataKey="businessRevenue" name="Business Revenue" fill={COLORS.revenue} />
-                      <Bar name="Business Expenses" fill={COLORS.expenses}>
-                        {monthlyPerformance.map((entry, index) => {
-                          const month = entry.month;
-                          const payrollData = monthlyPayroll.find(item => item?.month === month);
-                          const businessPayroll = payrollData?.businessPayroll || 0;
-                          const businessExpenses = entry.businessExpenses || 0;
-                          const nonPayrollExpenses = businessExpenses - businessPayroll;
-                          
-                          return [
-                            <Cell key={`payroll-${index}`} fill={COLORS.payrollBusiness} value={businessPayroll} />,
-                            <Cell key={`other-expense-${index}`} fill={COLORS.expenses} value={nonPayrollExpenses} />
-                          ];
-                        }).flat()}
-                      </Bar>
+                      <Bar dataKey="businessExpenses" name="Business Expenses" fill={COLORS.expenses} />
+                      <Bar dataKey="businessPayroll" name="Business Payroll" fill={COLORS.payrollBusiness} />
                       <Line 
                         type="monotone" 
                         dataKey="businessNetIncome" 
@@ -575,20 +551,8 @@ const DeepAnalysis = () => {
                   {dataView === 'combined' && (
                     <>
                       <Bar dataKey="totalRevenue" name="Total Revenue" fill={COLORS.revenue} />
-                      <Bar name="Total Expenses" fill={COLORS.expenses}>
-                        {monthlyPerformance.map((entry, index) => {
-                          const month = entry.month;
-                          const payrollData = monthlyPayroll.find(item => item?.month === month);
-                          const totalPayroll = payrollData?.totalPayroll || 0;
-                          const totalExpenses = entry.totalExpenses || 0;
-                          const nonPayrollExpenses = totalExpenses - totalPayroll;
-                          
-                          return [
-                            <Cell key={`payroll-${index}`} fill={COLORS.payroll} value={totalPayroll} />,
-                            <Cell key={`other-expense-${index}`} fill={COLORS.expenses} value={nonPayrollExpenses} />
-                          ];
-                        }).flat()}
-                      </Bar>
+                      <Bar dataKey="totalExpenses" name="Total Expenses" fill={COLORS.expenses} />
+                      <Bar dataKey="totalPayroll" name="Total Payroll" fill={COLORS.payroll} />
                       <Line 
                         type="monotone" 
                         dataKey="totalNetIncome" 
