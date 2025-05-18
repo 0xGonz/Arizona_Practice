@@ -252,27 +252,33 @@ export default function UploadHistory() {
                                           </Button>
                                         </div>
                                         
-                                        <div className="max-h-80 overflow-y-auto">
+                                        <div className="max-h-80 overflow-hidden">
                                           {annualData && annualData.length > 0 ? (
                                             <>
-                                              <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
-                                                <div style={{ minWidth: '750px' }}>
+                                              <div className="flex flex-col">
+                                                <div className="text-xs text-slate-500 mb-1 italic">
+                                                  Scroll horizontally and vertically to see all data →
+                                                </div>
+                                                <div className="overflow-x-auto overflow-y-auto max-h-64 border border-slate-200 rounded-md" 
+                                                     style={{ maxWidth: '100%', boxShadow: '0 0 5px rgba(0,0,0,0.05)' }}>
                                                   <table className="w-full border-collapse text-sm">
                                                     <thead>
                                                       <tr className="bg-slate-100 sticky top-0 z-10">
                                                         {Object.keys(annualData[0]).map((key, idx) => (
                                                           <th key={idx} className="p-2 text-left border-b font-medium whitespace-nowrap">
-                                                            {key}
+                                                            <div className="min-w-[120px]">{key}</div>
                                                           </th>
                                                         ))}
                                                       </tr>
                                                     </thead>
                                                     <tbody>
-                                                      {annualData.slice(0, 10).map((row, rowIdx) => (
+                                                      {annualData.slice(0, 15).map((row, rowIdx) => (
                                                         <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                                                           {Object.entries(row).map(([key, value], cellIdx) => (
-                                                            <td key={cellIdx} className="p-2 border-b whitespace-nowrap overflow-hidden text-ellipsis">
-                                                              {String(value)}
+                                                            <td key={cellIdx} className="p-2 border-b whitespace-nowrap">
+                                                              <div className="min-w-[120px] max-w-[300px] overflow-hidden text-ellipsis">
+                                                                {String(value)}
+                                                              </div>
                                                             </td>
                                                           ))}
                                                         </tr>
@@ -282,9 +288,9 @@ export default function UploadHistory() {
                                                 </div>
                                               </div>
                                               
-                                              {annualData.length > 10 && (
+                                              {annualData.length > 15 && (
                                                 <div className="mt-2 text-sm text-neutral-500 text-center">
-                                                  Showing 10 of {annualData.length} rows. Visit the Dashboard to see full analysis.
+                                                  Showing 15 of {annualData.length} rows. Visit the Dashboard to see full analysis.
                                                 </div>
                                               )}
                                             </>
