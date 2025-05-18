@@ -581,12 +581,12 @@ export default function Dashboard() {
                   <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
                   <Tooltip 
                     formatter={(value, name, props) => {
-                      if (name === "eRevenue") {
-                        return [formatCurrency(props.payload.eRevenue * 1000), "Revenue"];
-                      } else if (name === "eExpenses") {
-                        return [formatCurrency(props.payload.eExpenses * 1000), "Expenses"];
-                      } else if (name === "eNetIncome") {
-                        return [formatCurrency(props.payload.eNetIncome * 1000), "Net Income"];
+                      if (name === "Revenue (E)") {
+                        return [formatCurrency(props.payload.rawERevenue), "Revenue"];
+                      } else if (name === "Expenses (E)") {
+                        return [formatCurrency(props.payload.rawEExpenses), "Expenses"];
+                      } else if (name === "Net Income (E)") {
+                        return [formatCurrency(props.payload.rawENetIncome), "Net Income"];
                       }
                       return [formatCurrency(value as number), ""];
                     }}
@@ -631,12 +631,12 @@ export default function Dashboard() {
                   <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
                   <Tooltip 
                     formatter={(value, name, props) => {
-                      if (name === "oRevenue") {
-                        return [formatCurrency(props.payload.oRevenue * 1000), "Revenue"];
-                      } else if (name === "oExpenses") {
-                        return [formatCurrency(props.payload.oExpenses * 1000), "Expenses"];
-                      } else if (name === "oNetIncome") {
-                        return [formatCurrency(props.payload.oNetIncome * 1000), "Net Income"];
+                      if (name === "Revenue (O)") {
+                        return [formatCurrency(props.payload.rawORevenue), "Revenue"];
+                      } else if (name === "Expenses (O)") {
+                        return [formatCurrency(props.payload.rawOExpenses), "Expenses"];
+                      } else if (name === "Net Income (O)") {
+                        return [formatCurrency(props.payload.rawONetIncome), "Net Income"];
                       }
                       return [formatCurrency(value as number), ""];
                     }}
