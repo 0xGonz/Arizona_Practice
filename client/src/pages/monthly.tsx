@@ -221,15 +221,20 @@ export default function Monthly() {
       netIncome: 0
     };
     
-    // Get the structured line items directly from the data store
-    // This uses the properly structured data with lineItems
-    const dataSource = selectedView === 'employees' ? monthData.e : monthData.o;
-    const lineItems = dataSource?.lineItems || [];
+    // Get the right data source based on selected view
+    const dataSource = selectedView === 'employees' ? 
+      (monthData.eData || []) : 
+      (monthData.oData || []);
+    
+    // Directly use the data array that contains all the line items
+    const lineItems = dataSource;
     
     console.log(`Selected view: ${selectedView}`);
     console.log(`Found ${lineItems.length} line items for ${activeMonth}`);
+    console.log(`First 3 line items:`, lineItems.slice(0, 3).map(i => i.name));
     
     if (!lineItems || lineItems.length === 0) {
+      console.error(`No line items found in ${selectedView} data for ${activeMonth}!`);
       return defaultMetrics;
     }
     
