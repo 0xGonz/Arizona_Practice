@@ -136,6 +136,23 @@ function Router() {
 }
 
 function App() {
+  // Use a custom wrapper to remove any data-replit-metadata attributes
+  // to prevent the React Fragment warning
+  useEffect(() => {
+    const cleanupMetadata = () => {
+      document.querySelectorAll('[data-replit-metadata]').forEach(el => {
+        el.removeAttribute('data-replit-metadata');
+      });
+    };
+    
+    // Run once on mount
+    cleanupMetadata();
+    
+    // Set a backup timer to catch any dynamically added attributes
+    const interval = setInterval(cleanupMetadata, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
