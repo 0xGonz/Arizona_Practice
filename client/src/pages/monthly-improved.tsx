@@ -43,6 +43,25 @@ const formatCurrency = (value: number): string => {
 
 // Helper function to extract financial values from line items
 function getLineItemValue(lineItems: any[], keyword: string): number {
+  // First try to find an exact match for a total line item
+  const exactTotalMatch = lineItems?.find(i => 
+    i.name.toLowerCase() === keyword.toLowerCase() && i.isTotal === true
+  );
+  
+  if (exactTotalMatch) {
+    return exactTotalMatch.summaryValue || 0;
+  }
+  
+  // Then try to find a partial match with isTotal flag
+  const totalMatch = lineItems?.find(i => 
+    i.name.toLowerCase().includes(keyword.toLowerCase()) && i.isTotal === true
+  );
+  
+  if (totalMatch) {
+    return totalMatch.summaryValue || 0;
+  }
+  
+  // Finally, fall back to a simple partial match
   return lineItems?.find(i => 
     i.name.toLowerCase().includes(keyword.toLowerCase())
   )?.summaryValue || 0;
