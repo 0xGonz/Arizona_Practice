@@ -67,7 +67,12 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
             if (eUpload) {
               console.log(`Loading monthly-e data for ${month} from upload ID ${eUpload.id} (most recent of ${eUploads.length})`);
               try {
-                await loadCSVContent(eUpload.id);
+                const csvData = await loadCSVContent(eUpload.id);
+                if (csvData && Array.isArray(csvData)) {
+                  // Process the loaded data and update the store with it
+                  console.log(`Processing ${csvData.length} rows of monthly-e data for ${month}`);
+                  processCSVData('monthly-e', csvData, month);
+                }
               } catch (e) {
                 console.error(`Error loading monthly-e data for ${month}:`, e);
               }
@@ -83,7 +88,12 @@ function DataInitializer({ children }: { children: React.ReactNode }) {
             if (oUpload) {
               console.log(`Loading monthly-o data for ${month} from upload ID ${oUpload.id} (most recent of ${oUploads.length})`);
               try {
-                await loadCSVContent(oUpload.id);
+                const csvData = await loadCSVContent(oUpload.id);
+                if (csvData && Array.isArray(csvData)) {
+                  // Process the loaded data and update the store with it
+                  console.log(`Processing ${csvData.length} rows of monthly-o data for ${month}`);
+                  processCSVData('monthly-o', csvData, month);
+                }
               } catch (e) {
                 console.error(`Error loading monthly-o data for ${month}:`, e);
               }
