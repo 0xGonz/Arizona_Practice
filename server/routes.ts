@@ -340,10 +340,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update the processed flag in the database
       try {
-        const result = await db.execute(
-          `UPDATE csv_uploads SET processed = true WHERE id = $1`,
-          [id]
-        );
+        await db.update(csvUploads)
+          .set({ processed: true })
+          .where(eq(csvUploads.id, id));
+          
         console.log(`Marked upload ID ${id} as processed`);
         res.status(200).json({ success: true });
       } catch (dbError) {
