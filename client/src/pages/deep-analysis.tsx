@@ -219,10 +219,41 @@ const DeepAnalysis = () => {
       }
     });
     
-    // Convert map to array and sort by revenue
-    return Array.from(businessMap.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10);
+    // Create a predefined list of business units to ensure they all appear
+    const requiredBusinessUnits = [
+      'MedShip',
+      'Therapy, Physical',
+      'Imaging',
+      'Pharmacy',
+      'MRI',
+      'DME',
+      'NXT STIM',
+      'UDA',
+      'Procedure Charges',
+      'ProMed'
+    ];
+    
+    // Map of business names to their data
+    const businessDataMap = new Map(Array.from(businessMap.values()).map(b => [b.provider, b]));
+    
+    // Create the final array with all required business units
+    return requiredBusinessUnits.map(unitName => {
+      // If we have data for this unit, use it
+      if (businessDataMap.has(unitName)) {
+        return businessDataMap.get(unitName);
+      }
+      // Otherwise create placeholder with zero values
+      return {
+        provider: unitName,
+        revenue: 0,
+        expenses: 0,
+        netIncome: 0,
+        payroll: 0,
+        otherExpenses: 0,
+        profitMargin: 0,
+        count: 0
+      };
+    });
   }, [providerData.businessData]);
 
   // Get most profitable doctors
