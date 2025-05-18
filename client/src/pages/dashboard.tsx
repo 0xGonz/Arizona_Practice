@@ -743,8 +743,6 @@ export default function Dashboard() {
                 <LineChart
                   data={aggregatedData.monthlyTrends.map(month => ({
                     month: month.month,
-                    // Calculate combined margin
-                    margin: month.revenue > 0 ? (month.netIncome / month.revenue) * 100 : 0,
                     // Calculate E file margin 
                     eMargin: month.eRevenue > 0 ? (month.eNetIncome / month.eRevenue) * 100 : 0,
                     // Calculate O file margin
@@ -761,7 +759,6 @@ export default function Dashboard() {
                   <Tooltip 
                     formatter={(value, name) => {
                       const formattedValue = `${(value as number).toFixed(2)}%`;
-                      if (name === "margin") return [formattedValue, "Combined Margin (E+O)"];
                       if (name === "eMargin") return [formattedValue, "Employee Margin (E)"];
                       if (name === "oMargin") return [formattedValue, "Business Margin (O)"];
                       if (name === "avgMargin") return [formattedValue, "Average Margin"];
@@ -770,14 +767,6 @@ export default function Dashboard() {
                     labelFormatter={(label) => `Month: ${label}`}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="margin" 
-                    name="Combined (E+O)"
-                    stroke="#10b981" 
-                    strokeWidth={2}
-                    dot={{ fill: '#10b981', r: 4 }}
-                  />
                   <Line 
                     type="monotone" 
                     dataKey="eMargin" 
