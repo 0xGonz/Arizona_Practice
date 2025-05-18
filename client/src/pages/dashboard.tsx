@@ -158,9 +158,17 @@ export default function Dashboard() {
       const monthExpenses = monthEExpenses + monthOExpenses;
       const monthNetIncome = monthENetIncome + monthONetIncome;
       
-      // Add month to trends data for chart
+      // Create proper month abbreviations for the chart
+      const monthAbbreviations = {
+        january: 'Jan', february: 'Feb', march: 'Mar',
+        april: 'Apr', may: 'May', june: 'Jun',
+        july: 'Jul', august: 'Aug', september: 'Sep',
+        october: 'Oct', november: 'Nov', december: 'Dec'
+      };
+      
+      // Add month to trends data for chart with correct abbreviation
       monthlyTrends.push({
-        month: month.charAt(0).toUpperCase() + month.slice(1, 3),
+        month: monthAbbreviations[month.toLowerCase()] || month.charAt(0).toUpperCase() + month.slice(1, 3),
         revenue: monthRevenue,
         eRevenue: monthERevenue,
         oRevenue: monthORevenue,
