@@ -416,7 +416,7 @@ const DeepAnalysis = () => {
         totalNetIncome: eNetIncome + oNetIncome,
         totalMargin: totalMargin
       };
-    }).filter(Boolean);
+    });
   }, [monthlyData, availableMonths]);
   
   // Extract monthly payroll expenses
@@ -699,25 +699,28 @@ const DeepAnalysis = () => {
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         const month = label;
-                        const payrollData = monthlyPayroll.find(item => item?.month === month);
+                        const payrollData = monthlyPayroll.find(item => item.month === month);
                         
                         let payrollValue = 0;
                         if (dataView === 'doctor') {
-                          payrollValue = payrollData?.doctorPayroll || 0;
+                          payrollValue = payrollData ? payrollData.doctorPayroll : 0;
                         } else if (dataView === 'business') {
-                          payrollValue = payrollData?.businessPayroll || 0;
+                          payrollValue = payrollData ? payrollData.businessPayroll : 0;
                         } else {
-                          payrollValue = payrollData?.totalPayroll || 0;
+                          payrollValue = payrollData ? (payrollData.doctorPayroll + payrollData.businessPayroll) : 0;
                         }
                         
                         // Get the corresponding expense amount
                         let expenseValue = 0;
                         if (dataView === 'doctor') {
-                          expenseValue = monthlyPerformance.find(p => p.month === month)?.doctorExpenses || 0;
+                          const perfData = monthlyPerformance.find(p => p.month === month);
+                          expenseValue = perfData ? perfData.doctorExpenses : 0;
                         } else if (dataView === 'business') {
-                          expenseValue = monthlyPerformance.find(p => p.month === month)?.businessExpenses || 0;
+                          const perfData = monthlyPerformance.find(p => p.month === month);
+                          expenseValue = perfData ? perfData.businessExpenses : 0;
                         } else {
-                          expenseValue = monthlyPerformance.find(p => p.month === month)?.totalExpenses || 0;
+                          const perfData = monthlyPerformance.find(p => p.month === month);
+                          expenseValue = perfData ? perfData.totalExpenses : 0;
                         }
                         
                         // Calculate payroll as percentage of expenses
