@@ -86,17 +86,9 @@ const DeepAnalysis = () => {
           const expenses = getProviderPayroll(month, provider, 'e');
           const netIncome = getProviderNetIncome(month, provider, 'e');
           // Get payroll data specifically for this provider and month
-          let payroll = 0;
-          const payrollItem = monthData.e?.lineItems.find(
-            item => item.name === "Total Payroll and Related Expense" || 
-                  item.name === "Total Payroll & Related Expense" ||
-                  (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
-          );
-          
-          if (payrollItem?.entityValues && provider in payrollItem.entityValues) {
-            payroll = Math.abs(payrollItem.entityValues[provider] || 0);
-            console.log(`Found payroll for provider ${provider}: ${payroll}`);
-          }
+          // Use the dedicated payroll getter to ensure we get the right data
+          const payroll = getProviderPayroll(month, provider, 'e');
+          console.log(`Found payroll for provider ${provider} in ${month}: ${payroll}`);
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;

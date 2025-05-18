@@ -359,23 +359,7 @@ export const useStore = create<DataStore>((set, get) => ({
     
     const data = monthlyData[cleanMonth][fileType];
     
-    // First look for Total Operating Expenses as our primary source
-    const totalExpensesItem = data?.lineItems.find(item => 
-      (item.name === "Total Operating Expenses" || 
-       item.name === "Total Expenses" ||
-       item.name === "Total Expense") && 
-      item.isTotal && 
-      item.entityValues && 
-      item.entityValues[provider] !== undefined
-    );
-    
-    // If we found total expenses with a value for this provider
-    if (totalExpensesItem && totalExpensesItem.entityValues && totalExpensesItem.entityValues[provider] !== undefined) {
-      console.log(`Found total operating expenses for ${provider} in ${month}: ${totalExpensesItem.entityValues[provider]}`);
-      return Math.abs(totalExpensesItem.entityValues[provider] || 0);
-    }
-    
-    // Second try: Look for Total Payroll specifically
+    // First, specifically look for the payroll item
     const payrollItem = data?.lineItems.find(item => 
       (item.name === "Total Payroll and Related Expense" || 
        item.name === "Total Payroll & Related Expense" ||
@@ -384,11 +368,31 @@ export const useStore = create<DataStore>((set, get) => ({
       item.entityValues[provider] !== undefined
     );
     
-    // If we found a matching payroll item
+    // If we found a matching payroll item, use that
     if (payrollItem && payrollItem.entityValues && payrollItem.entityValues[provider] !== undefined) {
-      console.log(`Found total payroll for ${provider} in ${month}: ${payrollItem.entityValues[provider]}`);
-      return Math.abs(payrollItem.entityValues[provider] || 0);
+      const payrollValue = Math.abs(payrollItem.entityValues[provider] || 0);
+      console.log(`Found payroll for ${provider} in ${month} ${fileType} file: ${payrollValue}`);
+      return payrollValue;
     }
+    
+    // If no specific payroll item, fall back to expenses
+    const totalExpensesItem = data?.lineItems.find(item => 
+      (item.name === "Total Operating Expenses" || 
+       item.name === "Total Expenses" ||
+       item.name === "Total Expense") && 
+      item.entityValues && 
+      item.entityValues[provider] !== undefined
+    );
+    
+    if (totalExpensesItem && totalExpensesItem.entityValues && totalExpensesItem.entityValues[provider] !== undefined) {
+      const expensesValue = Math.abs(totalExpensesItem.entityValues[provider] || 0);
+      console.log(`Falling back to expenses for ${provider} in ${month} ${fileType} file: ${expensesValue}`);
+      return expensesValue;
+    }
+    
+    // If we still haven't found anything, return 0
+    console.log(`No payroll or expenses found for ${provider} in ${month} ${fileType} file`);
+    return 0;
     
     // Third try: Look for any payroll/expense-related item
     if (data?.lineItems) {
