@@ -131,6 +131,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process and store the data in the new structured format
       console.log(`Using FinancialDataManager to store structured data for upload ${uploadId}`);
       try {
+        // First parse the CSV
+        const parsedData = await parseCSV(fileContent);
+        
+        // Validate the parsed data with our Zod schema
+        const { validateCSVData } = await import('./validation');
+        
+        // Check if the parsed data is valid according to our schema
+        const validationResult = validateCSVData(parsedData, csvType, month);
+        
+        if (!validationResult.valid) {
+          console.error(`CSV validation failed for upload ${uploadId}:`, validationResult.errors);
+          return res.status(422).json({ 
+            message: "CSV validation failed", 
+            errors: validationResult.errors,
+            uploadId: uploadId
+          });
+        }
+        
+        console.log(`CSV validation successful for upload ${uploadId}, proceeding with ${validationResult.validatedData.length} valid rows`);
+        
+        // Continue with storing the validated data
         const success = await FinancialDataManager.storeStructuredFinancialData(
           uploadId, 
           fileContent, 
