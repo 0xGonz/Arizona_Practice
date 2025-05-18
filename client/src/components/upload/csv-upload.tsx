@@ -658,20 +658,20 @@ export default function CSVUpload({
                     )}
                   </div>
                   
-                  <ScrollArea className="flex-1 border rounded-md">
-                    <div className="overflow-x-auto p-2">
+                  <div className="flex-1 border rounded-md overflow-hidden">
+                    <div className="w-full h-full overflow-auto" style={{ maxHeight: '60vh' }}>
                       <table className="min-w-full">
-                        <thead className="sticky top-0 bg-white dark:bg-gray-950 shadow-sm">
+                        <thead className="sticky top-0 bg-white dark:bg-gray-950 shadow-sm z-10">
                           <tr>
                             {csvData.length > 0 && Object.keys(csvData[0]).map((header, i) => (
-                              <th key={i} className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              <th key={i} className="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b bg-white dark:bg-gray-950">
                                 {header}
                               </th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {csvData.slice(0, 15).map((row, rowIdx) => (
+                          {csvData.slice(0, 25).map((row, rowIdx) => (
                             <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900/50' : ''}>
                               {Object.entries(row).map(([key, value], cellIdx) => (
                                 <td key={cellIdx} className="p-2 text-xs whitespace-nowrap border-b border-gray-200 dark:border-gray-800">
@@ -680,17 +680,17 @@ export default function CSVUpload({
                               ))}
                             </tr>
                           ))}
-                          {csvData.length > 15 && (
+                          {csvData.length > 25 && (
                             <tr>
                               <td colSpan={Object.keys(csvData[0]).length} className="p-2 text-xs text-center italic text-gray-500">
-                                ... {csvData.length - 15} more rows
+                                ... {csvData.length - 25} more rows
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
                     </div>
-                  </ScrollArea>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
