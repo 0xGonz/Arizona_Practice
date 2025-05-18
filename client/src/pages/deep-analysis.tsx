@@ -727,14 +727,23 @@ const DeepAnalysis = () => {
                   <YAxis yAxisId="left" tickFormatter={(value) => formatCurrency(value)} />
                   <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} />
                   <Tooltip 
-                    formatter={(value: any, name: any) => {
+                    formatter={(value: any, name: any, props: any) => {
+                      // Special handling for Operating Expenses - show both individual component and total
+                      if (name === "Total Operating Expenses") {
+                        // Calculate and show the full expenses (payroll + other expenses)
+                        const payroll = props.payload.payroll || 0;
+                        const totalExpenses = (value as number) + payroll;
+                        return [formatCurrency(totalExpenses), "Total Operating Expenses (Full)"];
+                      }
+                      
+                      // Normal formatting for other values
                       if (typeof name === 'string') {
                         if (name.includes('Revenue') || name.includes('Expenses') || 
                             name.includes('Payroll') || name.includes('Income')) 
-                          return formatCurrency(value as number);
-                        if (name.includes('Margin')) return `${(value as number).toFixed(1)}%`;
+                          return [formatCurrency(value as number), name];
+                        if (name.includes('Margin')) return [`${(value as number).toFixed(1)}%`, name];
                       }
-                      return value;
+                      return [value, name];
                     }}
                     labelFormatter={(label) => selectedView === 'doctors' ? `Provider: ${label}` : `Business Unit: ${label}`}
                   />
