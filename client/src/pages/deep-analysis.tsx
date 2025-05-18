@@ -563,15 +563,11 @@ const DeepAnalysis = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={selectedView === 'doctors' ? 
-                    // List of specific doctors as requested
-                    doctorData.filter(d => ['Dr Noori', 'Dr Diep', 'Dr Heiner', 'Dr Anderson', 'Dr Killian', 
-                                           'Barnes,James', 'Dr Wright', 'Aggarwal,Nitish', 'Sitzer,Tiarra', "O'Haver"]
-                                           .includes(d.provider))
+                    // Use the top 10 doctors by revenue directly from the consolidated data
+                    topDoctors.slice(0, 10)
                     : 
-                    // List of specific business units as requested
-                    businessData.filter(b => ['Therapy,Physical', 'MedShip,MedShip', 'Imaging,imaging', 'Pharmacy',
-                                           'MRI,MRI', 'DME,DME', 'NXT STIM', 'ProMed,ProMed', 'ProcedureCharges', 'UDA,UDA']
-                                           .includes(b.provider))
+                    // Use the top 10 business units by revenue directly from the consolidated data
+                    topBusinesses.slice(0, 10)
                   }
                   margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
                 >
