@@ -7,6 +7,7 @@ import Layout from "@/components/layout/layout";
 import Dashboard from "@/pages/dashboard";
 import Monthly from "@/pages/monthly-improved";
 import Upload from "@/pages/upload";
+import UploadNew from "@/pages/upload-new";
 import UploadHistory from "@/pages/upload-history";
 import FinancialQuery from "@/pages/financial-query";
 import DeepAnalysis from "@/pages/deep-analysis";

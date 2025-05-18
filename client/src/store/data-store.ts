@@ -446,6 +446,45 @@ export const useStore = create<DataStore>((set, get) => ({
     return { uploadStatus: newStatus };
   }),
   
+  // Store raw CSV data without processing it yet
+  uploadRawCSVData: (type, data, month) => set(state => {
+    try {
+      const cleanMonth = month ? month.toLowerCase().trim() : '';
+      
+      if (type === 'annual') {
+        // For annual data, simply store the raw data
+        return {
+          rawUploadData: {
+            ...state.rawUploadData || {},
+            annual: data
+          }
+        };
+      } else if (type.startsWith('monthly-') && cleanMonth) {
+        // For monthly data, store both the raw data and the file type
+        const fileTypeKey = type === 'monthly-e' ? 'e' : 'o';
+        
+        return {
+          rawUploadData: {
+            ...state.rawUploadData || {},
+            monthly: {
+              ...(state.rawUploadData?.monthly || {}),
+              [cleanMonth]: {
+                ...(state.rawUploadData?.monthly?.[cleanMonth] || {}),
+                [fileTypeKey]: data
+              }
+            }
+          }
+        };
+      }
+      
+      // If no valid type/month, return state unchanged
+      return state;
+    } catch (error) {
+      console.error(`Error storing raw ${type} data:`, error);
+      return state;
+    }
+  }),
+
   // Process CSV data and update store
   processCSVData: (type, data, month) => set(state => {
     if (type.startsWith('monthly-') && month) {
