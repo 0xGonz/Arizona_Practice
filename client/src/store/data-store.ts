@@ -400,28 +400,67 @@ export const useStore = create<DataStore>((set, get) => ({
     
     const data = monthlyData[cleanMonth][fileType];
     
-    // Find Net Income line item with multiple variations
+    // First try to find the exact Net Income line item with multiple variations
     const netIncomeItem = data?.lineItems.find(item => 
       (item.name === "Net Income (Loss)" || 
        item.name === "Net Income" || 
        item.name === "Net Profit" || 
        item.name === "Net Profit (Loss)") && 
-      item.isTotal
+      item.isTotal && 
+      item.entityValues && 
+      item.entityValues[provider] !== undefined
     );
     
     // If we found a matching net income item with entity values
-    if (netIncomeItem && netIncomeItem.entityValues && netIncomeItem.entityValues[provider]) {
-      console.log(`Found net income for ${provider} in ${month}: ${netIncomeItem.entityValues[provider]}`);
+    if (netIncomeItem && netIncomeItem.entityValues && netIncomeItem.entityValues[provider] !== undefined) {
+      console.log(`Found exact net income for ${provider} in ${month}: ${netIncomeItem.entityValues[provider]}`);
       return netIncomeItem.entityValues[provider] || 0;
     }
     
-    // If we couldn't find the net income item specifically, calculate it
-    // Net Income = Revenue - Expenses
-    const revenue = get().getProviderRevenue(month, provider, fileType);
-    const expenses = get().getProviderPayroll(month, provider, fileType);
+    // Try to find a more generic net income entry if exact match wasn't found
+    if (data?.lineItems) {
+      for (const item of data.lineItems) {
+        if (item.name && 
+            (item.name.toLowerCase().includes("net income") || 
+             item.name.toLowerCase().includes("profit") || 
+             item.name.toLowerCase().includes("bottom line")) && 
+            item.entityValues && 
+            item.entityValues[provider] !== undefined) {
+          console.log(`Found alternative net income for ${provider} in ${month}: ${item.entityValues[provider]}`);
+          return item.entityValues[provider] || 0;
+        }
+      }
+    }
     
-    if (revenue > 0 || expenses > 0) {
-      const calculatedNetIncome = revenue - expenses;
+    // If we couldn't find the net income item specifically, calculate it accurately
+    // Net Income = Revenue - Total Expenses (not just payroll)
+    const revenue = get().getProviderRevenue(month, provider, fileType);
+    
+    // Try to find total expenses first
+    let totalExpenses = 0;
+    if (data?.lineItems) {
+      const expenseItem = data.lineItems.find(item => 
+        (item.name === "Total Operating Expenses" || 
+         item.name === "Total Expenses" ||
+         item.name === "Total Expense") && 
+        item.isTotal && 
+        item.entityValues && 
+        item.entityValues[provider] !== undefined
+      );
+      
+      if (expenseItem && expenseItem.entityValues && expenseItem.entityValues[provider] !== undefined) {
+        totalExpenses = Math.abs(expenseItem.entityValues[provider] || 0);
+      } else {
+        // Fall back to payroll if total expenses not found
+        totalExpenses = get().getProviderPayroll(month, provider, fileType);
+      }
+    } else {
+      // Fall back to payroll if lineItems not available
+      totalExpenses = get().getProviderPayroll(month, provider, fileType);
+    }
+    
+    if (revenue > 0 || totalExpenses > 0) {
+      const calculatedNetIncome = revenue - totalExpenses;
       console.log(`Calculated net income for ${provider} in ${month}: ${calculatedNetIncome}`);
       return calculatedNetIncome;
     }
