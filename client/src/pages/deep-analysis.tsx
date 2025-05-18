@@ -83,11 +83,10 @@ const DeepAnalysis = () => {
           if (provider === 'line_item' || provider === 'description') return;
           
           const revenue = getProviderRevenue(month, provider, 'e');
-          const expenses = getProviderPayroll(month, provider, 'e');
-          const netIncome = getProviderNetIncome(month, provider, 'e');
-          // Get payroll data specifically for this provider and month
-          // Use the dedicated payroll getter to ensure we get the right data
           const payroll = getProviderPayroll(month, provider, 'e');
+          const netIncome = getProviderNetIncome(month, provider, 'e');
+          // For total expenses, we use the difference between revenue and net income
+          const expenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
           console.log(`Found payroll for provider ${provider} in ${month}: ${payroll}`);
           
           // Calculate profit margin percentage
@@ -95,13 +94,16 @@ const DeepAnalysis = () => {
           // Calculate what percentage of expenses is payroll
           const payrollPercentage = expenses > 0 ? (payroll / expenses) * 100 : 0;
           
+          // Make sure expenses is defined and used correctly
+          const calculatedExpenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
+          
           doctorData.push({
             provider,
             revenue,
-            expenses,
+            expenses: calculatedExpenses,
             netIncome,
             payroll,
-            otherExpenses: expenses - payroll,
+            otherExpenses: calculatedExpenses - payroll,
             profitMargin,
             payrollPercentage,
             month
@@ -117,20 +119,11 @@ const DeepAnalysis = () => {
           if (provider === 'line_item' || provider === 'description') return;
           
           const revenue = getProviderRevenue(month, provider, 'o');
-          const expenses = getProviderPayroll(month, provider, 'o');
+          const payroll = getProviderPayroll(month, provider, 'o');
           const netIncome = getProviderNetIncome(month, provider, 'o');
-          // Get payroll data specifically for this provider and month
-          let payroll = 0;
-          const payrollItem = monthData.o?.lineItems.find(
-            item => item.name === "Total Payroll and Related Expense" || 
-                  item.name === "Total Payroll & Related Expense" ||
-                  (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
-          );
-          
-          if (payrollItem?.entityValues && provider in payrollItem.entityValues) {
-            payroll = Math.abs(payrollItem.entityValues[provider] || 0);
-            console.log(`Found payroll for business provider ${provider}: ${payroll}`);
-          }
+          // For total expenses, we use the difference between revenue and net income
+          const expenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
+          console.log(`Found payroll for business provider ${provider} in ${month}: ${payroll}`);
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
