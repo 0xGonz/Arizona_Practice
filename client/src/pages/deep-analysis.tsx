@@ -424,19 +424,21 @@ const DeepAnalysis = () => {
         doctorProfitMargin,
         doctorPayroll,
         doctorPayrollPercent,
+        doctorOtherExpenses,
         businessRevenue,
         businessExpenses,
         businessNetIncome,
         businessProfitMargin,
         businessPayroll,
         businessPayrollPercent,
+        businessOtherExpenses,
         totalRevenue,
         totalExpenses,
         totalNetIncome,
         totalProfitMargin,
         totalPayroll,
         totalPayrollPercent,
-        otherExpenses: totalExpenses - totalPayroll
+        totalOtherExpenses
       };
     });
   }, [monthlyData, availableMonths]);
