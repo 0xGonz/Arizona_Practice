@@ -424,24 +424,64 @@ const DeepAnalysis = () => {
               <TabsContent value="bar" className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={providerData.filter(d => d.profitMargin !== 0 && !isNaN(d.profitMargin)).slice(0, 20)}
-                    margin={{ top: 20, right: 30, left: 40, bottom: 100 }}
+                    data={topPerformers
+                      .filter(d => d.revenue > 0)
+                      .map(d => ({
+                        ...d,
+                        profitMargin: d.revenue > 0 ? (d.netIncome / d.revenue) * 100 : 0
+                      }))
+                      .sort((a, b) => b.profitMargin - a.profitMargin)
+                      .slice(0, 15)
+                    }
+                    margin={{ top: 20, right: 30, left: 60, bottom: 100 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
-                      dataKey="provider" 
+                      dataKey="displayName" 
                       angle={-45} 
                       textAnchor="end"
                       height={100}
                       interval={0}
+                      tick={{ fontSize: 11 }}
                     />
                     <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
                     <Tooltip 
-                      formatter={(value) => [`${(value as number).toFixed(2)}%`, 'Profit Margin']}
-                      labelFormatter={(label) => `Provider: ${label}`}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
+                              <p className="font-semibold">{data.displayName}</p>
+                              <p className="text-sm" style={{ color: payload[0].color }}>
+                                Profit Margin: {data.profitMargin.toFixed(2)}%
+                              </p>
+                              <p className="text-sm">
+                                Revenue: {formatCurrency(data.revenue)}
+                              </p>
+                              <p className="text-sm">
+                                Net Income: {formatCurrency(data.netIncome)}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {data.fileType}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                     />
                     <Legend />
-                    <Bar dataKey="profitMargin" name="Profit Margin %" fill="#8884d8" />
+                    <Bar 
+                      dataKey="profitMargin" 
+                      name="Profit Margin %" 
+                      fill="#8884d8"
+                    />
+                    <Bar 
+                      dataKey="revenue" 
+                      name="Revenue" 
+                      fill="#82ca9d"
+                      hide
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </TabsContent>
