@@ -3,7 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, Upload, Check } from "lucide-react";
 import { CSVType } from "@/types";
 import { useState } from "react";
-import { useStore } from "@/store/data-store";
+import { useStore } from "@/store/working-store";
 
 interface UploadBannerProps {
   title: string;

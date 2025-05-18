@@ -10,7 +10,7 @@ import Upload from "@/pages/upload";
 import UploadHistory from "@/pages/upload-history";
 import FinancialQuery from "@/pages/financial-query";
 import NotFound from "@/pages/not-found";
-import { useStore } from "@/store/simplified-store";
+import { useStore } from "@/store/working-store";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
