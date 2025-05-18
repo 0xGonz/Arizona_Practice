@@ -364,18 +364,29 @@ export const useStore = create<DataStore>((set, get) => ({
       console.log(`${month} ${fileType} file line items:`, data?.lineItems.map(item => item.name));
     }
     
-    // First, specifically look for the payroll item - improved matching to handle variations
+    // First and foremost, look specifically for "Total Payroll and Related Expense"
+    // This is the exact line item we need to use for each provider
+    const exactPayrollItem = data?.lineItems.find(item => 
+      item.name === "Total Payroll and Related Expense" && 
+      item.entityValues && 
+      item.entityValues[provider] !== undefined
+    );
+    
+    // If we found the exact match, use it
+    if (exactPayrollItem && exactPayrollItem.entityValues && exactPayrollItem.entityValues[provider] !== undefined) {
+      const payrollValue = Math.abs(exactPayrollItem.entityValues[provider] || 0);
+      console.log(`Found ${fileType} Payroll expense in ${month}: ${payrollValue} from line item 'Total Payroll and Related Expense'`);
+      return payrollValue;
+    }
+    
+    // Fall back to looking for variations of the payroll item name if exact match not found
     const payrollItem = data?.lineItems.find(item => {
       const itemNameLower = (item.name || '').toLowerCase();
       return (
-        (item.name === "Total Payroll and Related Expense" || 
-         item.name === "Total Payroll & Related Expense" ||
+        (item.name === "Total Payroll & Related Expense" ||
          item.name === "Total Payroll and Related Expenses" ||  // Added "Expenses" plural form
          item.name === "Total Payroll & Related Expenses" ||    // Added "Expenses" plural form
-         itemNameLower.includes("total payroll") ||
-         itemNameLower.includes("payroll and related") ||
-         itemNameLower.includes("payroll & related") ||
-         (itemNameLower.includes("total") && itemNameLower.includes("payroll")) ||
+         (itemNameLower.includes("total") && itemNameLower.includes("payroll") && itemNameLower.includes("related")) ||
          (itemNameLower.includes("payroll") && itemNameLower.includes("related") && 
           (itemNameLower.includes("expense") || itemNameLower.includes("expenses")))
         ) && 
@@ -387,7 +398,7 @@ export const useStore = create<DataStore>((set, get) => ({
     // If we found a matching payroll item, use that
     if (payrollItem && payrollItem.entityValues && payrollItem.entityValues[provider] !== undefined) {
       const payrollValue = Math.abs(payrollItem.entityValues[provider] || 0);
-      console.log(`Found payroll for ${provider} in ${month} ${fileType} file: ${payrollValue}`);
+      console.log(`Found ${fileType} Payroll expense in ${month}: ${payrollValue} from line item '${payrollItem.name}'`);
       return payrollValue;
     }
     
