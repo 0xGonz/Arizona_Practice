@@ -618,7 +618,7 @@ const DeepAnalysis = () => {
                   />
                   <Bar 
                     dataKey="payroll"
-                    name="Est. Payroll" 
+                    name="Total Payroll and Related Expense" 
                     fill={selectedView === 'doctors' ? COLORS.payrollDoctor : COLORS.payrollBusiness} 
                     stackId="expenses" 
                   />
