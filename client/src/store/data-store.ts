@@ -430,11 +430,56 @@ export const useStore = create<DataStore>((set, get) => ({
   }),
   
   // Clear uploaded data by type
-  clearUploadedData: (type, month) => set(async (state) => {
-    let newState;
+  clearUploadedData: (type, month) => set(state => {
+    // After updating state, trigger server deletion in background
+    const doServerDelete = async () => {
+      try {
+        if (type === 'all') {
+          // Delete all data from server
+          const deleteParams = {
+            deleteAll: true,
+            confirmDeleteAll: "CONFIRM_DELETE_ALL"
+          };
+          
+          await apiRequest('DELETE', '/api/finance/delete', deleteParams);
+          console.log('Successfully deleted all data from server');
+        } else if (type.startsWith('monthly-') && month) {
+          // Delete specific month/type data
+          const fileType = type;
+          const cleanMonth = month.toLowerCase().trim();
+          
+          // Use the uploads from state
+          const relevantUploads = state.uploadHistory.filter(upload => 
+            upload.type === fileType && upload.month?.toLowerCase() === cleanMonth
+          );
+          
+          const uploadIds = relevantUploads.map(upload => upload.id).filter(id => id !== undefined);
+          
+          if (uploadIds.length > 0) {
+            // Delete each upload individually
+            for (const uploadId of uploadIds) {
+              await apiRequest('DELETE', '/api/finance/delete', { uploadId });
+            }
+            console.log(`Deleted ${uploadIds.length} uploads for ${cleanMonth} ${type} from server`);
+          } else {
+            // If no specific upload IDs, delete by month and type
+            await apiRequest('DELETE', '/api/finance/delete', {
+              month: cleanMonth,
+              fileType: fileType
+            });
+            console.log(`Deleted data for ${cleanMonth} ${type} from server by criteria`);
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting data from server:', error);
+      }
+    };
     
-    // Delete from database first
-    try {
+    // Schedule the server deletion for after state update
+    setTimeout(doServerDelete, 0);
+    
+    // Update the local state immediately
+    let newState;
       if (type === 'all') {
         // Delete all data from server
         const deleteParams = {
@@ -442,11 +487,7 @@ export const useStore = create<DataStore>((set, get) => ({
           confirmDeleteAll: "CONFIRM_DELETE_ALL"
         };
         
-        await apiRequest('/api/finance/delete', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(deleteParams)
-        });
+        await apiRequest('DELETE', '/api/finance/delete', deleteParams);
         
         console.log('Successfully deleted all data from server');
       } else if (type.startsWith('monthly-') && month) {
@@ -464,22 +505,14 @@ export const useStore = create<DataStore>((set, get) => ({
         if (uploadIds.length > 0) {
           // Delete each upload individually
           for (const uploadId of uploadIds) {
-            await apiRequest('/api/finance/delete', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ uploadId })
-            });
+            await apiRequest('DELETE', '/api/finance/delete', { uploadId });
           }
           console.log(`Deleted ${uploadIds.length} uploads for ${cleanMonth} ${type} from server`);
         } else {
           // If no specific upload IDs, delete by month and type
-          await apiRequest('/api/finance/delete', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              month: cleanMonth,
-              fileType: fileType
-            })
+          await apiRequest('DELETE', '/api/finance/delete', {
+            month: cleanMonth,
+            fileType: fileType
           });
           console.log(`Deleted data for ${cleanMonth} ${type} from server by criteria`);
         }
