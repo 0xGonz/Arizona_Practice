@@ -314,25 +314,106 @@ export default function Monthly() {
       return 0;
     };
     
-    // Get the Total column values for our key financial metrics
-    const revenueAmount = getTotalColumnValue(revenueLineItem);
-    const expensesAmount = getTotalColumnValue(expensesLineItem);
-    const netIncomeAmount = getTotalColumnValue(netIncomeLineItem);
+    // DIRECT ACCESS TO FINANCIAL VALUES
+    // This direct approach finds values at specific depth points in the structure
+    // For employee data, look for these specific line items
+    const financialValues = {
+      revenue: 0,
+      expenses: 0,
+      netIncome: 0
+    };
     
-    console.log(`Found Revenue Item: ${revenueLineItem?.name || 'None'}`);
-    console.log(`Found Expenses Item: ${expensesLineItem?.name || 'None'}`);
-    console.log(`Found Net Income Item: ${netIncomeLineItem?.name || 'None'}`);
-    console.log(`Total Column Values - Revenue: ${revenueAmount}, Expenses: ${expensesAmount}, Net Income: ${netIncomeAmount}`);
+    // Look for specific important line items in the data
+    if (selectedView === 'employees') {
+      // Employee revenue is in specific line items like 40001 - Professional Services
+      const professionalServices = lineItems.find(item => 
+        item.name && item.name.includes('40001 - Professional Services'));
+      
+      // Employee expenses 
+      const payrollExpense = lineItems.find(item => 
+        item.name && (item.name.includes('Total Payroll and Related Expense')));
+      
+      // Try to find these in the data
+      if (professionalServices && professionalServices.summaryValue) {
+        financialValues.revenue = professionalServices.summaryValue;
+      }
+      
+      if (payrollExpense && payrollExpense.summaryValue) {
+        financialValues.expenses = payrollExpense.summaryValue;
+      }
+      
+      // If not found, search more broadly
+      if (financialValues.revenue === 0) {
+        // Try to find the ProMed Income line item
+        const proMedIncome = lineItems.find(item => 
+          item.name && item.name.includes('ProMed Income'));
+        
+        if (proMedIncome && proMedIncome.summaryValue) {
+          financialValues.revenue = proMedIncome.summaryValue;
+        }
+      }
+    } else {
+      // For "other" data, look for these specific items
+      const revenueItem = lineItems.find(item => 
+        item.name === 'Total Revenue' || 
+        item.name.includes('Total Service Revenue'));
+      
+      const expensesItem = lineItems.find(item => 
+        item.name === 'Total Operating Expenses' || 
+        item.name.includes('Total Expenses'));
+      
+      const netIncomeItem = lineItems.find(item => 
+        item.name === 'Net Income' || 
+        item.name.includes('Net Income (Loss)'));
+      
+      if (revenueItem) {
+        financialValues.revenue = revenueItem.summaryValue;
+        console.log(`Found revenue item: ${revenueItem.name} with value ${financialValues.revenue}`);
+      }
+      
+      if (expensesItem) {
+        financialValues.expenses = expensesItem.summaryValue;
+        console.log(`Found expenses item: ${expensesItem.name} with value ${financialValues.expenses}`);
+      }
+      
+      if (netIncomeItem) {
+        financialValues.netIncome = netIncomeItem.summaryValue;
+        console.log(`Found net income item: ${netIncomeItem.name} with value ${financialValues.netIncome}`);
+      }
+    }
     
-    // Only calculate net income as a fallback if we couldn't find it in the data
-    const finalNetIncome = (netIncomeAmount === 0 && revenueAmount > 0 && expensesAmount > 0) 
-      ? (revenueAmount - expensesAmount)
-      : netIncomeAmount;
+    // If we found nothing in the data, use any relevant items we can find
+    if (financialValues.revenue === 0 && financialValues.expenses === 0 && financialValues.netIncome === 0) {
+      // Find any revenue and expense items to use
+      let anyRevenueItem = lineItems.find(item => 
+        item.name && item.name.toLowerCase().includes('revenue') && item.summaryValue > 0);
+      
+      let anyExpenseItem = lineItems.find(item => 
+        item.name && (
+          item.name.toLowerCase().includes('expense') || 
+          item.name.toLowerCase().includes('payroll')
+        ) && item.summaryValue > 0);
+      
+      if (anyRevenueItem) {
+        financialValues.revenue = anyRevenueItem.summaryValue;
+        console.log(`Found alternative revenue item: ${anyRevenueItem.name} with value ${financialValues.revenue}`);
+      }
+      
+      if (anyExpenseItem) {
+        financialValues.expenses = anyExpenseItem.summaryValue;
+        console.log(`Found alternative expense item: ${anyExpenseItem.name} with value ${financialValues.expenses}`);
+      }
+    }
+    
+    // Calculate net income if we found revenue and expenses but not net income
+    if (financialValues.netIncome === 0 && financialValues.revenue > 0 && financialValues.expenses > 0) {
+      financialValues.netIncome = financialValues.revenue - financialValues.expenses;
+    }
     
     return {
-      revenue: revenueAmount,
-      expenses: expensesAmount,
-      netIncome: finalNetIncome
+      revenue: financialValues.revenue,
+      expenses: financialValues.expenses,
+      netIncome: financialValues.netIncome
     };
     
     // The rest of this function isn't used anymore since we're directly accessing the line items
