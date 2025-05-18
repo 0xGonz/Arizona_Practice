@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { useStore } from "@/store/working-store";
+import { useStore } from "@/store/data-store";
 import { extractRealDoctorData } from "@/lib/real-doctor-data";
 import { extractMonthlyPerformanceTrend } from "@/lib/monthly-trend";
 import { Badge } from "@/components/ui/badge";

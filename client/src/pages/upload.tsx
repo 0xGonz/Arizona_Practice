@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import CSVUpload from "@/components/upload/csv-upload";
 import { AlertCircle, Check, Clock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useStore } from "@/store/working-store";
+import { useStore } from "@/store/data-store";
 
 export default function Upload() {
   const { uploadStatus, uploadHistory, monthlyData } = useStore();

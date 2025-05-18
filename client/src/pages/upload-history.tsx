@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { useStore } from "@/store/working-store";
+import { useStore } from "@/store/data-store";
 import { Button } from "@/components/ui/button";
 import { Trash, FileSpreadsheet, Calendar, Eye, ChevronDown, ChevronUp, X, Download } from "lucide-react";
 import { Link } from "wouter";
@@ -55,46 +55,15 @@ export default function UploadHistory() {
   };
   
   // Handle delete for specific upload
-  const handleDelete = async (type: string, month?: string, uploadId?: number) => {
+  const handleDelete = (type: string, month?: string) => {
     // Generate a unique key for this item to confirm deletion
     const deleteKey = `${type}-${month || 'annual'}`;
     
     if (confirmDelete === deleteKey) {
       // User has confirmed, proceed with deletion
-      try {
-        // First delete from database directly using the specific uploadId if available
-        if (uploadId) {
-          await apiRequest('DELETE', '/api/finance/delete', { uploadId });
-          toast({
-            title: "Success",
-            description: "File successfully deleted from database.",
-            variant: "default"
-          });
-        } else {
-          // Fall back to type/month deletion
-          await apiRequest('DELETE', '/api/finance/delete', { 
-            fileType: type,
-            month: month
-          });
-          toast({
-            title: "Success",
-            description: `All ${getTypeDisplay(type)} files ${month ? `for ${month}` : ''} deleted from database.`,
-            variant: "default"
-          });
-        }
-        
-        // Then update local state
-        clearUploadedData(type as any, month);
-        setConfirmDelete(null);
-        setExpandedItem(null);
-      } catch (error) {
-        console.error('Error deleting data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete data from the database. Please try again.",
-          variant: "destructive"
-        });
-      }
+      clearUploadedData(type as any, month);  // Type cast to fix type issue
+      setConfirmDelete(null);
+      setExpandedItem(null);
     } else {
       // Ask for confirmation
       setConfirmDelete(deleteKey);
@@ -170,31 +139,9 @@ export default function UploadHistory() {
           {confirmDelete === 'all' && (
             <Button 
               variant="destructive"
-              onClick={async () => {
-                try {
-                  // First delete from database
-                  await apiRequest('DELETE', '/api/finance/delete', {
-                    deleteAll: true,
-                    confirmDeleteAll: "CONFIRM_DELETE_ALL"
-                  });
-                  
-                  // Then clear local state
-                  clearUploadedData('all');
-                  setConfirmDelete(null);
-                  
-                  toast({
-                    title: "Success",
-                    description: "All data has been deleted from both database and local storage.",
-                    variant: "default"
-                  });
-                } catch (error) {
-                  console.error('Error deleting data:', error);
-                  toast({
-                    title: "Error",
-                    description: "Failed to delete data from the database. Please try again.",
-                    variant: "destructive"
-                  });
-                }
+              onClick={() => {
+                clearUploadedData('all');
+                setConfirmDelete(null);
               }}
             >
               Yes, Delete All Data
@@ -279,7 +226,7 @@ export default function UploadHistory() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => handleDelete(item.type, item.month, item.id)}
+                                        onClick={() => handleDelete(item.type)}
                                         className={confirmDelete === itemKey ? 'text-red-600' : ''}
                                       >
                                         <Trash className="w-4 h-4" />
@@ -412,7 +359,7 @@ export default function UploadHistory() {
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => handleDelete(item.type, item.month, item.id)}
+                                          onClick={() => handleDelete(item.type, item.month)}
                                           className={confirmDelete === itemKey ? 'text-red-600' : ''}
                                         >
                                           <Trash className="w-4 h-4" />
