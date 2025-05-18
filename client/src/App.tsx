@@ -9,6 +9,7 @@ import Monthly from "@/pages/monthly-improved";
 import Upload from "@/pages/upload";
 import UploadHistory from "@/pages/upload-history";
 import FinancialQuery from "@/pages/financial-query";
+import DeepAnalysis from "@/pages/deep-analysis";
 import NotFound from "@/pages/not-found";
 import { useStore } from "@/store/data-store";
 import { useEffect } from "react";
@@ -125,6 +126,7 @@ function Router() {
         <Route path="/upload" component={Upload} />
         <Route path="/upload-history" component={UploadHistory} />
         <Route path="/financial-query" component={FinancialQuery} />
+        <Route path="/deep-analysis" component={DeepAnalysis} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

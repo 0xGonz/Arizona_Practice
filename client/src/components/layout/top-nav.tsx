@@ -5,7 +5,8 @@ import {
   Upload, 
   History, 
   Stethoscope,
-  Menu
+  Menu,
+  BarChart2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -19,6 +20,7 @@ interface NavItem {
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
   { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-4 h-4" /> },
+  { name: "Deep Analysis", path: "/deep-analysis", icon: <BarChart2 className="w-4 h-4" /> },
   { name: "Upload Data", path: "/upload", icon: <Upload className="w-4 h-4" /> },
   { name: "Upload History", path: "/upload-history", icon: <History className="w-4 h-4" /> }
 ];
