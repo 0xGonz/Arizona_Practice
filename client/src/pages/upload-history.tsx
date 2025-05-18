@@ -252,31 +252,35 @@ export default function UploadHistory() {
                                           </Button>
                                         </div>
                                         
-                                        <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                                        <div className="max-h-80 overflow-y-auto">
                                           {annualData && annualData.length > 0 ? (
                                             <>
-                                              <table className="w-full text-sm">
-                                                <thead className="bg-slate-200">
-                                                  <tr>
-                                                    {Object.keys(annualData[0]).map((key, idx) => (
-                                                      <th key={idx} className="py-2 px-3 text-left font-medium">
-                                                        {key}
-                                                      </th>
-                                                    ))}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {annualData.slice(0, 10).map((row, rowIdx) => (
-                                                    <tr key={rowIdx} className="border-b border-slate-200">
-                                                      {Object.entries(row).map(([key, value], cellIdx) => (
-                                                        <td key={cellIdx} className="py-2 px-3">
-                                                          {String(value)}
-                                                        </td>
+                                              <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
+                                                <div style={{ minWidth: '750px' }}>
+                                                  <table className="w-full border-collapse text-sm">
+                                                    <thead>
+                                                      <tr className="bg-slate-100 sticky top-0 z-10">
+                                                        {Object.keys(annualData[0]).map((key, idx) => (
+                                                          <th key={idx} className="p-2 text-left border-b font-medium whitespace-nowrap">
+                                                            {key}
+                                                          </th>
+                                                        ))}
+                                                      </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                      {annualData.slice(0, 10).map((row, rowIdx) => (
+                                                        <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                                          {Object.entries(row).map(([key, value], cellIdx) => (
+                                                            <td key={cellIdx} className="p-2 border-b whitespace-nowrap overflow-hidden text-ellipsis">
+                                                              {String(value)}
+                                                            </td>
+                                                          ))}
+                                                        </tr>
                                                       ))}
-                                                    </tr>
-                                                  ))}
-                                                </tbody>
-                                              </table>
+                                                    </tbody>
+                                                  </table>
+                                                </div>
+                                              </div>
                                               
                                               {annualData.length > 10 && (
                                                 <div className="mt-2 text-sm text-neutral-500 text-center">
@@ -385,28 +389,30 @@ export default function UploadHistory() {
                                             </Button>
                                           </div>
                                           
-                                          <div className="max-h-80 overflow-y-auto relative">
+                                          <div className="max-h-80 overflow-y-auto">
                                             {fileData && fileData.raw && fileData.raw.length > 0 ? (
-                                              <React.Fragment key={`monthly-data-${month}-${index}`}>
-                                                <div className="overflow-x-auto pb-4" style={{ maxWidth: '100%' }}>
-                                                  <table className="min-w-full border-collapse text-sm table-fixed" style={{ width: 'auto' }}>
-                                                    <thead>
-                                                      <tr className="bg-slate-100 sticky top-0 z-10">
-                                                        {Object.keys(fileData.raw[0]).map((header, idx) => (
-                                                          <th key={idx} className="p-2 text-left border-b font-medium whitespace-nowrap" style={{ minWidth: '150px' }}>{header}</th>
-                                                        ))}
-                                                      </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                      {fileData.raw.slice(0, 10).map((row, rowIdx) => (
-                                                        <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                                                          {Object.values(row).map((cell, cellIdx) => (
-                                                            <td key={cellIdx} className="p-2 border-b whitespace-nowrap overflow-hidden text-ellipsis">{String(cell)}</td>
+                                              <>
+                                                <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
+                                                  <div style={{ minWidth: '750px' }}>
+                                                    <table className="w-full border-collapse text-sm">
+                                                      <thead>
+                                                        <tr className="bg-slate-100 sticky top-0 z-10">
+                                                          {Object.keys(fileData.raw[0]).map((header, idx) => (
+                                                            <th key={idx} className="p-2 text-left border-b font-medium whitespace-nowrap">{header}</th>
                                                           ))}
                                                         </tr>
-                                                      ))}
-                                                    </tbody>
-                                                  </table>
+                                                      </thead>
+                                                      <tbody>
+                                                        {fileData.raw.slice(0, 10).map((row, rowIdx) => (
+                                                          <tr key={rowIdx} className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                                            {Object.values(row).map((cell, cellIdx) => (
+                                                              <td key={cellIdx} className="p-2 border-b whitespace-nowrap overflow-hidden text-ellipsis">{String(cell)}</td>
+                                                            ))}
+                                                          </tr>
+                                                        ))}
+                                                      </tbody>
+                                                    </table>
+                                                  </div>
                                                 </div>
                                                 
                                                 {fileData.raw.length > 10 && (
@@ -414,7 +420,7 @@ export default function UploadHistory() {
                                                     Showing 10 of {fileData.raw.length} rows. Visit the Monthly view to see full analysis.
                                                   </div>
                                                 )}
-                                              </React.Fragment>
+                                              </>
                                             ) : (
                                               <div className="text-center py-4 text-neutral-500">
                                                 No data available for preview.
