@@ -750,7 +750,32 @@ export const useStore = create<DataStore>((set, get) => ({
   
   // Set uploads from server data
   setUploadsFromServer: (uploads) => set(state => {
-    // Process server uploads and update store
+    // If uploads array is empty or only contains annual data, clear monthly data
+    const hasMonthlyData = uploads.some((u: any) => 
+      u.type === 'monthly-e' || u.type === 'monthly-o'
+    );
+    
+    if (!hasMonthlyData) {
+      // Clear localStorage to ensure deleted data doesn't reappear
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('monthlyData');
+        localStorage.removeItem('uploadStatus');
+        localStorage.removeItem('uploadHistory');
+      }
+      
+      // Clear all monthly data from state
+      return {
+        ...state,
+        monthlyData: {},
+        uploadStatus: {
+          ...state.uploadStatus,
+          monthly: {}
+        },
+        uploadHistory: uploads
+      };
+    }
+    
+    // Normal case - just update upload history
     return {
       ...state,
       uploadHistory: uploads
