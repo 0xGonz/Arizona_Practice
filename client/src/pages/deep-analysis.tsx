@@ -265,8 +265,13 @@ const DeepAnalysis = () => {
       let oExpenses = 0;
       let oNetIncome = 0;
       
-      // Extract totals from E files
+      // Find specific line items from E files
       if (monthData.e && monthData.e.lineItems) {
+        // Logging all total line items to help debug
+        const totalItems = monthData.e.lineItems.filter(item => item.isTotal);
+        console.log(`E file total line items for ${month}:`, totalItems.map(item => item.name));
+        
+        // Look for exact line item names as specified
         const totalRevenueItem = monthData.e.lineItems.find(item => 
           item.name === "Total Revenue" && item.isTotal
         );
@@ -276,16 +281,31 @@ const DeepAnalysis = () => {
         );
         
         const netIncomeItem = monthData.e.lineItems.find(item => 
-          (item.name === "Net Income (Loss)" || item.name === "Net Income") && item.isTotal
+          (item.name === "Net Income" || item.name === "Net Income (Loss)") && item.isTotal
         );
         
+        // If these exact items can't be found, log a warning
+        if (!totalRevenueItem) console.log(`Warning: 'Total Revenue' not found in E file for ${month}`);
+        if (!totalExpensesItem) console.log(`Warning: 'Total Operating Expenses' not found in E file for ${month}`);
+        if (!netIncomeItem) console.log(`Warning: 'Net Income' not found in E file for ${month}`);
+        
+        // Extract the values, with fallbacks just in case
         eRevenue = totalRevenueItem ? Math.abs(totalRevenueItem.summaryValue || 0) : 0;
         eExpenses = totalExpensesItem ? Math.abs(totalExpensesItem.summaryValue || 0) : 0;
         eNetIncome = netIncomeItem ? netIncomeItem.summaryValue || 0 : 0;
+        
+        console.log(`Found Revenue for E data in ${month}: ${eRevenue}`);
+        console.log(`Found Expenses for E data in ${month}: ${eExpenses}`);
+        console.log(`Found Net Income for E data in ${month}: ${eNetIncome}`);
       }
       
-      // Extract totals from O files
+      // Find specific line items from O files
       if (monthData.o && monthData.o.lineItems) {
+        // Logging all total line items to help debug
+        const totalItems = monthData.o.lineItems.filter(item => item.isTotal);
+        console.log(`O file total line items for ${month}:`, totalItems.map(item => item.name));
+        
+        // Look for exact line item names as specified
         const totalRevenueItem = monthData.o.lineItems.find(item => 
           item.name === "Total Revenue" && item.isTotal
         );
@@ -295,12 +315,22 @@ const DeepAnalysis = () => {
         );
         
         const netIncomeItem = monthData.o.lineItems.find(item => 
-          (item.name === "Net Income (Loss)" || item.name === "Net Income") && item.isTotal
+          (item.name === "Net Income" || item.name === "Net Income (Loss)") && item.isTotal
         );
         
+        // If these exact items can't be found, log a warning
+        if (!totalRevenueItem) console.log(`Warning: 'Total Revenue' not found in O file for ${month}`);
+        if (!totalExpensesItem) console.log(`Warning: 'Total Operating Expenses' not found in O file for ${month}`);
+        if (!netIncomeItem) console.log(`Warning: 'Net Income' not found in O file for ${month}`);
+        
+        // Extract the values, with fallbacks just in case
         oRevenue = totalRevenueItem ? Math.abs(totalRevenueItem.summaryValue || 0) : 0;
         oExpenses = totalExpensesItem ? Math.abs(totalExpensesItem.summaryValue || 0) : 0;
         oNetIncome = netIncomeItem ? netIncomeItem.summaryValue || 0 : 0;
+        
+        console.log(`Found Revenue for O data in ${month}: ${oRevenue}`);
+        console.log(`Found Expenses for O data in ${month}: ${oExpenses}`);
+        console.log(`Found Net Income for O data in ${month}: ${oNetIncome}`);
       }
       
       // Calculate profit margins
@@ -308,6 +338,8 @@ const DeepAnalysis = () => {
       const oMargin = oRevenue > 0 ? (oNetIncome / oRevenue) * 100 : 0;
       const totalMargin = (eRevenue + oRevenue) > 0 ? 
         ((eNetIncome + oNetIncome) / (eRevenue + oRevenue)) * 100 : 0;
+      
+      console.log(`Month: ${month} - Revenue: ${eRevenue + oRevenue}, Expenses: ${eExpenses + oExpenses}, NetIncome: ${eNetIncome + oNetIncome}`);
       
       return {
         month,
