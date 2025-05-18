@@ -139,9 +139,31 @@ export default function UploadHistory() {
           {confirmDelete === 'all' && (
             <Button 
               variant="destructive"
-              onClick={() => {
-                clearUploadedData('all');
-                setConfirmDelete(null);
+              onClick={async () => {
+                try {
+                  // First delete from database
+                  await apiRequest('DELETE', '/api/finance/delete', {
+                    deleteAll: true,
+                    confirmDeleteAll: "CONFIRM_DELETE_ALL"
+                  });
+                  
+                  // Then clear local state
+                  clearUploadedData('all');
+                  setConfirmDelete(null);
+                  
+                  toast({
+                    title: "Success",
+                    description: "All data has been deleted from both database and local storage.",
+                    variant: "default"
+                  });
+                } catch (error) {
+                  console.error('Error deleting data:', error);
+                  toast({
+                    title: "Error",
+                    description: "Failed to delete data from the database. Please try again.",
+                    variant: "destructive"
+                  });
+                }
               }}
             >
               Yes, Delete All Data
