@@ -838,10 +838,10 @@ export default function Monthly() {
                                   </td>
                                 ))}
                                 <td className="text-right py-3 px-4 font-medium">
-                                  {item.values && typeof item.values['All Employees'] !== 'undefined'
-                                    ? formatCurrency(item.values['All Employees']) 
-                                    : item.values && typeof item.values['Total'] !== 'undefined'
-                                      ? formatCurrency(item.values['Total'])
+                                  {item.values && typeof item.values['Total'] !== 'undefined'
+                                    ? formatCurrency(item.values['Total'])
+                                    : item.values && typeof item.values['All Employees'] !== 'undefined'
+                                      ? formatCurrency(item.values['All Employees'])
                                       : '$0'}
                                 </td>
                               </tr>
@@ -856,11 +856,11 @@ export default function Monthly() {
                                     </td>
                                   ))}
                                   <td className="text-right py-3 px-4">
-                                    {child.values && typeof child.values['All Employees'] !== 'undefined'
+                                    {child.values && typeof child.values['Total'] !== 'undefined'
+                                      ? formatCurrency(child.values['Total'])
+                                      : child.values && typeof child.values['All Employees'] !== 'undefined'
                                       ? formatCurrency(child.values['All Employees']) 
-                                      : child.values && typeof child.values['Total'] !== 'undefined'
-                                        ? formatCurrency(child.values['Total'])
-                                        : '$0'}
+                                      : '$0'}
                                   </td>
                                 </tr>
                               ))}
