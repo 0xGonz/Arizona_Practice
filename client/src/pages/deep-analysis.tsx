@@ -349,7 +349,9 @@ const DeepAnalysis = () => {
     expenses: '#ef4444', // Red for expenses
     netIncome: '#3b82f6', // Blue for net income
     revenue: '#8b5cf6', // Purple for revenue
-    payroll: '#ec4899' // Pink for payroll
+    payroll: '#ec4899', // Pink for payroll
+    payrollDoctor: '#9333ea', // Darker purple for doctor payroll
+    payrollBusiness: '#059669'  // Darker green for business payroll
   };
   
   // Colors for pie charts
@@ -358,6 +360,9 @@ const DeepAnalysis = () => {
     '#8b5cf6', '#ec4899', '#a855f7', '#14b8a6', '#f43f5e',
     '#0ea5e9', '#84cc16', '#f97316', '#06b6d4', '#8b5cf6'
   ];
+  
+  // Set up view type for data toggle
+  const [dataView, setDataView] = useState<'doctor' | 'business' | 'combined'>('combined');
 
   return (
     <div className="container mx-auto p-4 bg-gray-50">
