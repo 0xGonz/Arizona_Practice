@@ -82,9 +82,9 @@ const DeepAnalysis = () => {
           // Skip non-provider columns
           if (provider === 'line_item' || provider === 'description') return;
           
-          const revenue = getProviderRevenue('e', month, provider);
-          const expenses = getProviderPayroll('e', month, provider);
-          const netIncome = getProviderNetIncome('e', month, provider);
+          const revenue = getProviderRevenue(month, provider, 'e');
+          const expenses = getProviderPayroll(month, provider, 'e');
+          const netIncome = getProviderNetIncome(month, provider, 'e');
           // Get payroll data specifically for this provider and month
           const payroll = monthData.e?.lineItems.find(
             item => item.name.toLowerCase().includes('total payroll and related expense')
@@ -113,9 +113,9 @@ const DeepAnalysis = () => {
           // Skip non-provider columns
           if (provider === 'line_item' || provider === 'description') return;
           
-          const revenue = getProviderRevenue('o', month, provider);
-          const expenses = getProviderPayroll('o', month, provider);
-          const netIncome = getProviderNetIncome('o', month, provider);
+          const revenue = getProviderRevenue(month, provider, 'o');
+          const expenses = getProviderPayroll(month, provider, 'o');
+          const netIncome = getProviderNetIncome(month, provider, 'o');
           // Get payroll data specifically for this provider and month
           const payroll = monthData.o?.lineItems.find(
             item => item.name.toLowerCase().includes('total payroll and related expense')
