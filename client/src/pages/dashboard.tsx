@@ -526,7 +526,7 @@ export default function Dashboard() {
         <CardContent className="p-4">
           <Tabs defaultValue="combined">
             <TabsList className="mb-4 w-full grid grid-cols-3">
-              <TabsTrigger value="combined">Combined (E+O)</TabsTrigger>
+              <TabsTrigger value="combined">Total</TabsTrigger>
               <TabsTrigger value="e-files">Employee Files (E)</TabsTrigger>
               <TabsTrigger value="o-files">Business Files (O)</TabsTrigger>
             </TabsList>
