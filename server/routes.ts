@@ -338,15 +338,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear all uploads
   app.delete("/api/uploads/clear-all", async (req, res) => {
     try {
-      // Delete all data from all tables
-      await db.execute(`DELETE FROM csv_data`);
+      // Delete only from tables that actually exist
       await db.execute(`DELETE FROM csv_uploads`);
       await db.execute(`DELETE FROM monthly_financial_data`);
       await db.execute(`DELETE FROM department_performance`);
       await db.execute(`DELETE FROM doctor_performance`);
-      await db.execute(`DELETE FROM financial_categories`);
-      await db.execute(`DELETE FROM financial_line_items`);
-      await db.execute(`DELETE FROM financial_values`);
       await db.execute(`DELETE FROM upload_status`);
       
       console.log("All database data has been cleared");
