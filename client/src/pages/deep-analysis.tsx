@@ -448,14 +448,11 @@ const DeepAnalysis = () => {
     netIncome: '#FFC107', // Yellow/Gold for net income
     doctor: '#9C27B0', // Purple for doctor data
     business: '#2196F3', // Blue for business data
-    payroll: '#FF5722', // Orange for payroll
+    payroll: '#F44336', // Red for payroll
     payrollDoctor: '#E91E63', // Pink for doctor payroll
-    payrollBusiness: '#3F51B5', // Indigo for business payroll
+    payrollBusiness: '#673AB7', // Deep Purple for business payroll
     expensesDoctor: '#FF9E80', // Light orange for doctor expenses
     expensesBusiness: '#81D4FA' // Light blue for business expenses
-    payroll: '#F44336', // Red
-    payrollDoctor: '#E91E63', // Pink
-    payrollBusiness: '#673AB7' // Deep Purple
   };
 
   // Colors for pie charts
@@ -586,14 +583,7 @@ const DeepAnalysis = () => {
                     activeDot={{ r: 6 }}
                   />
                   
-                  {/* Other Expenses Bar */}
-                  <Bar
-                    dataKey="otherExpenses"
-                    name="otherExpenses"
-                    fill={COLORS.expenses}
-                    yAxisId="left"
-                    stackId="expenses"
-                  />
+                  {/* Removed duplicate Other Expenses Bar */}
                   
                   {/* Profit Margin Line */}
                   <Line
