@@ -69,8 +69,16 @@ const DeepAnalysis = () => {
   const providerData = useMemo(() => {
     const result: any[] = [];
     
+    // Validate inputs
+    if (!availableMonths || !Array.isArray(availableMonths) || availableMonths.length === 0) {
+      console.warn("No available months for provider data");
+      return result;
+    }
+    
     // Process each month's data
     availableMonths.forEach((month: string) => {
+      if (!month) return; // Skip undefined/null months
+      
       const monthData = monthlyData[month.toLowerCase()];
       if (!monthData) {
         console.log(`No data found for month ${month}, creating placeholder`);
@@ -82,12 +90,12 @@ const DeepAnalysis = () => {
       }
       
       // Get provider data from E files (doctors/employees)
-      if (monthData.e) {
+      if (monthData.e && monthData.e.entityColumns) {
         const providers: string[] = monthData.e.entityColumns || [];
         
         providers.forEach(provider => {
           // Skip non-provider columns like "Total"
-          if (provider === "Total" || provider === "All Employees") return;
+          if (!provider || provider === "Total" || provider === "All Employees") return;
           
           // Find revenue for this provider
           const revenue = getProviderRevenue(month, provider, 'e');
@@ -95,8 +103,7 @@ const DeepAnalysis = () => {
           const netIncome = getProviderNetIncome(month, provider, 'e');
           
           // Add to result if we have data
-          if (revenue !== 0 || expenses !== 0) {
-            result.push({
+          result.push({
               provider,
               month,
               fileType: 'Doctor',
