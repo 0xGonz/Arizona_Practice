@@ -371,60 +371,43 @@ const DeepAnalysis = () => {
         <p className="text-gray-600">Comprehensive financial comparison between doctor and business operations</p>
       </div>
       
-      {/* Monthly Revenue Breakdown */}
-      <h2 className="text-2xl font-bold mb-4">Monthly Revenue Breakdown</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card className="shadow-lg">
-          <CardHeader className="border-b bg-gray-50 py-3">
-            <CardTitle>Monthly Revenue Distribution</CardTitle>
-            <CardDescription>Comparing doctor and business revenue streams</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={monthlyPerformance}
-                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                  <XAxis dataKey="month" />
-                  <YAxis 
-                    tickFormatter={(value) => `$${Math.abs(value) >= 1000000 
-                      ? `${(value / 1000000).toFixed(1)}M` 
-                      : (Math.abs(value) >= 1000 
-                          ? `${(value / 1000).toFixed(0)}K` 
-                          : value)}`} 
-                  />
-                  <Tooltip 
-                    formatter={(value) => [formatCurrency(value as number), ""]} 
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
-                  <Legend />
-                  <Bar 
-                    dataKey="doctorRevenue" 
-                    name="Doctor Revenue" 
-                    fill={COLORS.doctor} 
-                    stackId="revenue"
-                  />
-                  <Bar 
-                    dataKey="businessRevenue" 
-                    name="Business Revenue" 
-                    fill={COLORS.business} 
-                    stackId="revenue"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      {/* All-in-One Financial Performance Card */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Comprehensive Financial Performance</h2>
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button 
+              className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'doctor' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setDataView('doctor')}
+            >
+              Doctors (E)
+            </button>
+            <button 
+              className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'business' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setDataView('business')}
+            >
+              Business (O)
+            </button>
+            <button 
+              className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'combined' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setDataView('combined')}
+            >
+              Combined
+            </button>
+          </div>
+        </div>
         
         <Card className="shadow-lg">
           <CardHeader className="border-b bg-gray-50 py-3">
-            <CardTitle>Monthly Revenue vs Expenses</CardTitle>
-            <CardDescription>Tracking overall financial performance trends</CardDescription>
+            <CardTitle>
+              {dataView === 'doctor' && 'Doctor Financial Performance (E-File)'}
+              {dataView === 'business' && 'Business Financial Performance (O-File)'}
+              {dataView === 'combined' && 'Combined Financial Performance'}
+            </CardTitle>
+            <CardDescription>Monthly comparison of revenue, expenses, payroll and net income</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="h-80">
+            <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={monthlyPerformance}
@@ -439,20 +422,103 @@ const DeepAnalysis = () => {
                           ? `${(value / 1000).toFixed(0)}K` 
                           : value)}`} 
                   />
-                  <Tooltip 
-                    formatter={(value) => [formatCurrency(value as number), ""]} 
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
                   <Legend />
-                  <Bar dataKey="totalRevenue" name="Total Revenue" fill={COLORS.revenue} />
-                  <Bar dataKey="totalExpenses" name="Total Expenses" fill={COLORS.expenses} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="totalNetIncome" 
-                    name="Net Income" 
-                    stroke={COLORS.netIncome} 
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
+                  
+                  {dataView === 'doctor' && (
+                    <>
+                      <Bar dataKey="doctorRevenue" name="Doctor Revenue" fill={COLORS.revenue} />
+                      <Bar dataKey="doctorExpenses" name="Doctor Expenses" fill={COLORS.expenses} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="doctorNetIncome" 
+                        name="Doctor Net Income" 
+                        stroke={COLORS.netIncome} 
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                      />
+                    </>
+                  )}
+                  
+                  {dataView === 'business' && (
+                    <>
+                      <Bar dataKey="businessRevenue" name="Business Revenue" fill={COLORS.revenue} />
+                      <Bar dataKey="businessExpenses" name="Business Expenses" fill={COLORS.expenses} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="businessNetIncome" 
+                        name="Business Net Income" 
+                        stroke={COLORS.netIncome} 
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                      />
+                    </>
+                  )}
+                  
+                  {dataView === 'combined' && (
+                    <>
+                      <Bar dataKey="totalRevenue" name="Total Revenue" fill={COLORS.revenue} />
+                      <Bar dataKey="totalExpenses" name="Total Expenses" fill={COLORS.expenses} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="totalNetIncome" 
+                        name="Total Net Income" 
+                        stroke={COLORS.netIncome} 
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                      />
+                    </>
+                  )}
+                  
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const month = label;
+                        const payrollData = monthlyPayroll.find(item => item?.month === month);
+                        
+                        let payrollValue = 0;
+                        if (dataView === 'doctor') {
+                          payrollValue = payrollData?.doctorPayroll || 0;
+                        } else if (dataView === 'business') {
+                          payrollValue = payrollData?.businessPayroll || 0;
+                        } else {
+                          payrollValue = payrollData?.totalPayroll || 0;
+                        }
+                        
+                        // Get the corresponding expense amount
+                        let expenseValue = 0;
+                        if (dataView === 'doctor') {
+                          expenseValue = monthlyPerformance.find(p => p.month === month)?.doctorExpenses || 0;
+                        } else if (dataView === 'business') {
+                          expenseValue = monthlyPerformance.find(p => p.month === month)?.businessExpenses || 0;
+                        } else {
+                          expenseValue = monthlyPerformance.find(p => p.month === month)?.totalExpenses || 0;
+                        }
+                        
+                        // Calculate payroll as percentage of expenses
+                        const payrollPercent = expenseValue > 0 ? (payrollValue / expenseValue * 100).toFixed(1) : 0;
+                        
+                        return (
+                          <div className="bg-white p-4 border rounded shadow-lg">
+                            <p className="font-bold">{month}</p>
+                            {payload.map((entry, index) => (
+                              <p key={index} className="text-sm">
+                                <span style={{ color: entry.color }}>●</span> {entry.name}: {formatCurrency(entry.value as number)}
+                              </p>
+                            ))}
+                            <div className="mt-2 pt-2 border-t">
+                              <p className="text-sm font-medium">Payroll Details:</p>
+                              <p className="text-sm">
+                                <span style={{ color: COLORS.payroll }}>●</span> Payroll: {formatCurrency(payrollValue)}
+                              </p>
+                              <p className="text-sm">
+                                <span style={{ color: COLORS.payroll }}>●</span> Payroll % of Expenses: {payrollPercent}%
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                 </ComposedChart>
               </ResponsiveContainer>
