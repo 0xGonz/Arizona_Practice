@@ -886,7 +886,7 @@ const DeepAnalysis = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={topDoctors}
+                      data={topDoctors || []}
                       cx="50%"
                       cy="50%"
                       labelLine={true}
@@ -895,7 +895,7 @@ const DeepAnalysis = () => {
                       nameKey="provider"
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
                     >
-                      {topDoctors.map((entry: any, index: number) => (
+                      {(topDoctors || []).map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
