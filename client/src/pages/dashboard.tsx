@@ -493,42 +493,151 @@ export default function Dashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={aggregatedData.monthlyTrends}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  name="Revenue"
-                  stroke="#3b82f6" 
-                  activeDot={{ r: 8 }} 
-                  strokeWidth={2}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="expenses" 
-                  name="Expenses"
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="netIncome" 
-                  name="Net Income"
-                  stroke="#10b981" 
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <Tabs defaultValue="combined">
+            <TabsList className="mb-4 w-full grid grid-cols-3">
+              <TabsTrigger value="combined">Combined (E+O)</TabsTrigger>
+              <TabsTrigger value="e-files">Employee Files (E)</TabsTrigger>
+              <TabsTrigger value="o-files">Business Files (O)</TabsTrigger>
+            </TabsList>
+            
+            {/* Combined E+O Data Tab */}
+            <TabsContent value="combined" className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={aggregatedData.monthlyTrends}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    name="Revenue"
+                    stroke="#3b82f6" 
+                    activeDot={{ r: 8 }} 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="expenses" 
+                    name="Expenses"
+                    stroke="#ef4444" 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="netIncome" 
+                    name="Net Income"
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </TabsContent>
+            
+            {/* Employee (E) Data Tab */}
+            <TabsContent value="e-files" className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={aggregatedData.monthlyTrends}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      if (name === "eRevenue") {
+                        return [formatCurrency(props.payload.eRevenue * 1000), "Revenue"];
+                      } else if (name === "eExpenses") {
+                        return [formatCurrency(props.payload.eExpenses * 1000), "Expenses"];
+                      } else if (name === "eNetIncome") {
+                        return [formatCurrency(props.payload.eNetIncome * 1000), "Net Income"];
+                      }
+                      return [formatCurrency(value as number), ""];
+                    }}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="eRevenue" 
+                    name="Revenue (E)"
+                    stroke="#3b82f6" 
+                    activeDot={{ r: 8 }} 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="eExpenses" 
+                    name="Expenses (E)"
+                    stroke="#ef4444" 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="eNetIncome" 
+                    name="Net Income (E)"
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </TabsContent>
+            
+            {/* Business (O) Data Tab */}
+            <TabsContent value="o-files" className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={aggregatedData.monthlyTrends}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      if (name === "oRevenue") {
+                        return [formatCurrency(props.payload.oRevenue * 1000), "Revenue"];
+                      } else if (name === "oExpenses") {
+                        return [formatCurrency(props.payload.oExpenses * 1000), "Expenses"];
+                      } else if (name === "oNetIncome") {
+                        return [formatCurrency(props.payload.oNetIncome * 1000), "Net Income"];
+                      }
+                      return [formatCurrency(value as number), ""];
+                    }}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="oRevenue" 
+                    name="Revenue (O)"
+                    stroke="#6366f1" 
+                    activeDot={{ r: 8 }} 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="oExpenses" 
+                    name="Expenses (O)"
+                    stroke="#f43f5e" 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="oNetIncome" 
+                    name="Net Income (O)"
+                    stroke="#059669" 
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
