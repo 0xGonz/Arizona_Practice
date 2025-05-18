@@ -421,9 +421,22 @@ const DeepAnalysis = () => {
   
   // Extract monthly payroll expenses
   const monthlyPayroll = useMemo(() => {
-    return availableMonths.map((month: string) => {
+    // Use same consistent array of all months as for monthly performance
+    const allMonths = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    
+    return allMonths.map((month: string) => {
       const monthData = monthlyData[month.toLowerCase()];
-      if (!monthData) return null;
+      if (!monthData) {
+        return {
+          month: month.charAt(0).toUpperCase() + month.slice(1),
+          doctorPayroll: 0,
+          businessPayroll: 0,
+          totalPayroll: 0
+        };
+      }
       
       let doctorPayroll = 0;
       let businessPayroll = 0;
@@ -485,7 +498,7 @@ const DeepAnalysis = () => {
       }
       
       return {
-        month,
+        month: month.charAt(0).toUpperCase() + month.slice(1),
         doctorPayroll,
         businessPayroll,
         totalPayroll: doctorPayroll + businessPayroll
@@ -582,8 +595,8 @@ const DeepAnalysis = () => {
                       <Bar 
                         dataKey={(entry) => {
                           // Find the payroll amount for this month
-                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
-                          const doctorPayroll = payrollData?.doctorPayroll || 0;
+                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
+                          const doctorPayroll = payrollData ? payrollData.doctorPayroll : 0;
                           // Return the amount that represents only non-payroll expenses
                           return Math.max(0, entry.doctorExpenses - doctorPayroll);
                         }}
@@ -593,8 +606,8 @@ const DeepAnalysis = () => {
                       />
                       <Bar 
                         dataKey={(entry) => {
-                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
-                          return payrollData?.doctorPayroll || 0;
+                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
+                          return payrollData ? payrollData.doctorPayroll : 0;
                         }}
                         name="Doctor Payroll" 
                         fill={COLORS.payrollDoctor} 
