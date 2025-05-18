@@ -69,33 +69,18 @@ const DeepAnalysis = () => {
   const providerData = useMemo(() => {
     const result: any[] = [];
     
-    // Validate inputs
-    if (!availableMonths || !Array.isArray(availableMonths) || availableMonths.length === 0) {
-      console.warn("No available months for provider data");
-      return result;
-    }
-    
     // Process each month's data
     availableMonths.forEach((month: string) => {
-      if (!month) return; // Skip undefined/null months
-      
       const monthData = monthlyData[month.toLowerCase()];
-      if (!monthData) {
-        console.log(`No data found for month ${month}, creating placeholder`);
-        result.push({
-          month: month.charAt(0).toUpperCase() + month.slice(1),
-          providers: []
-        });
-        return;
-      }
+      if (!monthData) return;
       
       // Get provider data from E files (doctors/employees)
-      if (monthData.e && monthData.e.entityColumns) {
+      if (monthData.e) {
         const providers: string[] = monthData.e.entityColumns || [];
         
         providers.forEach(provider => {
           // Skip non-provider columns like "Total"
-          if (!provider || provider === "Total" || provider === "All Employees") return;
+          if (provider === "Total" || provider === "All Employees") return;
           
           // Find revenue for this provider
           const revenue = getProviderRevenue(month, provider, 'e');
@@ -103,16 +88,18 @@ const DeepAnalysis = () => {
           const netIncome = getProviderNetIncome(month, provider, 'e');
           
           // Add to result if we have data
-          result.push({
-            provider,
-            month,
-            fileType: 'Doctor',
-            type: 'e',
-            revenue,
-            expenses,
-            netIncome,
-            profitMargin: revenue > 0 ? (netIncome / revenue) * 100 : 0
-          });
+          if (revenue !== 0 || expenses !== 0) {
+            result.push({
+              provider,
+              month,
+              fileType: 'Doctor',
+              type: 'e',
+              revenue,
+              expenses,
+              netIncome,
+              profitMargin: revenue > 0 ? (netIncome / revenue) * 100 : 0
+            });
+          }
         });
       }
       
@@ -241,11 +228,6 @@ const DeepAnalysis = () => {
   
   // Top performing doctors by revenue
   const topDoctors = useMemo(() => {
-    if (!doctorData || !Array.isArray(doctorData) || doctorData.length === 0) {
-      console.warn("No doctor data available for top doctors");
-      return [];
-    }
-    
     return [...doctorData]
       .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 10);
@@ -253,11 +235,6 @@ const DeepAnalysis = () => {
   
   // Top performing businesses by revenue
   const topBusinesses = useMemo(() => {
-    if (!businessData || !Array.isArray(businessData) || businessData.length === 0) {
-      console.warn("No business data available for top businesses");
-      return [];
-    }
-    
     return [...businessData]
       .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 10);
@@ -265,65 +242,25 @@ const DeepAnalysis = () => {
   
   // Most profitable doctors by profit margin
   const topProfitableDoctors = useMemo(() => {
-    if (!doctorData || !Array.isArray(doctorData) || doctorData.length === 0) {
-      console.warn("No doctor data available for profitable doctors");
-      return [];
-    }
-    
     return [...doctorData]
-      .filter((d: any) => d && d.revenue > 50000) // Only significant revenue
+      .filter((d: any) => d.revenue > 50000) // Only significant revenue
       .sort((a: any, b: any) => b.profitMargin - a.profitMargin)
       .slice(0, 10);
   }, [doctorData]);
   
   // Most profitable businesses by profit margin
   const topProfitableBusinesses = useMemo(() => {
-    if (!businessData || !Array.isArray(businessData) || businessData.length === 0) {
-      console.warn("No business data available for profitable businesses");
-      return [];
-    }
-    
     return [...businessData]
-      .filter((d: any) => d && d.revenue > 20000) // Only significant revenue
+      .filter((d: any) => d.revenue > 20000) // Only significant revenue
       .sort((a: any, b: any) => b.profitMargin - a.profitMargin)
       .slice(0, 10);
   }, [businessData]);
   
   // Monthly performance metrics
   const monthlyPerformance = useMemo(() => {
-    console.log("Processing monthly performance data for months:", availableMonths);
-    
-    // Create an array of all months in order, regardless of data availability
-    const allMonths = [
-      'january', 'february', 'march', 'april', 'may', 'june',
-      'july', 'august', 'september', 'october', 'november', 'december'
-    ];
-    
-    // Map data for each month, using zeros for missing months
-    const validPerformanceData = allMonths.map((monthName: string) => {
-      const month = monthName;
-      const monthData = monthlyData[month.toLowerCase()] || { e: null, o: null };
-      
-      // If no data exists for this month, create a placeholder with the month name
-      // This ensures the month always appears on the X-axis
-      if (!monthData) {
-        console.log(`No data found for month ${month}`);
-        return {
-          month: month.charAt(0).toUpperCase() + month.slice(1),
-          doctorRevenue: 0,
-          doctorExpenses: 0,
-          doctorNetIncome: 0,
-          doctorMargin: 0,
-          businessRevenue: 0,
-          businessExpenses: 0,
-          businessNetIncome: 0,
-          businessMargin: 0,
-          totalRevenue: 0,
-          totalExpenses: 0,
-          totalNetIncome: 0,
-          totalMargin: 0
-        };
-      }
+    return availableMonths.map((month: string) => {
+      const monthData = monthlyData[month.toLowerCase()];
+      if (!monthData) return null;
       
       let eRevenue = 0;
       let eExpenses = 0;
@@ -435,7 +372,7 @@ const DeepAnalysis = () => {
       console.log(`Month: ${month} - Revenue: ${eRevenue + oRevenue}, Expenses: ${eExpenses + oExpenses}, NetIncome: ${eNetIncome + oNetIncome}`);
       
       return {
-        month: month.charAt(0).toUpperCase() + month.slice(1),
+        month,
         doctorRevenue: eRevenue,
         doctorExpenses: eExpenses,
         doctorNetIncome: eNetIncome,
@@ -449,27 +386,14 @@ const DeepAnalysis = () => {
         totalNetIncome: eNetIncome + oNetIncome,
         totalMargin: totalMargin
       };
-    });
+    }).filter(Boolean);
   }, [monthlyData, availableMonths]);
   
   // Extract monthly payroll expenses
   const monthlyPayroll = useMemo(() => {
-    // Use same consistent array of all months as for monthly performance
-    const allMonths = [
-      'january', 'february', 'march', 'april', 'may', 'june',
-      'july', 'august', 'september', 'october', 'november', 'december'
-    ];
-    
-    return allMonths.map((month: string) => {
+    return availableMonths.map((month: string) => {
       const monthData = monthlyData[month.toLowerCase()];
-      if (!monthData) {
-        return {
-          month: month.charAt(0).toUpperCase() + month.slice(1),
-          doctorPayroll: 0,
-          businessPayroll: 0,
-          totalPayroll: 0
-        };
-      }
+      if (!monthData) return null;
       
       let doctorPayroll = 0;
       let businessPayroll = 0;
@@ -531,7 +455,7 @@ const DeepAnalysis = () => {
       }
       
       return {
-        month: month.charAt(0).toUpperCase() + month.slice(1),
+        month,
         doctorPayroll,
         businessPayroll,
         totalPayroll: doctorPayroll + businessPayroll
@@ -578,7 +502,7 @@ const DeepAnalysis = () => {
               className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'combined' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               onClick={() => setDataView('combined')}
             >
-              Total
+              Total (E+O)
             </button>
             <button 
               className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'doctor' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
@@ -605,10 +529,10 @@ const DeepAnalysis = () => {
             <CardDescription>Monthly comparison of revenue, expenses, payroll and net income</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="h-96 min-h-[240px]">
+            <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
-                  data={monthlyPerformance || []}
+                  data={monthlyPerformance}
                   margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -628,8 +552,8 @@ const DeepAnalysis = () => {
                       <Bar 
                         dataKey={(entry) => {
                           // Find the payroll amount for this month
-                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
-                          const doctorPayroll = payrollData ? payrollData.doctorPayroll : 0;
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          const doctorPayroll = payrollData?.doctorPayroll || 0;
                           // Return the amount that represents only non-payroll expenses
                           return Math.max(0, entry.doctorExpenses - doctorPayroll);
                         }}
@@ -639,8 +563,8 @@ const DeepAnalysis = () => {
                       />
                       <Bar 
                         dataKey={(entry) => {
-                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
-                          return payrollData ? payrollData.doctorPayroll : 0;
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          return payrollData?.doctorPayroll || 0;
                         }}
                         name="Doctor Payroll" 
                         fill={COLORS.payrollDoctor} 
@@ -663,8 +587,8 @@ const DeepAnalysis = () => {
                       <Bar 
                         dataKey={(entry) => {
                           // Find the payroll amount for this month
-                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
-                          const businessPayroll = payrollData ? payrollData.businessPayroll : 0;
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          const businessPayroll = payrollData?.businessPayroll || 0;
                           // Return the amount that represents only non-payroll expenses
                           return Math.max(0, entry.businessExpenses - businessPayroll);
                         }}
@@ -674,8 +598,8 @@ const DeepAnalysis = () => {
                       />
                       <Bar 
                         dataKey={(entry) => {
-                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
-                          return payrollData ? payrollData.businessPayroll : 0;
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          return payrollData?.businessPayroll || 0;
                         }}
                         name="Business Payroll" 
                         fill={COLORS.payrollBusiness} 
@@ -698,8 +622,8 @@ const DeepAnalysis = () => {
                       <Bar 
                         dataKey={(entry) => {
                           // Find the payroll amount for this month
-                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
-                          const totalPayroll = payrollData ? (payrollData.doctorPayroll + payrollData.businessPayroll) : 0;
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          const totalPayroll = (payrollData?.doctorPayroll || 0) + (payrollData?.businessPayroll || 0);
                           // Return the amount that represents only non-payroll expenses
                           return Math.max(0, entry.totalExpenses - totalPayroll);
                         }}
@@ -709,9 +633,9 @@ const DeepAnalysis = () => {
                       />
                       <Bar 
                         dataKey={(entry) => {
-                          const payrollData = monthlyPayroll.find(p => p.month === entry.month);
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
                           // Calculate the sum of doctor and business payroll to ensure we get accurate numbers
-                          return payrollData ? (payrollData.doctorPayroll + payrollData.businessPayroll) : 0;
+                          return (payrollData?.doctorPayroll || 0) + (payrollData?.businessPayroll || 0);
                         }} 
                         name="Total Payroll" 
                         fill={COLORS.payroll} 
@@ -732,28 +656,25 @@ const DeepAnalysis = () => {
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         const month = label;
-                        const payrollData = monthlyPayroll.find(item => item.month === month);
+                        const payrollData = monthlyPayroll.find(item => item?.month === month);
                         
                         let payrollValue = 0;
                         if (dataView === 'doctor') {
-                          payrollValue = payrollData ? payrollData.doctorPayroll : 0;
+                          payrollValue = payrollData?.doctorPayroll || 0;
                         } else if (dataView === 'business') {
-                          payrollValue = payrollData ? payrollData.businessPayroll : 0;
+                          payrollValue = payrollData?.businessPayroll || 0;
                         } else {
-                          payrollValue = payrollData ? (payrollData.doctorPayroll + payrollData.businessPayroll) : 0;
+                          payrollValue = payrollData?.totalPayroll || 0;
                         }
                         
                         // Get the corresponding expense amount
                         let expenseValue = 0;
                         if (dataView === 'doctor') {
-                          const perfData = monthlyPerformance.find(p => p.month === month);
-                          expenseValue = perfData ? perfData.doctorExpenses : 0;
+                          expenseValue = monthlyPerformance.find(p => p.month === month)?.doctorExpenses || 0;
                         } else if (dataView === 'business') {
-                          const perfData = monthlyPerformance.find(p => p.month === month);
-                          expenseValue = perfData ? perfData.businessExpenses : 0;
+                          expenseValue = monthlyPerformance.find(p => p.month === month)?.businessExpenses || 0;
                         } else {
-                          const perfData = monthlyPerformance.find(p => p.month === month);
-                          expenseValue = perfData ? perfData.totalExpenses : 0;
+                          expenseValue = monthlyPerformance.find(p => p.month === month)?.totalExpenses || 0;
                         }
                         
                         // Calculate payroll as percentage of expenses
@@ -829,7 +750,7 @@ const DeepAnalysis = () => {
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={topDoctors || []}
+                      data={topDoctors}
                       margin={{ top: 20, right: 20, left: 100, bottom: 20 }}
                       layout="vertical"
                     >
@@ -866,7 +787,7 @@ const DeepAnalysis = () => {
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={topProfitableDoctors || []}
+                      data={topProfitableDoctors}
                       margin={{ top: 20, right: 20, left: 100, bottom: 20 }}
                       layout="vertical"
                     >
@@ -912,7 +833,7 @@ const DeepAnalysis = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={topDoctors || []}
+                      data={topDoctors}
                       cx="50%"
                       cy="50%"
                       labelLine={true}
@@ -921,7 +842,7 @@ const DeepAnalysis = () => {
                       nameKey="provider"
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
                     >
-                      {(topDoctors || []).map((entry: any, index: number) => (
+                      {topDoctors.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
@@ -1065,10 +986,10 @@ const DeepAnalysis = () => {
           <CardDescription>Overall revenue and expense breakdown</CardDescription>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="h-96 min-h-[240px]">
+          <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
-                data={monthlyPerformance || []}
+                data={monthlyPerformance}
                 margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
