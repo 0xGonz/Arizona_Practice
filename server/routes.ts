@@ -338,18 +338,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear all uploads
   app.delete("/api/uploads/clear-all", async (req, res) => {
     try {
-      // Delete only from tables that actually exist
-      await db.execute(`DELETE FROM csv_uploads`);
+      // Delete in the correct order to respect foreign key constraints
+      // First, delete the tables that reference csv_uploads
       await db.execute(`DELETE FROM monthly_financial_data`);
       await db.execute(`DELETE FROM department_performance`);
       await db.execute(`DELETE FROM doctor_performance`);
       await db.execute(`DELETE FROM upload_status`);
       
+      // Then delete the uploads themselves
+      await db.execute(`DELETE FROM csv_uploads`);
+      
       console.log("All database data has been cleared");
       res.status(200).json({ success: true, message: "All data cleared" });
     } catch (error) {
       console.error("Error clearing all data:", error);
-      res.status(500).json({ message: "Error clearing data" });
+      res.status(500).json({ message: "Error clearing data", error: String(error) });
     }
   });
   
