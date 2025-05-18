@@ -399,6 +399,11 @@ const DeepAnalysis = () => {
       const totalNetIncome = doctorNetIncome + businessNetIncome;
       const totalPayroll = doctorPayroll + businessPayroll;
       
+      // Calculate other expenses (non-payroll) to create stacked bar chart
+      const doctorOtherExpenses = doctorExpenses - doctorPayroll;
+      const businessOtherExpenses = businessExpenses - businessPayroll;
+      const totalOtherExpenses = totalExpenses - totalPayroll;
+      
       // Calculate profit margin percentages
       const doctorProfitMargin = doctorRevenue > 0 ? (doctorNetIncome / doctorRevenue) * 100 : 0;
       const businessProfitMargin = businessRevenue > 0 ? (businessNetIncome / businessRevenue) * 100 : 0;
@@ -438,11 +443,16 @@ const DeepAnalysis = () => {
 
   // Define chart colors for consistency
   const COLORS = {
-    revenue: '#4CAF50', // Green
-    expenses: '#FF5722', // Orange/Red
-    netIncome: '#FFC107', // Yellow/Gold
-    doctor: '#9C27B0', // Purple
-    business: '#2196F3', // Blue
+    revenue: '#4CAF50', // Green for revenue
+    expenses: '#FF5722', // Orange/Red for expenses
+    netIncome: '#FFC107', // Yellow/Gold for net income
+    doctor: '#9C27B0', // Purple for doctor data
+    business: '#2196F3', // Blue for business data
+    payroll: '#FF5722', // Orange for payroll
+    payrollDoctor: '#E91E63', // Pink for doctor payroll
+    payrollBusiness: '#3F51B5', // Indigo for business payroll
+    expensesDoctor: '#FF9E80', // Light orange for doctor expenses
+    expensesBusiness: '#81D4FA' // Light blue for business expenses
     payroll: '#F44336', // Red
     payrollDoctor: '#E91E63', // Pink
     payrollBusiness: '#673AB7' // Deep Purple
@@ -508,51 +518,47 @@ const DeepAnalysis = () => {
                   />
                   <Legend formatter={(value) => typeof value === 'string' ? value.replace(/([A-Z])/g, ' $1').trim() : String(value)} />
                   
-                  {/* Revenue Line */}
-                  <Line
-                    type="monotone"
+                  {/* Revenue Bar - Direct from CSV */}
+                  <Bar
                     dataKey={
                       dataView === 'doctor' ? 'doctorRevenue' : 
                       dataView === 'business' ? 'businessRevenue' : 'totalRevenue'
                     }
                     name={
-                      dataView === 'doctor' ? 'doctorRevenue' : 
-                      dataView === 'business' ? 'businessRevenue' : 'totalRevenue'
+                      dataView === 'doctor' ? 'Total Revenue (E)' : 
+                      dataView === 'business' ? 'Total Revenue (O)' : 'Total Revenue'
                     }
-                    stroke={COLORS.revenue}
-                    strokeWidth={3}
+                    fill={COLORS.revenue}
                     yAxisId="left"
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
                   />
                   
-                  {/* Net Income Line */}
-                  <Line
-                    type="monotone"
+                  {/* Operating Expenses Bar Stack */}
+                  <Bar
                     dataKey={
-                      dataView === 'doctor' ? 'doctorNetIncome' : 
-                      dataView === 'business' ? 'businessNetIncome' : 'totalNetIncome'
+                      dataView === 'doctor' ? 'doctorOtherExpenses' : 
+                      dataView === 'business' ? 'businessOtherExpenses' : 'totalOtherExpenses'
                     }
                     name={
-                      dataView === 'doctor' ? 'doctorNetIncome' : 
-                      dataView === 'business' ? 'businessNetIncome' : 'totalNetIncome'
+                      dataView === 'doctor' ? 'Other Expenses (E)' : 
+                      dataView === 'business' ? 'Other Expenses (O)' : 'Other Expenses'
                     }
-                    stroke={COLORS.netIncome}
-                    strokeWidth={3}
+                    fill={
+                      dataView === 'doctor' ? COLORS.expensesDoctor : 
+                      dataView === 'business' ? COLORS.expensesBusiness : COLORS.expenses
+                    }
                     yAxisId="left"
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
+                    stackId="expenses"
                   />
                   
-                  {/* Payroll Bar */}
+                  {/* Payroll Bar - Stacked on top of Other Expenses */}
                   <Bar
                     dataKey={
                       dataView === 'doctor' ? 'doctorPayroll' : 
                       dataView === 'business' ? 'businessPayroll' : 'totalPayroll'
                     }
                     name={
-                      dataView === 'doctor' ? 'doctorPayroll' : 
-                      dataView === 'business' ? 'businessPayroll' : 'totalPayroll'
+                      dataView === 'doctor' ? 'Payroll (E)' : 
+                      dataView === 'business' ? 'Payroll (O)' : 'Total Payroll'
                     }
                     fill={
                       dataView === 'doctor' ? COLORS.payrollDoctor : 
@@ -560,6 +566,24 @@ const DeepAnalysis = () => {
                     }
                     yAxisId="left"
                     stackId="expenses"
+                  />
+                  
+                  {/* Net Income Line - Direct from CSV */}
+                  <Line
+                    type="monotone"
+                    dataKey={
+                      dataView === 'doctor' ? 'doctorNetIncome' : 
+                      dataView === 'business' ? 'businessNetIncome' : 'totalNetIncome'
+                    }
+                    name={
+                      dataView === 'doctor' ? 'Net Income (E)' : 
+                      dataView === 'business' ? 'Net Income (O)' : 'Net Income'
+                    }
+                    stroke={COLORS.netIncome}
+                    strokeWidth={3}
+                    yAxisId="left"
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
                   
                   {/* Other Expenses Bar */}
