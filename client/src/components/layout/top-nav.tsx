@@ -22,6 +22,7 @@ const navigationItems = [
   { name: "Monthly Analytics", path: "/", icon: <CalendarDays className="w-4 h-4" /> },
   { name: "Deep Analysis", path: "/deep-analysis", icon: <BarChart2 className="w-4 h-4" /> },
   { name: "Upload Data", path: "/upload", icon: <Upload className="w-4 h-4" /> },
+  { name: "New Upload", path: "/upload-new", icon: <Upload className="w-4 h-4" /> },
   { name: "Upload History", path: "/upload-history", icon: <History className="w-4 h-4" /> }
 ];
 

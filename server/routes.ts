@@ -335,6 +335,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Clear all uploads
+  app.delete("/api/uploads/clear-all", async (req, res) => {
+    try {
+      // Delete all data from all tables
+      await db.execute(`DELETE FROM csv_data`);
+      await db.execute(`DELETE FROM csv_uploads`);
+      await db.execute(`DELETE FROM monthly_financial_data`);
+      await db.execute(`DELETE FROM department_performance`);
+      await db.execute(`DELETE FROM doctor_performance`);
+      await db.execute(`DELETE FROM financial_categories`);
+      await db.execute(`DELETE FROM financial_line_items`);
+      await db.execute(`DELETE FROM financial_values`);
+      await db.execute(`DELETE FROM upload_status`);
+      
+      console.log("All database data has been cleared");
+      res.status(200).json({ success: true, message: "All data cleared" });
+    } catch (error) {
+      console.error("Error clearing all data:", error);
+      res.status(500).json({ message: "Error clearing data" });
+    }
+  });
+  
+  // Clear specific uploads
+  app.delete("/api/uploads/clear", async (req, res) => {
+    try {
+      const { type, month } = req.query;
+      
+      if (!type) {
+        return res.status(400).json({ message: "Type is required" });
+      }
+      
+      let query = `DELETE FROM csv_uploads WHERE type = $1`;
+      let params = [type];
+      
+      if (month) {
+        query += ` AND month = $2`;
+        params.push(month as string);
+      }
+      
+      // Delete the uploads
+      await db.execute(query, params);
+      
+      // Also delete related data
+      if (type === 'annual') {
+        // Clear annual data
+        await db.execute(`DELETE FROM csv_data WHERE upload_id IN (SELECT id FROM csv_uploads WHERE type = 'annual')`);
+      } else if (type === 'monthly-e' && month) {
+        // Clear monthly E data for this month
+        await db.execute(
+          `DELETE FROM csv_data WHERE upload_id IN (SELECT id FROM csv_uploads WHERE type = 'monthly-e' AND month = $1)`,
+          [month]
+        );
+        
+        await db.execute(
+          `DELETE FROM doctor_performance WHERE month = $1`,
+          [month]
+        );
+      } else if (type === 'monthly-o' && month) {
+        // Clear monthly O data for this month
+        await db.execute(
+          `DELETE FROM csv_data WHERE upload_id IN (SELECT id FROM csv_uploads WHERE type = 'monthly-o' AND month = $1)`,
+          [month]
+        );
+        
+        await db.execute(
+          `DELETE FROM department_performance WHERE month = $1`,
+          [month]
+        );
+      }
+      
+      // Clear monthly financial data if both E and O data for a month are deleted
+      if (month && (type === 'monthly-e' || type === 'monthly-o')) {
+        const remainingCount = await db.execute(
+          `SELECT COUNT(*) FROM csv_uploads WHERE month = $1 AND (type = 'monthly-e' OR type = 'monthly-o')`,
+          [month]
+        );
+        
+        if (remainingCount.rows[0].count === '0') {
+          await db.execute(
+            `DELETE FROM monthly_financial_data WHERE month = $1`,
+            [month]
+          );
+        }
+      }
+      
+      console.log(`Cleared ${type} data${month ? ` for ${month}` : ''}`);
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error clearing data:", error);
+      res.status(500).json({ message: "Database error" });
+    }
+  });
+  
   // New advanced financial data query endpoint
   app.get("/api/finance/query", async (req, res) => {
     try {
