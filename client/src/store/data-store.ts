@@ -213,6 +213,12 @@ interface DataStore {
   // Server Data Sync
   setUploadsFromServer: (uploads: any[]) => void;
   loadCSVContent: (id: number) => Promise<any[] | undefined>;
+  
+  // Provider Data Analysis
+  getProviderRevenue: (month: string, provider: string, fileType: 'e' | 'o') => number;
+  getProviderPayroll: (month: string, provider: string, fileType: 'e' | 'o') => number;
+  getProviderNetIncome: (month: string, provider: string, fileType: 'e' | 'o') => number;
+  getAvailableMonths: () => string[];
 }
 
 // Load initial data from localStorage if available
@@ -276,6 +282,87 @@ export const useStore = create<DataStore>((set, get) => ({
     ancillaryComparison: [],
     uploadHistory: []
   }),
+  
+  // Provider data extraction methods
+  getAvailableMonths: () => {
+    const { monthlyData } = get();
+    return Object.keys(monthlyData).filter(month => 
+      monthlyData[month] && 
+      (monthlyData[month].e || monthlyData[month].o)
+    );
+  },
+  
+  getProviderRevenue: (month, provider, fileType) => {
+    const { monthlyData } = get();
+    const cleanMonth = month.toLowerCase().trim();
+    
+    if (!monthlyData[cleanMonth] || !monthlyData[cleanMonth][fileType]) {
+      return 0;
+    }
+    
+    const data = monthlyData[cleanMonth][fileType];
+    
+    // Look for revenue line items
+    const revenueItem = data?.lineItems.find(item => 
+      item.name === "Total Revenue" && item.isTotal
+    );
+    
+    if (revenueItem && revenueItem.entityValues && revenueItem.entityValues[provider]) {
+      return Math.abs(revenueItem.entityValues[provider] || 0);
+    }
+    
+    return 0;
+  },
+  
+  getProviderPayroll: (month, provider, fileType) => {
+    const { monthlyData } = get();
+    const cleanMonth = month.toLowerCase().trim();
+    
+    if (!monthlyData[cleanMonth] || !monthlyData[cleanMonth][fileType]) {
+      return 0;
+    }
+    
+    const data = monthlyData[cleanMonth][fileType];
+    
+    // Find Total Payroll and Related Expense line item
+    const payrollItem = data?.lineItems.find(item => 
+      (item.name === "Total Payroll and Related Expense" || 
+       item.name === "Total Payroll & Related Expense" ||
+       item.name.includes("Payroll") && item.isTotal)
+    );
+    
+    if (payrollItem && payrollItem.entityValues && payrollItem.entityValues[provider]) {
+      return Math.abs(payrollItem.entityValues[provider] || 0);
+    }
+    
+    return 0;
+  },
+  
+  getProviderNetIncome: (month, provider, fileType) => {
+    const { monthlyData } = get();
+    const cleanMonth = month.toLowerCase().trim();
+    
+    if (!monthlyData[cleanMonth] || !monthlyData[cleanMonth][fileType]) {
+      return 0;
+    }
+    
+    const data = monthlyData[cleanMonth][fileType];
+    
+    // Find Net Income line item
+    const netIncomeItem = data?.lineItems.find(item => 
+      (item.name === "Net Income (Loss)" || 
+       item.name === "Net Income" || 
+       item.name === "Net Profit" || 
+       item.name === "Net Profit (Loss)") && 
+      item.isTotal
+    );
+    
+    if (netIncomeItem && netIncomeItem.entityValues && netIncomeItem.entityValues[provider]) {
+      return netIncomeItem.entityValues[provider] || 0;
+    }
+    
+    return 0;
+  },
   
   // Update upload status
   setUploadStatus: (status) => set(state => {

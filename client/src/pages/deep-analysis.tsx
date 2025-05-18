@@ -33,7 +33,7 @@ const DeepAnalysis = () => {
     const result: any[] = [];
     
     // Process each month's data
-    availableMonths.forEach(month => {
+    availableMonths.forEach((month: string) => {
       const monthData = monthlyData[month.toLowerCase()];
       if (!monthData) return;
       
@@ -125,7 +125,7 @@ const DeepAnalysis = () => {
   
   // Calculate monthly performance metrics
   const monthlyPerformance = useMemo(() => {
-    return availableMonths.map(month => {
+    return availableMonths.map((month: string) => {
       const monthData = monthlyData[month.toLowerCase()];
       if (!monthData) return null;
       
