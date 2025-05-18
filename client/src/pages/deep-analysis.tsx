@@ -579,10 +579,10 @@ const DeepAnalysis = () => {
             <CardDescription>Monthly comparison of revenue, expenses, payroll and net income</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="h-96">
+            <div className="h-96 min-h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
-                  data={monthlyPerformance}
+                  data={monthlyPerformance || []}
                   margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -803,7 +803,7 @@ const DeepAnalysis = () => {
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={topDoctors}
+                      data={topDoctors || []}
                       margin={{ top: 20, right: 20, left: 100, bottom: 20 }}
                       layout="vertical"
                     >
@@ -840,7 +840,7 @@ const DeepAnalysis = () => {
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={topProfitableDoctors}
+                      data={topProfitableDoctors || []}
                       margin={{ top: 20, right: 20, left: 100, bottom: 20 }}
                       layout="vertical"
                     >
@@ -1039,10 +1039,10 @@ const DeepAnalysis = () => {
           <CardDescription>Overall revenue and expense breakdown</CardDescription>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="h-96">
+          <div className="h-96 min-h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
-                data={monthlyPerformance}
+                data={monthlyPerformance || []}
                 margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
