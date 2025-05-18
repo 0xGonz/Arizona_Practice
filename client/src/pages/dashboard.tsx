@@ -170,20 +170,29 @@ export default function Dashboard() {
       // Debug logs to track where values come from
       console.log(`Month: ${month} - Revenue: ${monthRevenue}, Expenses: ${monthExpenses}, NetIncome: ${monthNetIncome}`);
       
+      // Fix negative values for expense display in charts (expenses should be positive values)
+      const displayExpenses = monthExpenses < 0 ? Math.abs(monthExpenses) : monthExpenses;
+      const displayEExpenses = monthEExpenses < 0 ? Math.abs(monthEExpenses) : monthEExpenses;
+      const displayOExpenses = monthOExpenses < 0 ? Math.abs(monthOExpenses) : monthOExpenses;
+      
       monthlyTrends.push({
         // Use standard month abbreviations with proper capitalization 
         month: monthAbbreviations[month.toLowerCase()] || month.charAt(0).toUpperCase() + month.slice(1, 3),
-        // Use the values from direct line item lookups rather than calculations
-        revenue: monthRevenue,
-        eRevenue: monthERevenue,
-        oRevenue: monthORevenue,
-        expenses: Math.abs(monthExpenses), // Use absolute value for expenses to ensure consistent display
-        eExpenses: Math.abs(monthEExpenses),
-        oExpenses: Math.abs(monthOExpenses),
-        netIncome: monthNetIncome,
-        eNetIncome: monthENetIncome,
-        oNetIncome: monthONetIncome,
-        payrollExpenses: monthPayrollExpenses
+        // Scale down values for better chart display (in thousands)
+        revenue: Math.round(monthRevenue / 1000),
+        eRevenue: Math.round(monthERevenue / 1000),
+        oRevenue: Math.round(monthORevenue / 1000),
+        expenses: Math.round(displayExpenses / 1000),
+        eExpenses: Math.round(displayEExpenses / 1000),
+        oExpenses: Math.round(displayOExpenses / 1000),
+        netIncome: Math.round(monthNetIncome / 1000),
+        eNetIncome: Math.round(monthENetIncome / 1000),
+        oNetIncome: Math.round(monthONetIncome / 1000),
+        payrollExpenses: Math.round(monthPayrollExpenses / 1000),
+        // Keep original values for tooltips
+        rawRevenue: monthRevenue,
+        rawExpenses: displayExpenses,
+        rawNetIncome: monthNetIncome
       });
     });
     
@@ -315,11 +324,31 @@ export default function Dashboard() {
       return (
         <div className="bg-white p-3 border rounded shadow-md">
           <p className="font-bold">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value as number)}
-            </p>
-          ))}
+          {payload.map((entry, index) => {
+            // Check if we have raw values for better tooltip display
+            let displayValue = entry.value as number;
+            
+            // Use raw values if available (multiply displayed value by 1000 to get back original)
+            if (entry.name === "Revenue" && payload[0].payload.rawRevenue) {
+              displayValue = payload[0].payload.rawRevenue;
+            }
+            else if (entry.name === "Expenses" && payload[0].payload.rawExpenses) {
+              displayValue = payload[0].payload.rawExpenses;
+            }
+            else if (entry.name === "Net Income" && payload[0].payload.rawNetIncome) {
+              displayValue = payload[0].payload.rawNetIncome;
+            }
+            else {
+              // If raw values aren't available, convert chart value back to original
+              displayValue = (entry.value as number) * 1000;
+            }
+            
+            return (
+              <p key={index} style={{ color: entry.color }}>
+                {entry.name}: {formatCurrency(displayValue)}
+              </p>
+            );
+          })}
         </div>
       );
     }
