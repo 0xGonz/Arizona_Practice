@@ -1,0 +1,244 @@
+import React, { useMemo, useState } from "react";
+import { useStore } from "@/store/data-store";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, ComposedChart, Area
+} from "recharts";
+
+// Format currency values
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+// Color palette for the charts
+const COLORS = {
+  revenue: "#16a34a",           // green
+  expenses: "#dc2626",          // red
+  payroll: "#0ea5e9",           // cyan
+  payrollDoctor: "#0ea5e9",
+  payrollBusiness: "#38bdf8",
+  netIncome: "#2563eb",         // blue
+};
+
+export default function DeepAnalysis() {
+  // ------- Pull raw state from Zustand store -------
+  const monthlyData = useStore(state => state.monthlyData);
+  const getProviderRevenue = useStore(state => state.getProviderRevenue);
+  const getProviderPayroll  = useStore(state => state.getProviderPayroll);
+  const getProviderNetIncome = useStore(state => state.getProviderNetIncome);
+  const getAvailableMonths  = useStore(state => state.getAvailableMonths);
+  const providerData        = useStore(state => state.providerData);
+
+  // ------- Sort month strings chronologically -------
+  const availableMonths = useMemo(() => {
+    const months = getAvailableMonths();
+    const monthOrder: Record<string, number> = {
+      january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,
+      july: 7, august: 8, september: 9, october: 10, november: 11, december: 12,
+    };
+    return months.sort((a, b) => monthOrder[a.toLowerCase()] - monthOrder[b.toLowerCase()]);
+  }, [getAvailableMonths]);
+
+  // ------- Build monthly payroll (doctor + business) -------
+  const monthlyPayroll = useMemo(() => {
+    return availableMonths.map(month => {
+      const md = monthlyData[month.toLowerCase()];
+      if (!md) return null;
+
+      let doctorPayroll = 0;
+      let businessPayroll = 0;
+
+      const findPayroll = (file: any) => {
+        if (!file || !file.lineItems) return 0;
+        const exact = file.lineItems.find((it: any) => it.name === "Total Payroll and Related Expense" && it.isTotal);
+        const alt   = file.lineItems.find((it: any) => /payroll/i.test(it.name) && it.isTotal);
+        return (exact ?? alt)?.total ?? 0;
+      };
+
+      if (md.e) doctorPayroll   = findPayroll(md.e);
+      if (md.o) businessPayroll = findPayroll(md.o);
+
+      return {
+        month: month.toLowerCase(),
+        doctorPayroll,
+        businessPayroll,
+        totalPayroll: doctorPayroll + businessPayroll,
+      };
+    }).filter(Boolean);
+  }, [availableMonths, monthlyData]);
+
+  // ------- Aggregate totals for each month (revenue, expenses, net) -------
+  const monthlyPerformance = useMemo(() => {
+    return availableMonths.map(month => {
+      const md = monthlyData[month.toLowerCase()];
+      if (!md) return null;
+
+      const safe = (v: any) => (typeof v === 'number' && !isNaN(v)) ? v : 0;
+
+      // helper to pull a numeric line item from a file by regex
+      const pull = (file: any, regex: RegExp) => {
+        if (!file || !file.lineItems) return 0;
+        const row = file.lineItems.find((it: any) => regex.test(it.name) && it.isTotal);
+        return safe(row?.total);
+      };
+
+      const totalRevenue   = pull(md.e, /total.*revenue|gross revenue/i) + pull(md.o, /total.*revenue|gross revenue/i);
+      const totalExpenses  = pull(md.e, /total.*operating.*expenses/i)   + pull(md.o, /total.*operating.*expenses/i);
+      const totalNetIncome = pull(md.e, /net income/i)                  + pull(md.o, /net income/i);
+
+      // Doctor-only slice (E-files)
+      const doctorRevenue   = pull(md.e, /total.*revenue|gross revenue/i);
+      const doctorExpenses  = pull(md.e, /total.*operating.*expenses/i);
+      const doctorNetIncome = pull(md.e, /net income/i);
+
+      // Business-only slice (O-files)
+      const businessRevenue   = pull(md.o, /total.*revenue|gross revenue/i);
+      const businessExpenses  = pull(md.o, /total.*operating.*expenses/i);
+      const businessNetIncome = pull(md.o, /net income/i);
+
+      return {
+        month: month[0].toUpperCase() + month.slice(1),
+        totalRevenue, totalExpenses, totalNetIncome,
+        doctorRevenue, doctorExpenses, doctorNetIncome,
+        businessRevenue, businessExpenses, businessNetIncome,
+      };
+    }).filter(Boolean);
+  }, [availableMonths, monthlyData]);
+
+  // ------- Provider-level aggregations (used by tables outside these charts) -------
+  const doctorsData   = useMemo(() => { return []; /* Not implemented for brevity */ }, [providerData]);
+  const businessData  = useMemo(() => { return []; /* Not implemented for brevity */ }, [providerData]);
+
+  // ------- Local state toggles for the big chart -------
+  const [dataView, setDataView] = useState<'combined' | 'doctor' | 'business'>('combined');
+
+  // -------------------- RENDER --------------------
+  return (
+    <div className="space-y-8">
+      {/* -------- Comprehensive Financial Performance -------- */}
+      <Card className="shadow-lg">
+        <CardHeader className="border-b bg-gray-50 py-3">
+          <CardTitle>
+            {dataView === 'doctor'   && 'Doctor Financial Performance (E-File)'}
+            {dataView === 'business' && 'Business Financial Performance (O-File)'}
+            {dataView === 'combined' && 'Combined Financial Performance'}
+          </CardTitle>
+          <CardDescription>Monthly comparison of revenue, expenses, payroll and net income</CardDescription>
+          <div className="mt-2 flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView==='combined' ? 'bg-white shadow-sm' : 'text-gray-600'}`} onClick={() => setDataView('combined')}>Total (E+O)</button>
+            <button className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView==='doctor'   ? 'bg-white shadow-sm' : 'text-gray-600'}`} onClick={() => setDataView('doctor')}>Doctor Data (E)</button>
+            <button className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView==='business' ? 'bg-white shadow-sm' : 'text-gray-600'}`} onClick={() => setDataView('business')}>Business Data (O)</button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4">
+          <div className="h-[28rem]">
+            {monthlyPerformance.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-gray-500">
+                Upload both E & O files for at least one month to see this chart.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={monthlyPerformance} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={v => v >= 1_000_000 ? `$${(v/1_000_000).toFixed(1)}M` : v >= 1_000 ? `$${(v/1_000).toFixed(0)}K` : `$${v}`}/>
+                  <Legend />
+
+                  {/* ----- Doctor slice ----- */}
+                  {dataView === 'doctor' && (
+                    <>
+                      <Bar dataKey="doctorRevenue"   name="Doctor Revenue"  fill={COLORS.revenue} />
+                      <Bar dataKey={entry => {
+                        const pay = monthlyPayroll.find(p => p?.month === entry.month.toLowerCase())?.doctorPayroll || 0;
+                        return Math.max(0, entry.doctorExpenses - pay);
+                      }} name="Doctor Other Expenses" fill={COLORS.expenses} stackId="expenses" />
+                      <Bar dataKey={entry => monthlyPayroll.find(p => p?.month === entry.month.toLowerCase())?.doctorPayroll || 0} name="Doctor Payroll" fill={COLORS.payrollDoctor} stackId="expenses" />
+                      <Line type="monotone" dataKey="doctorNetIncome" name="Doctor Net Income" stroke={COLORS.netIncome} strokeWidth={3} dot={{ r: 4 }} />
+                    </>
+                  )}
+
+                  {/* ----- Business slice ----- */}
+                  {dataView === 'business' && (
+                    <>
+                      <Bar dataKey="businessRevenue"   name="Business Revenue"  fill={COLORS.revenue} />
+                      <Bar dataKey={entry => {
+                        const pay = monthlyPayroll.find(p => p?.month === entry.month.toLowerCase())?.businessPayroll || 0;
+                        return Math.max(0, entry.businessExpenses - pay);
+                      }} name="Business Other Expenses" fill={COLORS.expenses} stackId="expenses" />
+                      <Bar dataKey={entry => monthlyPayroll.find(p => p?.month === entry.month.toLowerCase())?.businessPayroll || 0} name="Business Payroll" fill={COLORS.payrollBusiness} stackId="expenses" />
+                      <Line type="monotone" dataKey="businessNetIncome" name="Business Net Income" stroke={COLORS.netIncome} strokeWidth={3} dot={{ r: 4 }} />
+                    </>
+                  )}
+
+                  {/* ----- Combined slice ----- */}
+                  {dataView === 'combined' && (
+                    <>
+                      <Bar dataKey="totalRevenue"   name="Total Revenue"  fill={COLORS.revenue} />
+                      <Bar dataKey={entry => {
+                        const pay = monthlyPayroll.find(p => p?.month === entry.month.toLowerCase());
+                        const totalPay = (pay?.doctorPayroll || 0) + (pay?.businessPayroll || 0);
+                        return Math.max(0, entry.totalExpenses - totalPay);
+                      }} name="Other Expenses" fill={COLORS.expenses} stackId="expenses" />
+                      <Bar dataKey={entry => {
+                        const pay = monthlyPayroll.find(p => p?.month === entry.month.toLowerCase());
+                        return (pay?.doctorPayroll || 0) + (pay?.businessPayroll || 0);
+                      }} name="Total Payroll" fill={COLORS.payroll} stackId="expenses" />
+                      <Line type="monotone" dataKey="totalNetIncome" name="Total Net Income" stroke={COLORS.netIncome} strokeWidth={3} dot={{ r: 4 }} />
+                    </>
+                  )}
+
+                  {/* ----- Tooltip ----- */}
+                  <Tooltip content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    const pay = monthlyPayroll.find(p => p?.month === label.toLowerCase());
+                    const format = (v:number) => formatCurrency(Math.round(v));
+                    return (
+                      <div className="rounded-md border bg-white px-3 py-2 shadow-md text-xs space-y-1">
+                        <div className="font-medium text-gray-700">{label}</div>
+                        {dataView === 'doctor' && (
+                          <>
+                            <div>Revenue: {format(payload[0].value)}</div>
+                            <div>Payroll: {format(pay?.doctorPayroll||0)}</div>
+                            <div>Other Exp: {format(Math.max(0,(payload[1]?.value||0)))}</div>
+                            <div>Net Income: {format(payload[3]?.value||0)}</div>
+                          </>) }
+                        {dataView === 'business' && (
+                          <>
+                            <div>Revenue: {format(payload[0].value)}</div>
+                            <div>Payroll: {format(pay?.businessPayroll||0)}</div>
+                            <div>Other Exp: {format(Math.max(0,(payload[1]?.value||0)))}</div>
+                            <div>Net Income: {format(payload[3]?.value||0)}</div>
+                          </>) }
+                        {dataView === 'combined' && (
+                          <>
+                            <div>Revenue: {format(payload[0].value)}</div>
+                            <div>Payroll: {format(pay?.totalPayroll||0)}</div>
+                            <div>Other Exp: {format(Math.max(0,(payload[1]?.value||0)))}</div>
+                            <div>Net Income: {format(payload[3]?.value||0)}</div>
+                          </>) }
+                      </div>
+                    );
+                  }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Other charts will be added below */}
+      <div className="text-center p-4 text-gray-500">
+        Additional charts will be displayed here. Only the Comprehensive Financial Performance chart has been updated.
+      </div>
+    </div>
+  );
+}

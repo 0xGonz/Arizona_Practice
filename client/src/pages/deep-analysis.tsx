@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useStore } from "@/store/data-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -17,9 +18,14 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// Format percentage values
-const formatPercent = (value: number) => {
-  return `${value.toFixed(1)}%`;
+// Color palette for the charts
+const COLORS = {
+  revenue: "#16a34a",           // green
+  expenses: "#dc2626",          // red
+  payroll: "#0ea5e9",           // cyan
+  payrollDoctor: "#0ea5e9",
+  payrollBusiness: "#38bdf8",
+  netIncome: "#2563eb",         // blue
 };
 
 const DeepAnalysis = () => {
