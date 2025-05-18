@@ -573,12 +573,11 @@ const DeepAnalysis = () => {
                                            'MRI,MRI', 'DME,DME', 'NXT STIM', 'ProMed,ProMed', 'ProcedureCharges', 'UDA,UDA']
                                            .includes(b.provider))
                   }
-                  layout="vertical"
-                  margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                  <XAxis type="number" tickFormatter={(value) => formatCurrency(value)} />
-                  <YAxis type="category" dataKey="provider" width={120} />
+                  <XAxis dataKey="provider" interval={0} angle={-45} textAnchor="end" height={100} />
+                  <YAxis tickFormatter={(value) => formatCurrency(value)} />
                   <Tooltip 
                     formatter={(value, name) => {
                       if (name === 'revenue') return formatCurrency(value as number);
@@ -593,21 +592,7 @@ const DeepAnalysis = () => {
                   <Bar 
                     dataKey="revenue" 
                     name="Revenue" 
-                    fill={COLORS.revenue} 
-                    label={(props) => {
-                      const { x, y, width, value } = props;
-                      return (
-                        <text 
-                          x={x + width + 5} 
-                          y={y + 4} 
-                          fill={COLORS.revenue} 
-                          fontSize={10}
-                          textAnchor="start"
-                        >
-                          {formatCurrency(value as number)}
-                        </text>
-                      );
-                    }}
+                    fill={COLORS.revenue}
                   />
                   <Bar 
                     dataKey={(entry) => {
@@ -630,25 +615,7 @@ const DeepAnalysis = () => {
                   <Bar 
                     dataKey="netIncome" 
                     name="Net Income" 
-                    fill={COLORS.netIncome} 
-                    label={(props) => {
-                      const { x, y, width, value } = props;
-                      const displayValue = (value as number) >= 0 ? 
-                        formatCurrency(value as number) : 
-                        `(${formatCurrency(Math.abs(value as number))})`;
-                      
-                      return (
-                        <text 
-                          x={x + width + 5} 
-                          y={y + 4} 
-                          fill={(value as number) >= 0 ? COLORS.netIncome : '#ff0000'} 
-                          fontSize={10}
-                          textAnchor="start"
-                        >
-                          {displayValue}
-                        </text>
-                      );
-                    }}
+                    fill={COLORS.netIncome}
                   />
                 </BarChart>
               </ResponsiveContainer>
