@@ -280,8 +280,13 @@ const DeepAnalysis = () => {
           item.name === "Total Operating Expenses" && item.isTotal
         );
         
+        // Looking for any of the possible Net Income line item names
         const netIncomeItem = monthData.e.lineItems.find(item => 
-          (item.name === "Net Income" || item.name === "Net Income (Loss)") && item.isTotal
+          (item.name === "Net Income" || 
+           item.name === "Net Income (Loss)" || 
+           item.name === "Total Net Income" || 
+           item.name === "Net Profit" || 
+           item.name === "Total Net Profit") && item.isTotal
         );
         
         // If these exact items can't be found, log a warning
@@ -292,7 +297,15 @@ const DeepAnalysis = () => {
         // Extract the values, with fallbacks just in case
         eRevenue = totalRevenueItem ? Math.abs(totalRevenueItem.summaryValue || 0) : 0;
         eExpenses = totalExpensesItem ? Math.abs(totalExpensesItem.summaryValue || 0) : 0;
-        eNetIncome = netIncomeItem ? netIncomeItem.summaryValue || 0 : 0;
+        
+        // Try to get Net Income from line item, but if not found, calculate it from Revenue - Expenses
+        if (netIncomeItem) {
+          eNetIncome = netIncomeItem.summaryValue || 0;
+        } else {
+          // Calculate Net Income directly from Revenue - Expenses
+          eNetIncome = eRevenue - eExpenses;
+          console.log(`Calculated Net Income for E data in ${month}: ${eNetIncome} (Revenue ${eRevenue} - Expenses ${eExpenses})`);
+        }
         
         console.log(`Found Revenue for E data in ${month}: ${eRevenue}`);
         console.log(`Found Expenses for E data in ${month}: ${eExpenses}`);
@@ -314,8 +327,13 @@ const DeepAnalysis = () => {
           item.name === "Total Operating Expenses" && item.isTotal
         );
         
+        // Looking for any of the possible Net Income line item names
         const netIncomeItem = monthData.o.lineItems.find(item => 
-          (item.name === "Net Income" || item.name === "Net Income (Loss)") && item.isTotal
+          (item.name === "Net Income" || 
+           item.name === "Net Income (Loss)" || 
+           item.name === "Total Net Income" || 
+           item.name === "Net Profit" || 
+           item.name === "Total Net Profit") && item.isTotal
         );
         
         // If these exact items can't be found, log a warning
@@ -326,7 +344,15 @@ const DeepAnalysis = () => {
         // Extract the values, with fallbacks just in case
         oRevenue = totalRevenueItem ? Math.abs(totalRevenueItem.summaryValue || 0) : 0;
         oExpenses = totalExpensesItem ? Math.abs(totalExpensesItem.summaryValue || 0) : 0;
-        oNetIncome = netIncomeItem ? netIncomeItem.summaryValue || 0 : 0;
+        
+        // Try to get Net Income from line item, but if not found, calculate it from Revenue - Expenses
+        if (netIncomeItem) {
+          oNetIncome = netIncomeItem.summaryValue || 0;
+        } else {
+          // Calculate Net Income directly from Revenue - Expenses
+          oNetIncome = oRevenue - oExpenses;
+          console.log(`Found Net Income for O data in ${month}: ${oNetIncome}`);
+        }
         
         console.log(`Found Revenue for O data in ${month}: ${oRevenue}`);
         console.log(`Found Expenses for O data in ${month}: ${oExpenses}`);
