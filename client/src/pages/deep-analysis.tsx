@@ -664,11 +664,13 @@ const DeepAnalysis = () => {
                   <YAxis yAxisId="left" tickFormatter={(value) => formatCurrency(value)} />
                   <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} />
                   <Tooltip 
-                    formatter={(value, name) => {
-                      if (name === 'Total Revenue' || name === 'Total Operating Expenses' || 
-                          name === 'Total Payroll' || name === 'Net Income') 
-                        return formatCurrency(value as number);
-                      if (name === 'Profit Margin %') return `${(value as number).toFixed(1)}%`;
+                    formatter={(value: any, name: any) => {
+                      if (typeof name === 'string') {
+                        if (name.includes('Revenue') || name.includes('Expenses') || 
+                            name.includes('Payroll') || name.includes('Income')) 
+                          return formatCurrency(value as number);
+                        if (name.includes('Margin')) return `${(value as number).toFixed(1)}%`;
+                      }
                       return value;
                     }}
                     labelFormatter={(label) => selectedView === 'doctors' ? `Provider: ${label}` : `Business Unit: ${label}`}
