@@ -714,32 +714,135 @@ const DeepAnalysis = () => {
           Monthly Payroll Expenses data is now combined with the Comprehensive Financial Performance chart
       */}
       
-      {/* Provider Performance Section */}
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-        <h2 className="text-2xl font-bold mb-2">Provider Performance Analysis</h2>
-        <p className="text-gray-600">Detailed financial metrics for individual doctors and business units</p>
+      {/* Provider Performance Section - New Consolidated View */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Provider Performance Analysis</h2>
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button 
+              className={`px-4 py-1.5 text-sm font-medium rounded-md ${selectedView === 'doctors' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setSelectedView('doctors')}
+            >
+              Doctor Data (E)
+            </button>
+            <button 
+              className={`px-4 py-1.5 text-sm font-medium rounded-md ${selectedView === 'business' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setSelectedView('business')}
+            >
+              Business Data (O)
+            </button>
+          </div>
+        </div>
+        
+        <Card className="shadow-lg">
+          <CardHeader className="border-b bg-gray-50 py-3">
+            <CardTitle>
+              {selectedView === 'doctors' ? 'Provider Revenue, Expenses & Profit Analysis (E-Files)' : 'Business Unit Revenue, Expenses & Profit Analysis (O-Files)'}
+            </CardTitle>
+            <CardDescription>
+              Detailed financial breakdown by {selectedView === 'doctors' ? 'provider' : 'business unit'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-[600px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={selectedView === 'doctors' ? 
+                    // List of specific doctors as requested
+                    doctorData.filter(d => ['Dr Noori', 'Dr Diep', 'Dr Heiner', 'Dr Anderson', 'Dr Killian', 
+                                           'Barnes, James', 'Dr Wright', 'Aggarwal, Nitish', 'Sitzer, Tiarra', "O'Haver"]
+                                           .includes(d.provider))
+                    : 
+                    // List of specific business units as requested
+                    businessData.filter(b => ['Therapy,Physical', 'MedShip,MedShip', 'Imaging,imaging', 'Pharmacy',
+                                           'MRI, MRI', 'DME, DME', 'NXT STIM', 'ProMed,ProMed', 'ProcedureCharges', 'UDA, UDA']
+                                           .includes(b.provider))
+                  }
+                  layout="vertical"
+                  margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis type="number" tickFormatter={(value) => formatCurrency(value)} />
+                  <YAxis type="category" dataKey="provider" width={120} />
+                  <Tooltip 
+                    formatter={(value, name) => {
+                      if (name === 'revenue') return formatCurrency(value as number);
+                      if (name === 'expenses') return formatCurrency(value as number);
+                      if (name === 'netIncome') return formatCurrency(value as number);
+                      if (name === 'profitMargin') return `${(value as number).toFixed(1)}%`;
+                      return value;
+                    }}
+                    labelFormatter={(label) => `Provider: ${label}`}
+                  />
+                  <Legend />
+                  <Bar 
+                    dataKey="revenue" 
+                    name="Revenue" 
+                    fill={COLORS.revenue} 
+                    label={(props) => {
+                      const { x, y, width, value } = props;
+                      return (
+                        <text 
+                          x={x + width + 5} 
+                          y={y + 4} 
+                          fill={COLORS.revenue} 
+                          fontSize={10}
+                          textAnchor="start"
+                        >
+                          {formatCurrency(value as number)}
+                        </text>
+                      );
+                    }}
+                  />
+                  <Bar 
+                    dataKey={(entry) => {
+                      // Calculate non-payroll expenses
+                      return Math.max(0, entry.expenses - (entry.expenses * 0.75)); // Estimate non-payroll expenses
+                    }}
+                    name="Other Expenses" 
+                    fill={COLORS.expenses} 
+                    stackId="expenses" 
+                  />
+                  <Bar 
+                    dataKey={(entry) => {
+                      // Estimate payroll expenses at 75% of total expenses
+                      return entry.expenses * 0.75;
+                    }}
+                    name="Est. Payroll" 
+                    fill={selectedView === 'doctors' ? COLORS.payrollDoctor : COLORS.payrollBusiness} 
+                    stackId="expenses" 
+                  />
+                  <Bar 
+                    dataKey="netIncome" 
+                    name="Net Income" 
+                    fill={COLORS.netIncome} 
+                    label={(props) => {
+                      const { x, y, width, value } = props;
+                      const displayValue = (value as number) >= 0 ? 
+                        formatCurrency(value as number) : 
+                        `(${formatCurrency(Math.abs(value as number))})`;
+                      
+                      return (
+                        <text 
+                          x={x + width + 5} 
+                          y={y + 4} 
+                          fill={(value as number) >= 0 ? COLORS.netIncome : '#ff0000'} 
+                          fontSize={10}
+                          textAnchor="start"
+                        >
+                          {displayValue}
+                        </text>
+                      );
+                    }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
-      <Tabs defaultValue="doctors" className="mb-8">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger 
-            value="doctors" 
-            className="text-lg py-3"
-            onClick={() => setSelectedView('doctors')}
-          >
-            Doctor Performance
-          </TabsTrigger>
-          <TabsTrigger 
-            value="businesses" 
-            className="text-lg py-3"
-            onClick={() => setSelectedView('business')}
-          >
-            Business Unit Performance
-          </TabsTrigger>
-        </TabsList>
-        
-        {/* Doctor Performance Tab */}
-        <TabsContent value="doctors" className="mt-0">
+      {/* Removed old TabsContent value="doctors" section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card className="shadow-lg">
               <CardHeader className="border-b bg-gray-50 py-3">
