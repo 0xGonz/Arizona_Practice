@@ -557,7 +557,15 @@ const DeepAnalysis = () => {
                         fill={COLORS.expenses} 
                         stackId="expenses" 
                       />
-                      <Bar dataKey="doctorPayroll" name="Doctor Payroll" fill={COLORS.payrollDoctor} stackId="expenses" />
+                      <Bar 
+                        dataKey={(entry) => {
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          return payrollData?.doctorPayroll || 0;
+                        }}
+                        name="Doctor Payroll" 
+                        fill={COLORS.payrollDoctor} 
+                        stackId="expenses" 
+                      />
                       <Line 
                         type="monotone" 
                         dataKey="doctorNetIncome" 
@@ -584,7 +592,15 @@ const DeepAnalysis = () => {
                         fill={COLORS.expenses} 
                         stackId="expenses" 
                       />
-                      <Bar dataKey="businessPayroll" name="Business Payroll" fill={COLORS.payrollBusiness} stackId="expenses" />
+                      <Bar 
+                        dataKey={(entry) => {
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          return payrollData?.businessPayroll || 0;
+                        }}
+                        name="Business Payroll" 
+                        fill={COLORS.payrollBusiness} 
+                        stackId="expenses" 
+                      />
                       <Line 
                         type="monotone" 
                         dataKey="businessNetIncome" 
@@ -614,7 +630,8 @@ const DeepAnalysis = () => {
                       <Bar 
                         dataKey={(entry) => {
                           const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
-                          return payrollData?.totalPayroll || 0;
+                          // Calculate the sum of doctor and business payroll to ensure we get accurate numbers
+                          return (payrollData?.doctorPayroll || 0) + (payrollData?.businessPayroll || 0);
                         }} 
                         name="Total Payroll" 
                         fill={COLORS.payroll} 
