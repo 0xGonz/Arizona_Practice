@@ -86,16 +86,13 @@ const DeepAnalysis = () => {
           const payroll = getProviderPayroll(month, provider, 'e');
           const netIncome = getProviderNetIncome(month, provider, 'e');
           // For total expenses, we use the difference between revenue and net income
-          const expenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
+          const calculatedExpenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
           console.log(`Found payroll for provider ${provider} in ${month}: ${payroll}`);
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
           // Calculate what percentage of expenses is payroll
-          const payrollPercentage = expenses > 0 ? (payroll / expenses) * 100 : 0;
-          
-          // Make sure expenses is defined and used correctly
-          const calculatedExpenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
+          const payrollPercentage = calculatedExpenses > 0 ? (payroll / calculatedExpenses) * 100 : 0;
           
           doctorData.push({
             provider,
@@ -122,21 +119,21 @@ const DeepAnalysis = () => {
           const payroll = getProviderPayroll(month, provider, 'o');
           const netIncome = getProviderNetIncome(month, provider, 'o');
           // For total expenses, we use the difference between revenue and net income
-          const expenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
+          const calculatedExpenses = revenue - netIncome > 0 ? revenue - netIncome : payroll;
           console.log(`Found payroll for business provider ${provider} in ${month}: ${payroll}`);
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
           // Calculate what percentage of expenses is payroll
-          const payrollPercentage = expenses > 0 ? (payroll / expenses) * 100 : 0;
+          const payrollPercentage = calculatedExpenses > 0 ? (payroll / calculatedExpenses) * 100 : 0;
           
           businessData.push({
             provider,
             revenue,
-            expenses,
+            expenses: calculatedExpenses,
             netIncome,
             payroll,
-            otherExpenses: expenses - payroll,
+            otherExpenses: calculatedExpenses - payroll,
             profitMargin,
             payrollPercentage,
             month
@@ -465,13 +462,13 @@ const DeepAnalysis = () => {
                   <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} />
                   <Tooltip
                     formatter={(value, name, props) => {
-                      if (name.includes('ProfitMargin') || name.includes('PayrollPercent')) {
-                        return [`${Number(value).toFixed(1)}%`, name.replace(/([A-Z])/g, ' $1').trim()];
+                      if (typeof name === 'string' && (name.includes('ProfitMargin') || name.includes('PayrollPercent'))) {
+                        return [`${Number(value).toFixed(1)}%`, typeof name === 'string' ? name.replace(/([A-Z])/g, ' $1').trim() : name];
                       }
-                      return [formatCurrency(value as number), name.replace(/([A-Z])/g, ' $1').trim()];
+                      return [formatCurrency(value as number), typeof name === 'string' ? name.replace(/([A-Z])/g, ' $1').trim() : name];
                     }}
                   />
-                  <Legend formatter={(value) => value.replace(/([A-Z])/g, ' $1').trim()} />
+                  <Legend formatter={(value) => typeof value === 'string' ? value.replace(/([A-Z])/g, ' $1').trim() : String(value)} />
                   
                   {/* Revenue Line */}
                   <Line
