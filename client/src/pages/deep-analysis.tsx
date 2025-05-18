@@ -1,13 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useStore } from "@/store/data-store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
+  PieChart, Pie, Cell, LineChart, Line, ComposedChart, Area
 } from "recharts";
 
-// Format large numbers with commas and dollar sign
+// Format currency values
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -15,6 +16,11 @@ const formatCurrency = (value: number) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
+};
+
+// Format percentage values
+const formatPercent = (value: number) => {
+  return `${value.toFixed(1)}%`;
 };
 
 const DeepAnalysis = () => {
@@ -27,6 +33,7 @@ const DeepAnalysis = () => {
   } = useStore();
   
   const availableMonths = useMemo(() => getAvailableMonths(), [getAvailableMonths]);
+  const [selectedView, setSelectedView] = useState<'doctors' | 'business'>('doctors');
 
   // Extract provider data from both E and O files
   const providerData = useMemo(() => {
@@ -40,7 +47,6 @@ const DeepAnalysis = () => {
       // Get provider data from E files (doctors/employees)
       if (monthData.e) {
         const providers: string[] = monthData.e.entityColumns || [];
-        console.log(`Found providers in E file for ${month}:`, providers);
         
         providers.forEach(provider => {
           // Skip non-provider columns like "Total"
@@ -56,7 +62,8 @@ const DeepAnalysis = () => {
             result.push({
               provider,
               month,
-              fileType: 'Employee (E)',
+              fileType: 'Doctor',
+              type: 'e',
               revenue,
               expenses,
               netIncome,
@@ -69,7 +76,6 @@ const DeepAnalysis = () => {
       // Get provider data from O files (businesses/departments)
       if (monthData.o) {
         const providers: string[] = monthData.o.entityColumns || [];
-        console.log(`Found providers in O file for ${month}:`, providers);
         
         providers.forEach(provider => {
           // Skip non-provider columns like "Total"
@@ -85,7 +91,8 @@ const DeepAnalysis = () => {
             result.push({
               provider,
               month,
-              fileType: 'Business (O)',
+              fileType: 'Business',
+              type: 'o',
               revenue,
               expenses,
               netIncome,
@@ -96,47 +103,130 @@ const DeepAnalysis = () => {
       }
     });
     
-    console.log(`Total provider data records: ${result.length}`);
-    if (result.length > 0) {
-      console.log("Sample provider data:", result.slice(0, 3));
-    }
-    
     return result;
   }, [monthlyData, availableMonths, getProviderRevenue, getProviderPayroll, getProviderNetIncome]);
   
-  // Get top performing providers by revenue
-  const topPerformers = useMemo(() => {
-    // Group by provider and sum their revenue, but keep E and O files separate
-    const providerTotals = providerData.reduce((acc, item) => {
-      // Create a unique key combining provider name and file type to keep E and O separated
-      const key = `${item.provider}_${item.fileType}`;
-      if (!acc[key]) {
-        acc[key] = {
-          provider: item.provider,
-          revenue: 0,
-          expenses: 0, 
-          netIncome: 0,
-          fileType: item.fileType,
-          displayName: `${item.provider} (${item.fileType === 'Employee (E)' ? 'Doctor' : 'Business'})`
-        };
-      }
-      acc[key].revenue += item.revenue;
-      acc[key].expenses += item.expenses;
-      acc[key].netIncome += item.netIncome;
-      return acc;
-    }, {});
+  // Doctor data aggregated by provider
+  const doctorData = useMemo(() => {
+    const doctors = providerData
+      .filter(item => item.fileType === 'Doctor')
+      .reduce((acc, item) => {
+        const key = item.provider;
+        if (!acc[key]) {
+          acc[key] = {
+            provider: key,
+            revenue: 0,
+            expenses: 0,
+            netIncome: 0,
+            profitMargin: 0,
+            monthlyData: {}
+          };
+        }
+        
+        // Aggregate total values
+        acc[key].revenue += item.revenue;
+        acc[key].expenses += item.expenses;
+        acc[key].netIncome += item.netIncome;
+        
+        // Track monthly values
+        if (!acc[key].monthlyData[item.month]) {
+          acc[key].monthlyData[item.month] = {
+            revenue: 0,
+            expenses: 0,
+            netIncome: 0
+          };
+        }
+        
+        acc[key].monthlyData[item.month].revenue += item.revenue;
+        acc[key].monthlyData[item.month].expenses += item.expenses;
+        acc[key].monthlyData[item.month].netIncome += item.netIncome;
+        
+        return acc;
+      }, {});
     
-    // Convert to array and sort by revenue
-    const result = Object.values(providerTotals)
-      .sort((a: any, b: any) => b.revenue - a.revenue)
-      .filter((item: any) => item.revenue > 0); // Only include positive revenue
-      
-    console.log("Top performers:", result.slice(0, 5));
-    
-    return result;
+    // Calculate profit margins and convert to array
+    return Object.values(doctors).map((doctor: any) => ({
+      ...doctor,
+      profitMargin: doctor.revenue > 0 ? (doctor.netIncome / doctor.revenue) * 100 : 0
+    }));
   }, [providerData]);
   
-  // Calculate monthly performance metrics
+  // Business data aggregated by provider
+  const businessData = useMemo(() => {
+    const businesses = providerData
+      .filter(item => item.fileType === 'Business')
+      .reduce((acc, item) => {
+        const key = item.provider;
+        if (!acc[key]) {
+          acc[key] = {
+            provider: key,
+            revenue: 0,
+            expenses: 0,
+            netIncome: 0,
+            profitMargin: 0,
+            monthlyData: {}
+          };
+        }
+        
+        // Aggregate total values
+        acc[key].revenue += item.revenue;
+        acc[key].expenses += item.expenses;
+        acc[key].netIncome += item.netIncome;
+        
+        // Track monthly values
+        if (!acc[key].monthlyData[item.month]) {
+          acc[key].monthlyData[item.month] = {
+            revenue: 0,
+            expenses: 0,
+            netIncome: 0
+          };
+        }
+        
+        acc[key].monthlyData[item.month].revenue += item.revenue;
+        acc[key].monthlyData[item.month].expenses += item.expenses;
+        acc[key].monthlyData[item.month].netIncome += item.netIncome;
+        
+        return acc;
+      }, {});
+    
+    // Calculate profit margins and convert to array
+    return Object.values(businesses).map((business: any) => ({
+      ...business,
+      profitMargin: business.revenue > 0 ? (business.netIncome / business.revenue) * 100 : 0
+    }));
+  }, [providerData]);
+  
+  // Top performing doctors by revenue
+  const topDoctors = useMemo(() => {
+    return [...doctorData]
+      .sort((a: any, b: any) => b.revenue - a.revenue)
+      .slice(0, 10);
+  }, [doctorData]);
+  
+  // Top performing businesses by revenue
+  const topBusinesses = useMemo(() => {
+    return [...businessData]
+      .sort((a: any, b: any) => b.revenue - a.revenue)
+      .slice(0, 10);
+  }, [businessData]);
+  
+  // Most profitable doctors by profit margin
+  const topProfitableDoctors = useMemo(() => {
+    return [...doctorData]
+      .filter((d: any) => d.revenue > 50000) // Only significant revenue
+      .sort((a: any, b: any) => b.profitMargin - a.profitMargin)
+      .slice(0, 10);
+  }, [doctorData]);
+  
+  // Most profitable businesses by profit margin
+  const topProfitableBusinesses = useMemo(() => {
+    return [...businessData]
+      .filter((d: any) => d.revenue > 20000) // Only significant revenue
+      .sort((a: any, b: any) => b.profitMargin - a.profitMargin)
+      .slice(0, 10);
+  }, [businessData]);
+  
+  // Monthly performance metrics
   const monthlyPerformance = useMemo(() => {
     return availableMonths.map((month: string) => {
       const monthData = monthlyData[month.toLowerCase()];
@@ -149,7 +239,7 @@ const DeepAnalysis = () => {
       let oExpenses = 0;
       let oNetIncome = 0;
       
-      // Sum all provider values for E files
+      // Extract totals from E files
       if (monthData.e && monthData.e.lineItems) {
         const totalRevenueItem = monthData.e.lineItems.find(item => 
           item.name === "Total Revenue" && item.isTotal
@@ -168,7 +258,7 @@ const DeepAnalysis = () => {
         eNetIncome = netIncomeItem ? netIncomeItem.summaryValue || 0 : 0;
       }
       
-      // Sum all provider values for O files
+      // Extract totals from O files
       if (monthData.o && monthData.o.lineItems) {
         const totalRevenueItem = monthData.o.lineItems.find(item => 
           item.name === "Total Revenue" && item.isTotal
@@ -187,367 +277,111 @@ const DeepAnalysis = () => {
         oNetIncome = netIncomeItem ? netIncomeItem.summaryValue || 0 : 0;
       }
       
+      // Calculate profit margins
+      const eMargin = eRevenue > 0 ? (eNetIncome / eRevenue) * 100 : 0;
+      const oMargin = oRevenue > 0 ? (oNetIncome / oRevenue) * 100 : 0;
+      const totalMargin = (eRevenue + oRevenue) > 0 ? 
+        ((eNetIncome + oNetIncome) / (eRevenue + oRevenue)) * 100 : 0;
+      
       return {
         month,
-        eRevenue,
-        eExpenses,
-        eNetIncome,
-        oRevenue,
-        oExpenses,
-        oNetIncome,
+        doctorRevenue: eRevenue,
+        doctorExpenses: eExpenses,
+        doctorNetIncome: eNetIncome,
+        doctorMargin: eMargin,
+        businessRevenue: oRevenue,
+        businessExpenses: oExpenses,
+        businessNetIncome: oNetIncome,
+        businessMargin: oMargin,
         totalRevenue: eRevenue + oRevenue,
         totalExpenses: eExpenses + oExpenses,
-        totalNetIncome: eNetIncome + oNetIncome
+        totalNetIncome: eNetIncome + oNetIncome,
+        totalMargin: totalMargin
       };
     }).filter(Boolean);
   }, [monthlyData, availableMonths]);
   
-  // Calculate revenue distribution by provider
-  const revenueDistribution = useMemo(() => {
-    // Group by provider and sum their revenue, but keep E and O files separate
-    const providerRevenue = providerData.reduce((acc, item) => {
-      // Create a unique key combining provider name and file type
-      const key = `${item.provider}_${item.fileType}`;
-      if (!acc[key]) {
-        acc[key] = {
-          provider: item.provider,
-          value: 0,
-          fileType: item.fileType,
-          displayName: `${item.provider} (${item.fileType === 'Employee (E)' ? 'Doctor' : 'Business'})`
-        };
-      }
-      acc[key].value += item.revenue;
-      return acc;
-    }, {});
-    
-    // Convert to array and sort by revenue
-    const result = Object.values(providerRevenue)
-      .sort((a: any, b: any) => b.value - a.value)
-      .filter((item: any) => item.value > 0) // Only include positive revenue
-      .slice(0, 15); // Limit to top 15 for better visualization
+  // Extract monthly payroll expenses
+  const monthlyPayroll = useMemo(() => {
+    return availableMonths.map((month: string) => {
+      const monthData = monthlyData[month.toLowerCase()];
+      if (!monthData) return null;
       
-    console.log("Revenue distribution data:", result.slice(0, 5));
-    
-    return result;
-  }, [providerData]);
-
-  // Color scale for pie charts
-  const COLORS = [
-    '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', 
-    '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57',
-    '#83a6ed', '#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d'
-  ];
+      let doctorPayroll = 0;
+      let businessPayroll = 0;
+      
+      // Find payroll in E files
+      if (monthData.e && monthData.e.lineItems) {
+        const payrollItem = monthData.e.lineItems.find(item => 
+          (item.name === "Total Payroll and Related Expense" || 
+           item.name === "Total Payroll & Related Expense" ||
+           (item.name.includes("Payroll") && item.isTotal))
+        );
+        
+        doctorPayroll = payrollItem ? Math.abs(payrollItem.summaryValue || 0) : 0;
+      }
+      
+      // Find payroll in O files
+      if (monthData.o && monthData.o.lineItems) {
+        const payrollItem = monthData.o.lineItems.find(item => 
+          (item.name === "Total Payroll and Related Expense" || 
+           item.name === "Total Payroll & Related Expense" ||
+           (item.name.includes("Payroll") && item.isTotal))
+        );
+        
+        businessPayroll = payrollItem ? Math.abs(payrollItem.summaryValue || 0) : 0;
+      }
+      
+      return {
+        month,
+        doctorPayroll,
+        businessPayroll,
+        totalPayroll: doctorPayroll + businessPayroll
+      };
+    }).filter(Boolean);
+  }, [monthlyData, availableMonths]);
   
-  // Format for tooltip display
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-          <p className="font-semibold">{label || payload[0].payload.provider || payload[0].name}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: {entry.dataKey.includes('profitMargin') 
-                ? `${entry.value.toFixed(2)}%` 
-                : formatCurrency(entry.value)}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
+  // Color scheme - more professional and visually distinct
+  const COLORS = {
+    doctor: '#6366f1', // Indigo for doctor data
+    business: '#10b981', // Emerald for business data
+    combined: '#f59e0b', // Amber for combined data
+    expenses: '#ef4444', // Red for expenses
+    netIncome: '#3b82f6', // Blue for net income
+    revenue: '#8b5cf6', // Purple for revenue
+    payroll: '#ec4899' // Pink for payroll
   };
+  
+  // Colors for pie charts
+  const PIE_COLORS = [
+    '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', 
+    '#8b5cf6', '#ec4899', '#a855f7', '#14b8a6', '#f43f5e',
+    '#0ea5e9', '#84cc16', '#f97316', '#06b6d4', '#8b5cf6'
+  ];
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Deep Financial Analysis</h1>
+    <div className="container mx-auto p-4 bg-gray-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
+        <h1 className="text-3xl font-bold mb-2">Provider Performance Analysis</h1>
+        <p className="text-gray-600">Comprehensive financial comparison between doctor and business operations</p>
+      </div>
       
-      <div className="grid grid-cols-1 gap-6">
-        {/* Monthly E vs O Comparison */}
-        <Card className="shadow-lg border-t-4 border-blue-500">
-          <CardHeader className="bg-gray-50 p-4">
-            <CardTitle className="text-xl font-semibold">Monthly Revenue Comparison: Employee vs Business</CardTitle>
-            <CardDescription>Comparing monthly revenue between Employee (E) and Business (O) files</CardDescription>
+      {/* Monthly Revenue Breakdown */}
+      <h2 className="text-2xl font-bold mb-4">Monthly Revenue Breakdown</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="shadow-lg">
+          <CardHeader className="border-b bg-gray-50 py-3">
+            <CardTitle>Monthly Revenue Distribution</CardTitle>
+            <CardDescription>Comparing doctor and business revenue streams</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={monthlyPerformance}
-                  margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000000 
-                    ? `${(value / 1000000).toFixed(1)}M` 
-                    : (Math.abs(value) >= 1000 
-                        ? `${(value / 1000).toFixed(0)}K` 
-                        : value)}`} 
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="eRevenue" name="Employee Revenue" fill="#8884d8" />
-                  <Bar dataKey="oRevenue" name="Business Revenue" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Provider Revenue Distribution */}
-        <Card className="shadow-lg border-t-4 border-green-500">
-          <CardHeader className="bg-gray-50 p-4">
-            <CardTitle className="text-xl font-semibold">Revenue Distribution by Provider</CardTitle>
-            <CardDescription>Share of total revenue contributed by each provider</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={revenueDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="displayName"
-                    label={({ displayName, percent }) => `${displayName.split(' ')[0]}: ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {revenueDistribution.map((entry: any, index: number) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.fileType === 'Employee (E)' ? 
-                          COLORS[index % 7] : // Use first set of colors for E data
-                          COLORS[(index % 7) + 7]} // Use second set for O data
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-                            <p className="font-semibold">{data.displayName}</p>
-                            <p className="text-sm" style={{ color: payload[0].color }}>
-                              Revenue: {formatCurrency(data.value)}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {data.fileType}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Top Performers */}
-        <Card className="shadow-lg border-t-4 border-purple-500">
-          <CardHeader className="bg-gray-50 p-4">
-            <CardTitle className="text-xl font-semibold">Top Performing Providers</CardTitle>
-            <CardDescription>Revenue, expenses, and net income for top providers</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={topPerformers.slice(0, 10)}
-                  margin={{ top: 20, right: 30, left: 80, bottom: 5 }}
-                  layout="vertical"
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" tickFormatter={(value) => 
-                    `$${Math.abs(value) >= 1000000 
-                      ? `${(value / 1000000).toFixed(1)}M` 
-                      : (Math.abs(value) >= 1000 
-                          ? `${(value / 1000).toFixed(0)}K` 
-                          : value)}`
-                  } />
-                  <YAxis 
-                    dataKey="displayName" 
-                    type="category" 
-                    width={150}
-                    tickFormatter={(value) => value.length > 18 ? `${value.substring(0, 15)}...` : value}
-                  />
-                  <Tooltip 
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-                            <p className="font-semibold">{data.displayName}</p>
-                            {payload.map((entry: any, index: number) => (
-                              <p key={index} className="text-sm" style={{ color: entry.color }}>
-                                {entry.name}: {formatCurrency(entry.value)}
-                              </p>
-                            ))}
-                            <p className="text-xs text-gray-500 mt-1">
-                              {data.fileType}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
-                  <Bar dataKey="expenses" name="Expenses" fill="#82ca9d" />
-                  <Bar dataKey="netIncome" name="Net Income" fill="#ffc658" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Provider Profit Margin Analysis */}
-        <Card className="shadow-lg border-t-4 border-orange-500">
-          <CardHeader className="bg-gray-50 p-4">
-            <CardTitle className="text-xl font-semibold">Provider Profit Margin Analysis</CardTitle>
-            <CardDescription>Comparing profit margins across top providers</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4">
-            <Tabs defaultValue="bar">
-              <TabsList className="mb-4">
-                <TabsTrigger value="bar">Bar Chart</TabsTrigger>
-                <TabsTrigger value="line">Monthly Trend</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="bar" className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={topPerformers
-                      .filter(d => d.revenue > 0)
-                      .map(d => ({
-                        ...d,
-                        profitMargin: d.revenue > 0 ? (d.netIncome / d.revenue) * 100 : 0
-                      }))
-                      .sort((a, b) => b.profitMargin - a.profitMargin)
-                      .slice(0, 15)
-                    }
-                    margin={{ top: 20, right: 30, left: 60, bottom: 100 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="displayName" 
-                      angle={-45} 
-                      textAnchor="end"
-                      height={100}
-                      interval={0}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
-                    <Tooltip 
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-                              <p className="font-semibold">{data.displayName}</p>
-                              <p className="text-sm" style={{ color: payload[0].color }}>
-                                Profit Margin: {data.profitMargin.toFixed(2)}%
-                              </p>
-                              <p className="text-sm">
-                                Revenue: {formatCurrency(data.revenue)}
-                              </p>
-                              <p className="text-sm">
-                                Net Income: {formatCurrency(data.netIncome)}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {data.fileType}
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Legend />
-                    <Bar 
-                      dataKey="profitMargin" 
-                      name="Profit Margin %" 
-                      fill="#8884d8"
-                    />
-                    <Bar 
-                      dataKey="revenue" 
-                      name="Revenue" 
-                      fill="#82ca9d"
-                      hide
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </TabsContent>
-              
-              <TabsContent value="line" className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={monthlyPerformance}
-                    margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis 
-                      tickFormatter={(value) => `${value.toFixed(1)}%`}
-                      domain={['auto', 'auto']}
-                    />
-                    <Tooltip 
-                      formatter={(value) => {
-                        if (typeof value === 'number') {
-                          return [`${value.toFixed(2)}%`, ''];
-                        }
-                        return [value, ''];
-                      }}
-                    />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey={(data) => data.eRevenue > 0 ? (data.eNetIncome / data.eRevenue) * 100 : 0} 
-                      name="Employee Margin" 
-                      stroke="#8884d8" 
-                      activeDot={{ r: 8 }} 
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey={(data) => data.oRevenue > 0 ? (data.oNetIncome / data.oRevenue) * 100 : 0} 
-                      name="Business Margin" 
-                      stroke="#82ca9d" 
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey={(data) => data.totalRevenue > 0 ? (data.totalNetIncome / data.totalRevenue) * 100 : 0} 
-                      name="Total Margin" 
-                      stroke="#ffc658" 
-                      strokeDasharray="5 5"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-        
-        {/* Monthly Expense Breakdown */}
-        <Card className="shadow-lg border-t-4 border-red-500">
-          <CardHeader className="bg-gray-50 p-4">
-            <CardTitle className="text-xl font-semibold">Monthly Expense Analysis</CardTitle>
-            <CardDescription>Comparing expenses between Employee and Business files</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={monthlyPerformance}
-                  margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis dataKey="month" />
                   <YAxis 
                     tickFormatter={(value) => `$${Math.abs(value) >= 1000000 
@@ -556,30 +390,145 @@ const DeepAnalysis = () => {
                           ? `${(value / 1000).toFixed(0)}K` 
                           : value)}`} 
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip 
+                    formatter={(value) => [formatCurrency(value as number), ""]} 
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
                   <Legend />
-                  <Bar dataKey="eExpenses" name="Employee Expenses" fill="#FF8042" />
-                  <Bar dataKey="oExpenses" name="Business Expenses" fill="#FFBB28" />
+                  <Bar 
+                    dataKey="doctorRevenue" 
+                    name="Doctor Revenue" 
+                    fill={COLORS.doctor} 
+                    stackId="revenue"
+                  />
+                  <Bar 
+                    dataKey="businessRevenue" 
+                    name="Business Revenue" 
+                    fill={COLORS.business} 
+                    stackId="revenue"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
         
-        {/* Net Income Comparison */}
-        <Card className="shadow-lg border-t-4 border-indigo-500">
-          <CardHeader className="bg-gray-50 p-4">
-            <CardTitle className="text-xl font-semibold">Net Income Comparison</CardTitle>
-            <CardDescription>Monthly net income for Employee vs Business files</CardDescription>
+        <Card className="shadow-lg">
+          <CardHeader className="border-b bg-gray-50 py-3">
+            <CardTitle>Monthly Revenue vs Expenses</CardTitle>
+            <CardDescription>Tracking overall financial performance trends</CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={monthlyPerformance}
+                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis dataKey="month" />
+                  <YAxis 
+                    tickFormatter={(value) => `$${Math.abs(value) >= 1000000 
+                      ? `${(value / 1000000).toFixed(1)}M` 
+                      : (Math.abs(value) >= 1000 
+                          ? `${(value / 1000).toFixed(0)}K` 
+                          : value)}`} 
+                  />
+                  <Tooltip 
+                    formatter={(value) => [formatCurrency(value as number), ""]} 
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="totalRevenue" name="Total Revenue" fill={COLORS.revenue} />
+                  <Bar dataKey="totalExpenses" name="Total Expenses" fill={COLORS.expenses} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="totalNetIncome" 
+                    name="Net Income" 
+                    stroke={COLORS.netIncome} 
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Profit Margin Analysis */}
+      <h2 className="text-2xl font-bold mb-4">Profit Margin Analysis</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="shadow-lg">
+          <CardHeader className="border-b bg-gray-50 py-3">
+            <CardTitle>Monthly Profit Margin Trends</CardTitle>
+            <CardDescription>Doctor vs Business profitability over time</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={monthlyPerformance}
-                  margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis dataKey="month" />
+                  <YAxis 
+                    tickFormatter={(value) => `${value.toFixed(1)}%`}
+                    domain={[dataMin => Math.min(-10, dataMin), dataMax => Math.max(100, dataMax)]}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`${(value as number).toFixed(2)}%`, ""]} 
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="doctorMargin" 
+                    name="Doctor Profit Margin" 
+                    stroke={COLORS.doctor} 
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="businessMargin" 
+                    name="Business Profit Margin" 
+                    stroke={COLORS.business}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="totalMargin" 
+                    name="Combined Profit Margin" 
+                    stroke={COLORS.combined}
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-lg">
+          <CardHeader className="border-b bg-gray-50 py-3">
+            <CardTitle>Monthly Payroll Expenses</CardTitle>
+            <CardDescription>Tracking payroll costs by business unit</CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthlyPayroll}
+                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis dataKey="month" />
                   <YAxis 
                     tickFormatter={(value) => `$${Math.abs(value) >= 1000000 
@@ -588,39 +537,358 @@ const DeepAnalysis = () => {
                           ? `${(value / 1000).toFixed(0)}K` 
                           : value)}`} 
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip 
+                    formatter={(value) => [formatCurrency(value as number), ""]} 
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="eNetIncome" 
-                    name="Employee Net Income" 
-                    stroke="#8884d8" 
-                    strokeWidth={2}
-                    dot={{ r: 5 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="oNetIncome" 
-                    name="Business Net Income" 
-                    stroke="#82ca9d" 
-                    strokeWidth={2}
-                    dot={{ r: 5 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="totalNetIncome" 
-                    name="Total Net Income" 
-                    stroke="#ffc658" 
-                    strokeWidth={3}
-                    strokeDasharray="5 5"
-                    dot={{ r: 5 }}
-                  />
-                </LineChart>
+                  <Bar dataKey="doctorPayroll" name="Doctor Payroll" fill={COLORS.doctor} />
+                  <Bar dataKey="businessPayroll" name="Business Payroll" fill={COLORS.business} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
+      
+      {/* Provider Performance Section */}
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <h2 className="text-2xl font-bold mb-2">Provider Performance Analysis</h2>
+        <p className="text-gray-600">Detailed financial metrics for individual doctors and business units</p>
+      </div>
+      
+      <Tabs defaultValue="doctors" className="mb-8">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger 
+            value="doctors" 
+            className="text-lg py-3"
+            onClick={() => setSelectedView('doctors')}
+          >
+            Doctor Performance
+          </TabsTrigger>
+          <TabsTrigger 
+            value="businesses" 
+            className="text-lg py-3"
+            onClick={() => setSelectedView('business')}
+          >
+            Business Unit Performance
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Doctor Performance Tab */}
+        <TabsContent value="doctors" className="mt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gray-50 py-3">
+                <CardTitle>Top Doctors by Revenue</CardTitle>
+                <CardDescription>Top 10 highest revenue-generating doctors</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={topDoctors}
+                      margin={{ top: 20, right: 20, left: 100, bottom: 20 }}
+                      layout="vertical"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                      <XAxis 
+                        type="number" 
+                        tickFormatter={(value) => formatCurrency(value)}
+                      />
+                      <YAxis 
+                        dataKey="provider" 
+                        type="category" 
+                        width={100}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [formatCurrency(value as number), ""]}
+                        labelFormatter={(label) => `Doctor: ${label}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" name="Revenue" fill={COLORS.revenue} />
+                      <Bar dataKey="expenses" name="Expenses" fill={COLORS.expenses} />
+                      <Bar dataKey="netIncome" name="Net Income" fill={COLORS.netIncome} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gray-50 py-3">
+                <CardTitle>Most Profitable Doctors</CardTitle>
+                <CardDescription>Doctors with highest profit margins</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={topProfitableDoctors}
+                      margin={{ top: 20, right: 20, left: 100, bottom: 20 }}
+                      layout="vertical"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                      <XAxis 
+                        type="number" 
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <YAxis 
+                        dataKey="provider" 
+                        type="category" 
+                        width={100}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => {
+                          if (name === "profitMargin") 
+                            return [`${(value as number).toFixed(2)}%`, "Profit Margin"];
+                          return [formatCurrency(value as number), name];
+                        }}
+                        labelFormatter={(label) => `Doctor: ${label}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="profitMargin" name="Profit Margin" fill={COLORS.doctor}>
+                        {topProfitableDoctors.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card className="shadow-lg mb-6">
+            <CardHeader className="border-b bg-gray-50 py-3">
+              <CardTitle>Doctor Revenue Distribution</CardTitle>
+              <CardDescription>Percentage breakdown of revenue by doctor</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={topDoctors}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      outerRadius={140}
+                      dataKey="revenue"
+                      nameKey="provider"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                    >
+                      {topDoctors.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value) => [formatCurrency(value as number), "Revenue"]}
+                      labelFormatter={(label) => `Doctor: ${label}`}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Business Performance Tab */}
+        <TabsContent value="businesses" className="mt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gray-50 py-3">
+                <CardTitle>Top Business Units by Revenue</CardTitle>
+                <CardDescription>Top 10 highest revenue-generating business units</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={topBusinesses}
+                      margin={{ top: 20, right: 20, left: 120, bottom: 20 }}
+                      layout="vertical"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                      <XAxis 
+                        type="number" 
+                        tickFormatter={(value) => formatCurrency(value)}
+                      />
+                      <YAxis 
+                        dataKey="provider" 
+                        type="category" 
+                        width={120}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [formatCurrency(value as number), ""]}
+                        labelFormatter={(label) => `Business: ${label}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" name="Revenue" fill={COLORS.revenue} />
+                      <Bar dataKey="expenses" name="Expenses" fill={COLORS.expenses} />
+                      <Bar dataKey="netIncome" name="Net Income" fill={COLORS.netIncome} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gray-50 py-3">
+                <CardTitle>Most Profitable Business Units</CardTitle>
+                <CardDescription>Business units with highest profit margins</CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={topProfitableBusinesses}
+                      margin={{ top: 20, right: 20, left: 120, bottom: 20 }}
+                      layout="vertical"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                      <XAxis 
+                        type="number" 
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <YAxis 
+                        dataKey="provider" 
+                        type="category" 
+                        width={120}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => {
+                          if (name === "profitMargin") 
+                            return [`${(value as number).toFixed(2)}%`, "Profit Margin"];
+                          return [formatCurrency(value as number), name];
+                        }}
+                        labelFormatter={(label) => `Business: ${label}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="profitMargin" name="Profit Margin" fill={COLORS.business}>
+                        {topProfitableBusinesses.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card className="shadow-lg mb-6">
+            <CardHeader className="border-b bg-gray-50 py-3">
+              <CardTitle>Business Revenue Distribution</CardTitle>
+              <CardDescription>Percentage breakdown of revenue by business unit</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-96">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={topBusinesses}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      outerRadius={140}
+                      dataKey="revenue"
+                      nameKey="provider"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                    >
+                      {topBusinesses.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value) => [formatCurrency(value as number), "Revenue"]}
+                      labelFormatter={(label) => `Business: ${label}`}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Summary Section */}
+      <Card className="shadow-lg mb-8">
+        <CardHeader className="border-b bg-gray-50 py-3">
+          <CardTitle>Financial Performance Summary</CardTitle>
+          <CardDescription>Overall revenue and expense breakdown</CardDescription>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={monthlyPerformance}
+                margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <XAxis dataKey="month" />
+                <YAxis 
+                  yAxisId="left"
+                  tickFormatter={(value) => `$${Math.abs(value) >= 1000000 
+                    ? `${(value / 1000000).toFixed(1)}M` 
+                    : (Math.abs(value) >= 1000 
+                        ? `${(value / 1000).toFixed(0)}K` 
+                        : value)}`} 
+                />
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  tickFormatter={(value) => `${value}%`}
+                  domain={[-30, 50]}
+                />
+                <Tooltip 
+                  formatter={(value, name) => {
+                    if (name === "totalMargin") 
+                      return [`${(value as number).toFixed(2)}%`, "Profit Margin"];
+                    return [formatCurrency(value as number), name];
+                  }}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Legend />
+                <Area 
+                  yAxisId="left"
+                  type="monotone" 
+                  dataKey="totalRevenue" 
+                  name="Total Revenue" 
+                  fill={`${COLORS.revenue}33`}
+                  stroke={COLORS.revenue}
+                  fillOpacity={0.3}
+                />
+                <Bar yAxisId="left" dataKey="totalExpenses" name="Total Expenses" fill={COLORS.expenses} />
+                <Line 
+                  yAxisId="left"
+                  type="monotone" 
+                  dataKey="totalNetIncome" 
+                  name="Net Income" 
+                  stroke={COLORS.netIncome}
+                  strokeWidth={3}
+                  dot={{ r: 5 }}
+                  activeDot={{ r: 7 }}
+                />
+                <Line 
+                  yAxisId="right"
+                  type="monotone" 
+                  dataKey="totalMargin" 
+                  name="Profit Margin" 
+                  stroke="#ff0000"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 4 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
