@@ -626,6 +626,21 @@ export const useStore = create<DataStore>((set, get) => ({
     let newState;
     
     if (type === 'all') {
+      // Delete all data from the database
+      fetch('/api/uploads/clear-all', {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log('All data deleted from database successfully');
+        } else {
+          console.error('Failed to delete all data from database');
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting all data from database:', error);
+      });
+      
       newState = {
         ...state,
         monthlyData: {},
@@ -642,6 +657,21 @@ export const useStore = create<DataStore>((set, get) => ({
     } else if (type.startsWith('monthly-') && month) {
       const cleanMonth = month.toLowerCase().trim();
       const isEType = type === 'monthly-e';
+      
+      // Delete specific type/month data from the database
+      fetch(`/api/uploads/clear?type=${type}&month=${cleanMonth}`, {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log(`${type} data for ${cleanMonth} deleted from database successfully`);
+        } else {
+          console.error(`Failed to delete ${type} data for ${cleanMonth} from database`);
+        }
+      })
+      .catch(error => {
+        console.error(`Error deleting ${type} data for ${cleanMonth} from database:`, error);
+      });
       
       // Create a deep copy of the monthly data
       const newMonthlyData = JSON.parse(JSON.stringify(state.monthlyData));
