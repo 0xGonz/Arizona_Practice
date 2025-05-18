@@ -546,16 +546,30 @@ export default function Dashboard() {
                 <BarChart
                   data={aggregatedData.monthlyTrends.map(trend => ({
                     month: trend.month,
-                    "eData.netIncome": trend.eNetIncome,
-                    "oData.netIncome": trend.oNetIncome
+                    "eData.netIncome": trend.eNetIncome * 1000, // Convert back to real values
+                    "oData.netIncome": trend.oNetIncome * 1000, // Convert back to real values
+                    rawENetIncome: trend.eNetIncome * 1000, // Store raw values for tooltip
+                    rawONetIncome: trend.oNetIncome * 1000  // Store raw values for tooltip
                   }))}
                   margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                  <YAxis 
+                    tickFormatter={(value) => 
+                      `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`
+                    } 
+                  />
                   <Tooltip 
-                    formatter={(value) => [`${formatCurrency(value as number)}`, '']}
+                    formatter={(value, name, props) => {
+                      // Use the actual value for tooltip display
+                      if (name === "eData.netIncome") {
+                        return [formatCurrency(props.payload.rawENetIncome), "Employee Net Income"];
+                      } else if (name === "oData.netIncome") {
+                        return [formatCurrency(props.payload.rawONetIncome), "Business Net Income"];
+                      }
+                      return [formatCurrency(value as number), ""];
+                    }}
                     labelFormatter={(label) => `Month: ${label}`}
                   />
                   <Legend />
@@ -627,18 +641,29 @@ export default function Dashboard() {
               <BarChart
                 data={aggregatedData.monthlyTrends.map(trend => ({
                   month: trend.month,
-                  payroll: trend.payrollExpenses || 0,
-                  revenue: trend.revenue || 0
+                  payroll: trend.payrollExpenses * 1000, // Convert back to real values
+                  revenue: trend.revenue * 1000, // Convert back to real values
+                  rawPayroll: trend.payrollExpenses * 1000, // Store raw values for tooltip
+                  rawRevenue: trend.revenue * 1000 // Store raw values for tooltip
                 }))}
                 margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`} />
+                <YAxis 
+                  tickFormatter={(value) => 
+                    `$${Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}K` : value}`
+                  } 
+                />
                 <Tooltip 
-                  formatter={(value, name) => {
-                    if (name === 'payroll') return [formatCurrency(value as number), 'Payroll & Related Expenses'];
-                    return [formatCurrency(value as number), 'Revenue'];
+                  formatter={(value, name, props) => {
+                    // Use the actual values for tooltip display
+                    if (name === "payroll") {
+                      return [formatCurrency(props.payload.rawPayroll), 'Payroll & Related Expenses'];
+                    } else if (name === "revenue") {
+                      return [formatCurrency(props.payload.rawRevenue), 'Revenue'];
+                    }
+                    return [formatCurrency(value as number), ''];
                   }}
                   labelFormatter={(label) => `Month: ${label}`}
                 />
