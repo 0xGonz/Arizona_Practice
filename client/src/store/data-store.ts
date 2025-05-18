@@ -623,11 +623,89 @@ export const useStore = create<DataStore>((set, get) => ({
   
   // Clear uploaded data by type
   clearUploadedData: (type, month) => {
-    // Use an async function to handle database deletion properly
+    // Update the UI state immediately to provide faster feedback
+    if (type === 'all') {
+      // For "clear all", immediately update state before network request
+      set({
+        annualData: [],
+        monthlyData: {},
+        revenueMix: [],
+        marginTrend: [],
+        topPerformers: [],
+        bottomPerformers: [],
+        ancillaryComparison: [],
+        uploadStatus: {
+          annual: false,
+          monthly: {}
+        },
+        uploadHistory: []
+      });
+      
+      // Clear localStorage 
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('monthlyData');
+        localStorage.removeItem('uploadStatus');
+        localStorage.removeItem('uploadHistory');
+        localStorage.removeItem('revenueMix');
+        localStorage.removeItem('marginTrend');
+        localStorage.removeItem('topPerformers');
+        localStorage.removeItem('bottomPerformers');
+        localStorage.removeItem('ancillaryComparison');
+      }
+    } 
+    else if (type.startsWith('monthly-') && month) {
+      // For specific item deletion, update state immediately 
+      const cleanMonth = month.toLowerCase().trim();
+      const isEType = type === 'monthly-e';
+      
+      set(state => {
+        // Create deep copies to avoid state mutation issues
+        const newMonthlyData = JSON.parse(JSON.stringify(state.monthlyData || {}));
+        const newMonthlyStatus = JSON.parse(JSON.stringify(state.uploadStatus?.monthly || {}));
+        
+        // Remove the specific type data
+        if (newMonthlyData[cleanMonth]) {
+          if (isEType) {
+            delete newMonthlyData[cleanMonth].e;
+          } else {
+            delete newMonthlyData[cleanMonth].o;
+          }
+          
+          // If both types are removed, remove the month entry
+          if (!newMonthlyData[cleanMonth]?.e && !newMonthlyData[cleanMonth]?.o) {
+            delete newMonthlyData[cleanMonth];
+          }
+        }
+        
+        // Update the upload status
+        if (newMonthlyStatus[cleanMonth]) {
+          newMonthlyStatus[cleanMonth][isEType ? 'e' : 'o'] = false;
+          
+          // If both types are false, remove the month entry
+          if (!newMonthlyStatus[cleanMonth]?.e && !newMonthlyStatus[cleanMonth]?.o) {
+            delete newMonthlyStatus[cleanMonth];
+          }
+        }
+        
+        return {
+          ...state,
+          monthlyData: newMonthlyData,
+          uploadStatus: {
+            ...state.uploadStatus,
+            monthly: newMonthlyStatus
+          },
+          uploadHistory: state.uploadHistory.filter(upload => 
+            !(upload.type === type && upload.month === cleanMonth)
+          )
+        };
+      });
+    }
+    
+    // Now perform the actual server-side deletion in the background
     const deleteData = async () => {
       try {
         if (type === 'all') {
-          // Delete all data from the database first
+          // Delete all data from the database
           const response = await fetch('/api/uploads/clear-all', {
             method: 'DELETE',
             headers: {
@@ -637,100 +715,23 @@ export const useStore = create<DataStore>((set, get) => ({
           
           if (response.ok) {
             console.log('All data deleted from database successfully');
-            
-            // Now update local state to reflect this
-            set({
-              annualData: [],
-              monthlyData: {},
-              revenueMix: [],
-              marginTrend: [],
-              topPerformers: [],
-              bottomPerformers: [],
-              ancillaryComparison: [],
-              uploadStatus: {
-                annual: false,
-                monthly: {}
-              },
-              uploadHistory: []
-            });
-            
-            // Force clear localStorage too
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem('monthlyData');
-              localStorage.removeItem('uploadStatus');
-              localStorage.removeItem('uploadHistory');
-              localStorage.removeItem('revenueMix');
-              localStorage.removeItem('marginTrend');
-              localStorage.removeItem('topPerformers');
-              localStorage.removeItem('bottomPerformers');
-              localStorage.removeItem('ancillaryComparison');
-            }
-            
-            // Refresh the page to ensure all data is cleared
-            window.location.reload();
-            
           } else {
             console.error('Failed to delete all data from database');
           }
-        } else if (type.startsWith('monthly-') && month) {
+        } 
+        else if (type.startsWith('monthly-') && month) {
           const cleanMonth = month.toLowerCase().trim();
-          const isEType = type === 'monthly-e';
           
           // Delete specific type/month data from the database
           const response = await fetch(`/api/uploads/clear?type=${type}&month=${cleanMonth}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            }
           });
           
           if (response.ok) {
             console.log(`${type} data for ${cleanMonth} deleted from database successfully`);
-            
-            // Update the state for this specific data type
-            set(state => {
-              // Create a deep copy of the monthly data
-              const newMonthlyData = JSON.parse(JSON.stringify(state.monthlyData));
-              
-              // Remove the specific type data
-              if (newMonthlyData[cleanMonth]) {
-                if (isEType) {
-                  delete newMonthlyData[cleanMonth].e;
-                } else {
-                  delete newMonthlyData[cleanMonth].o;
-                }
-                
-                // If both types are removed, remove the month entry
-                if (!newMonthlyData[cleanMonth].e && !newMonthlyData[cleanMonth].o) {
-                  delete newMonthlyData[cleanMonth];
-                }
-              }
-              
-              // Update the upload status
-              const newMonthlyStatus = JSON.parse(JSON.stringify(state.uploadStatus.monthly));
-              if (newMonthlyStatus[cleanMonth]) {
-                newMonthlyStatus[cleanMonth][isEType ? 'e' : 'o'] = false;
-                
-                // If both types are false, remove the month entry
-                if (!newMonthlyStatus[cleanMonth].e && !newMonthlyStatus[cleanMonth].o) {
-                  delete newMonthlyStatus[cleanMonth];
-                }
-              }
-              
-              const newState = {
-                ...state,
-                monthlyData: newMonthlyData,
-                uploadStatus: {
-                  ...state.uploadStatus,
-                  monthly: newMonthlyStatus
-                },
-                uploadHistory: state.uploadHistory.filter(upload => 
-                  !(upload.type === type && upload.month === cleanMonth)
-                )
-              };
-              
-              // Save to localStorage
-              saveToLocalStorage(newState);
-              
-              return newState;
-            });
           } else {
             console.error(`Failed to delete ${type} data for ${cleanMonth} from database`);
           }
@@ -740,10 +741,10 @@ export const useStore = create<DataStore>((set, get) => ({
       }
     };
     
-    // Start the deletion process
+    // Start the deletion process in the background
     deleteData();
     
-    // Return a no-op state update so Zustand doesn't complain
+    // No need for additional state update
     return state => state;
   },
   
