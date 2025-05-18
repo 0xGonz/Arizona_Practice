@@ -65,11 +65,24 @@ export default function Dashboard() {
           item.name === "Revenue" && item.depth === 1
         );
         
-        // Look for Expense line items - prefer Total Operating Expenses if available
+        // Look for Expense line items - EXACT MATCH "Total Operating Expenses" only
+        // Debug what's available
+        const allExpenseLines = monthData.e.lineItems.filter(item => 
+          item.name.includes("Operating Expense") || item.name.includes("Total Operating")
+        );
+        console.log(`E File expense lines in ${month}:`, allExpenseLines.map(item => 
+          `${item.name}: ${item.summaryValue} (isTotal: ${item.isTotal}, depth: ${item.depth})`
+        ));
+        
+        // Search for Operating Expenses - try multiple variations to find the correct line
         const expenseLine = monthData.e.lineItems.find(item => 
           item.name === "Total Operating Expenses" && item.isTotal
         ) || monthData.e.lineItems.find(item => 
-          item.name === "Operating Expense" && item.depth === 1
+          item.name === "Total Operating Expenses" 
+        ) || monthData.e.lineItems.find(item => 
+          item.name.includes("Total Operating") && item.depth === 1
+        ) || monthData.e.lineItems.find(item => 
+          item.name === "Operating Expenses" && (item.isTotal || item.depth === 1)
         );
         
         // Look for Net Income line directly from the CSV
@@ -96,8 +109,19 @@ export default function Dashboard() {
         monthEExpenses = expenseLine?.summaryValue || 0;
         monthENetIncome = netIncomeLine?.summaryValue || 0;
         
-        // If no Net Income line was found, don't try to calculate it
-        console.log(`Found Net Income for E data in ${month}: ${monthENetIncome}`);
+        // If there's no net income, we calculate it (but log it clearly)
+        if (!netIncomeLine) {
+          console.log(`Warning: 'Net Income' not found in E file for ${month}`);
+          console.log(`Calculated Net Income for E data in ${month}: ${monthERevenue - monthEExpenses} (Revenue ${monthERevenue} - Expenses ${monthEExpenses})`);
+        }
+        
+        // Create a complete overview of the exact values found in the file (for debugging)
+        console.log(`E file ${month} values directly from CSV:
+          - Total Revenue: ${monthERevenue} from line item "${revenueLine?.name || 'Not found'}"
+          - Total Operating Expenses: ${monthEExpenses} from line item "${expenseLine?.name || 'Not found'}"
+          - Net Income: ${monthENetIncome} from line item "${netIncomeLine?.name || 'Not found (calculated)'}"
+          - Total Payroll: ${payrollExpenseLine ? Math.abs(payrollExpenseLine.summaryValue || 0) : 0} from line item "${payrollExpenseLine?.name || 'Not found'}"
+        `);
         
         // Add to E totals
         totalERevenue += monthERevenue;
@@ -114,11 +138,24 @@ export default function Dashboard() {
           item.name === "Revenue" && item.depth === 1
         );
         
-        // Look for Expense line items - prefer Total Operating Expenses if available
+        // Look for Expense line items - EXACT MATCH "Total Operating Expenses" only
+        // Debug what's available
+        const allOExpenseLines = monthData.o.lineItems.filter(item => 
+          item.name.includes("Operating Expense") || item.name.includes("Total Operating")
+        );
+        console.log(`O File expense lines in ${month}:`, allOExpenseLines.map(item => 
+          `${item.name}: ${item.summaryValue} (isTotal: ${item.isTotal}, depth: ${item.depth})`
+        ));
+        
+        // Search for Operating Expenses - try multiple variations to find the correct line
         const expenseLine = monthData.o.lineItems.find(item => 
           item.name === "Total Operating Expenses" && item.isTotal
         ) || monthData.o.lineItems.find(item => 
-          item.name === "Operating Expense" && item.depth === 1
+          item.name === "Total Operating Expenses" 
+        ) || monthData.o.lineItems.find(item => 
+          item.name.includes("Total Operating") && item.depth === 1
+        ) || monthData.o.lineItems.find(item => 
+          item.name === "Operating Expenses" && (item.isTotal || item.depth === 1)
         );
         
         // Look for Net Income line directly from the CSV
@@ -145,8 +182,21 @@ export default function Dashboard() {
         monthOExpenses = expenseLine?.summaryValue || 0;
         monthONetIncome = netIncomeLine?.summaryValue || 0;
         
-        // If no Net Income line was found, don't try to calculate it
-        console.log(`Found Net Income for O data in ${month}: ${monthONetIncome}`);
+        // If there's no net income, we calculate it (but log it clearly)
+        if (!netIncomeLine) {
+          console.log(`Warning: 'Net Income' not found in O file for ${month}`);
+          // If we need to calculate net income, it's revenue minus expenses
+          monthONetIncome = monthORevenue - monthOExpenses;
+          console.log(`Found Net Income for O data in ${month}: ${monthONetIncome}`);
+        }
+        
+        // Create a complete overview of the exact values found in the file (for debugging)
+        console.log(`O file ${month} values:
+          - Total Revenue: ${monthORevenue} 
+          - Total Operating Expenses: ${monthOExpenses}
+          - Net Income: ${monthONetIncome}
+          - Total Payroll: ${monthPayrollExpenses}
+        `);
         
         // Add to O totals
         totalORevenue += monthORevenue;
