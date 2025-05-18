@@ -87,8 +87,10 @@ const DeepAnalysis = () => {
           const netIncome = getProviderNetIncome(month, provider, 'e');
           // Get payroll data specifically for this provider and month
           const payroll = monthData.e?.lineItems.find(
-            item => item.name.toLowerCase().includes('total payroll and related expense')
-          )?.values?.[provider] || 0;
+            item => item.name === "Total Payroll and Related Expense" || 
+                   item.name === "Total Payroll & Related Expense" ||
+                   (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
+          )?.entityValues?.[provider] || 0;
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
@@ -118,8 +120,10 @@ const DeepAnalysis = () => {
           const netIncome = getProviderNetIncome(month, provider, 'o');
           // Get payroll data specifically for this provider and month
           const payroll = monthData.o?.lineItems.find(
-            item => item.name.toLowerCase().includes('total payroll and related expense')
-          )?.values?.[provider] || 0;
+            item => item.name === "Total Payroll and Related Expense" || 
+                   item.name === "Total Payroll & Related Expense" ||
+                   (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
+          )?.entityValues?.[provider] || 0;
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
@@ -288,10 +292,12 @@ const DeepAnalysis = () => {
 
         // Find the 'Total Payroll and Related Expense' line item
         const payrollLine = eData.lineItems.find(
-          item => item.name.toLowerCase().includes('total payroll and related expense')
+          item => item.name === "Total Payroll and Related Expense" || 
+                 item.name === "Total Payroll & Related Expense" ||
+                 (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
         );
         if (payrollLine) {
-          doctorPayroll = payrollLine.total || 0;
+          doctorPayroll = payrollLine.summaryValue || 0;
           console.log(`Found E Payroll expense in ${month}: ${doctorPayroll}`);
         }
         
@@ -335,10 +341,12 @@ const DeepAnalysis = () => {
 
         // Find the 'Total Payroll and Related Expense' line item
         const payrollLine = oData.lineItems.find(
-          item => item.name.toLowerCase().includes('total payroll and related expense')
+          item => item.name === "Total Payroll and Related Expense" || 
+                 item.name === "Total Payroll & Related Expense" ||
+                 (item.name.toLowerCase().includes("total") && item.name.toLowerCase().includes("payroll"))
         );
         if (payrollLine) {
-          businessPayroll = payrollLine.total || 0;
+          businessPayroll = payrollLine.summaryValue || 0;
           console.log(`Found O Payroll expense in ${month}: ${businessPayroll}`);
         }
         
