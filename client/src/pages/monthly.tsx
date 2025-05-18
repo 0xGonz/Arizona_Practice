@@ -233,92 +233,87 @@ export default function Monthly() {
       return defaultMetrics;
     }
     
-    // Function to extract values from line items - first searches for exact match,
-    // then includes partial matches if needed
-    const findLineItemValue = (searchTerms: string[], items: any[]): number => {
-      // First try exact match (most reliable)
-      for (const term of searchTerms) {
-        const exactMatch = items.find(item => item.name === term);
-        if (exactMatch) {
-          console.log(`Found exact match for "${term}": ${exactMatch.summaryValue}`);
-          
-          // If summaryValue is 0 but there are entity values, calculate the sum
-          if (exactMatch.summaryValue === 0 && exactMatch.entityValues) {
-            const sum = Object.values(exactMatch.entityValues).reduce((total: number, val: any) => {
-              return total + (typeof val === 'number' ? val : 0);
-            }, 0);
-            
-            if (sum > 0) {
-              console.log(`Using sum of entity values instead: ${sum}`);
-              return sum;
-            }
-          }
-          
-          return exactMatch.summaryValue;
-        }
-      }
+    // DIRECT APPROACH: Just find these specific values in your CSV data
+    // This is the simplest approach that doesn't try to calculate anything
+    
+    // These are the exact names from your CSV files
+    // First look for exact line item name matches
+    let revenueItem = lineItems.find(item => 
+      item.name === 'Total Revenue' || 
+      item.name === 'Total Service Revenue'
+    );
+    
+    let expensesItem = lineItems.find(item => 
+      item.name === 'Total Operating Expenses' || 
+      item.name === 'Total Expenses' ||
+      item.name === 'Total Payroll and Related Expense' ||
+      item.name === 'Payroll and Related Expense'
+    );
+    
+    let netIncomeItem = lineItems.find(item => 
+      item.name === 'Net Income' || 
+      item.name === 'Net Income (Loss)'
+    );
+    
+    // If we didn't find the exact names, try case-insensitive search
+    if (!revenueItem) {
+      revenueItem = lineItems.find(item => 
+        item.name && item.name.toLowerCase().includes('total revenue')
+      );
+    }
+    
+    if (!expensesItem) {
+      expensesItem = lineItems.find(item => 
+        item.name && (
+          item.name.toLowerCase().includes('total operating expenses') ||
+          item.name.toLowerCase().includes('total payroll')
+        )
+      );
       
-      // If no exact match, try includes/contains match
-      for (const term of searchTerms) {
-        const partialMatches = items.filter(item => 
-          item.name && item.name.toLowerCase().includes(term.toLowerCase())
-        );
+      // If still not found, look for any expenses line item
+      if (!expensesItem) {
+        const possibleExpenses = lineItems.filter(item => 
+          item.name && (
+            item.name.toLowerCase().includes('expense') ||
+            item.name.toLowerCase().includes('payroll')
+          )
+        ).sort((a, b) => b.summaryValue - a.summaryValue);
         
-        if (partialMatches.length > 0) {
-          // Get the item with highest depth (most specific)
-          const bestMatch = partialMatches.sort((a, b) => b.depth - a.depth)[0];
-          console.log(`Found partial match for "${term}": ${bestMatch.name} = ${bestMatch.summaryValue}`);
-          
-          // If summaryValue is 0 but there are entity values, calculate the sum
-          if (bestMatch.summaryValue === 0 && bestMatch.entityValues) {
-            const sum = Object.values(bestMatch.entityValues).reduce((total: number, val: any) => {
-              return total + (typeof val === 'number' ? val : 0);
-            }, 0);
-            
-            if (sum > 0) {
-              console.log(`Using sum of entity values instead: ${sum}`);
-              return sum;
-            }
-          }
-          
-          return bestMatch.summaryValue;
+        if (possibleExpenses.length > 0) {
+          expensesItem = possibleExpenses[0];
         }
       }
-      
-      console.log(`No matches found for: ${searchTerms.join(', ')}`);
-      return 0;
-    };
+    }
     
-    // Find the specific line items values using our comprehensive search function
-    const revenueAmount = findLineItemValue([
-      'Total Revenue',
-      'Total Service Revenue',
-      'Revenue',
-      'Total Income'
-    ], lineItems);
+    if (!netIncomeItem) {
+      netIncomeItem = lineItems.find(item => 
+        item.name && (
+          item.name.toLowerCase().includes('net income') ||
+          item.name.toLowerCase().includes('profit')
+        )
+      );
+    }
     
-    const expensesAmount = findLineItemValue([
-      'Total Payroll and Related Expense',
-      'Payroll and Related Expense',
-      'Total Operating Expenses',
-      'Total Expenses',
-      'Operating Expenses'
-    ], lineItems);
+    console.log(`Found Revenue Item: ${revenueItem?.name || 'None'}`);
+    console.log(`Found Expenses Item: ${expensesItem?.name || 'None'}`);
+    console.log(`Found Net Income Item: ${netIncomeItem?.name || 'None'}`);
     
-    const netIncomeAmount = findLineItemValue([
-      'Net Income',
-      'Net Income (Loss)'
-    ], lineItems);
+    // Just get the direct values from these line items - no calculations
+    const revenueAmount = revenueItem?.summaryValue || 0;
+    const expensesAmount = expensesItem?.summaryValue || 0;
+    const netIncomeAmount = netIncomeItem?.summaryValue || 0;
     
-    // If net income is not found, calculate it from revenue and expenses
-    const calculatedNetIncome = netIncomeAmount === 0 ? (revenueAmount - expensesAmount) : netIncomeAmount;
+    console.log(`EXACT VALUES - Revenue: ${revenueAmount}, Expenses: ${expensesAmount}, Net Income: ${netIncomeAmount}`);
     
-    console.log(`Final amounts - Revenue: ${revenueAmount}, Expenses: ${expensesAmount}, Net Income: ${calculatedNetIncome}`);
+    // Only fall back to calculation if net income isn't found or is zero
+    const finalNetIncome = (netIncomeAmount === 0 && revenueAmount > 0 && expensesAmount > 0) 
+      ? (revenueAmount - expensesAmount)
+      : netIncomeAmount;
     
     return {
       revenue: revenueAmount,
       expenses: expensesAmount,
-      netIncome: calculatedNetIncome
+      netIncome: finalNetIncome
     };
     
     // The rest of this function isn't used anymore since we're directly accessing the line items
