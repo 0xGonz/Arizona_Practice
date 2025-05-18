@@ -312,24 +312,58 @@ const DeepAnalysis = () => {
       
       // Find payroll in E files
       if (monthData.e && monthData.e.lineItems) {
-        const payrollItem = monthData.e.lineItems.find(item => 
-          (item.name === "Total Payroll and Related Expense" || 
-           item.name === "Total Payroll & Related Expense" ||
-           (item.name.includes("Payroll") && item.isTotal))
+        // First look specifically for the exact line item
+        let payrollItem = monthData.e.lineItems.find(item => 
+          item.name === "Total Payroll and Related Expense" && item.isTotal
         );
         
-        doctorPayroll = payrollItem ? Math.abs(payrollItem.summaryValue || 0) : 0;
+        // If not found, try alternative naming
+        if (!payrollItem) {
+          payrollItem = monthData.e.lineItems.find(item => 
+            (item.name === "Total Payroll & Related Expense" && item.isTotal) ||
+            (item.name === "Total Payroll Expense" && item.isTotal)
+          );
+        }
+        
+        // Last resort, look for any payroll line item that is a total
+        if (!payrollItem) {
+          payrollItem = monthData.e.lineItems.find(item => 
+            (item.name.includes("Payroll") && item.isTotal)
+          );
+        }
+        
+        if (payrollItem) {
+          doctorPayroll = Math.abs(payrollItem.summaryValue || 0);
+          console.log(`Found E Payroll expense in ${month}: ${doctorPayroll}`);
+        }
       }
       
       // Find payroll in O files
       if (monthData.o && monthData.o.lineItems) {
-        const payrollItem = monthData.o.lineItems.find(item => 
-          (item.name === "Total Payroll and Related Expense" || 
-           item.name === "Total Payroll & Related Expense" ||
-           (item.name.includes("Payroll") && item.isTotal))
+        // First look specifically for the exact line item
+        let payrollItem = monthData.o.lineItems.find(item => 
+          item.name === "Total Payroll and Related Expense" && item.isTotal
         );
         
-        businessPayroll = payrollItem ? Math.abs(payrollItem.summaryValue || 0) : 0;
+        // If not found, try alternative naming
+        if (!payrollItem) {
+          payrollItem = monthData.o.lineItems.find(item => 
+            (item.name === "Total Payroll & Related Expense" && item.isTotal) ||
+            (item.name === "Total Payroll Expense" && item.isTotal)
+          );
+        }
+        
+        // Last resort, look for any payroll line item that is a total
+        if (!payrollItem) {
+          payrollItem = monthData.o.lineItems.find(item => 
+            (item.name.includes("Payroll") && item.isTotal)
+          );
+        }
+        
+        if (payrollItem) {
+          businessPayroll = Math.abs(payrollItem.summaryValue || 0);
+          console.log(`Found O Payroll expense in ${month}: ${businessPayroll}`);
+        }
       }
       
       return {
