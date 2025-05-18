@@ -201,27 +201,57 @@ export default function Dashboard() {
       const displayEExpenses = monthEExpenses < 0 ? Math.abs(monthEExpenses) : monthEExpenses;
       const displayOExpenses = monthOExpenses < 0 ? Math.abs(monthOExpenses) : monthOExpenses;
       
+      // Calculate properly combined values for E+O data (actual sum of both)
+      // For E-files: use the actual monthly-e file data
+      const eRevenue = monthERevenue;
+      const eExpenses = Math.abs(monthEExpenses); // Make expenses positive
+      const eNetIncome = monthENetIncome;
+      
+      // For O-files: use the actual monthly-o file data
+      const oRevenue = monthORevenue;
+      const oExpenses = Math.abs(monthOExpenses); // Make expenses positive
+      const oNetIncome = monthONetIncome;
+      
+      // Properly aggregated combined values (actual sum of E+O)
+      const combinedRevenue = eRevenue + oRevenue;
+      const combinedExpenses = eExpenses + oExpenses;
+      const combinedNetIncome = eNetIncome + oNetIncome;
+
       // Add month to trends data for chart with correct abbreviation
       monthlyTrends.push({
         // Use standard month abbreviations with proper capitalization 
         month: monthAbbreviations[month.toLowerCase()] || month.charAt(0).toUpperCase() + month.slice(1, 3),
-        // Use KPI card values if available, otherwise fall back to calculated values
-        // Scale down values for better chart display (in thousands)
-        revenue: Math.round((kpiRevenue || monthRevenue) / 1000),
-        expenses: Math.round((kpiExpenses || displayExpenses) / 1000),
-        netIncome: Math.round((kpiNetIncome || monthNetIncome) / 1000),
-        // Keep component values for detailed analysis
-        eRevenue: Math.round(monthERevenue / 1000),
-        oRevenue: Math.round(monthORevenue / 1000),
-        eExpenses: Math.round(displayEExpenses / 1000),
-        oExpenses: Math.round(displayOExpenses / 1000),
-        eNetIncome: Math.round(monthENetIncome / 1000),
-        oNetIncome: Math.round(monthONetIncome / 1000),
+        
+        // Combined E+O values for the first tab (properly aggregated)
+        revenue: Math.round(combinedRevenue / 1000),
+        expenses: Math.round(combinedExpenses / 1000),
+        netIncome: Math.round(combinedNetIncome / 1000),
+        
+        // E file data for second tab
+        eRevenue: Math.round(eRevenue / 1000),
+        eExpenses: Math.round(eExpenses / 1000),
+        eNetIncome: Math.round(eNetIncome / 1000),
+        
+        // O file data for third tab
+        oRevenue: Math.round(oRevenue / 1000),
+        oExpenses: Math.round(oExpenses / 1000),
+        oNetIncome: Math.round(oNetIncome / 1000),
+        
+        // Payroll data for other charts
         payrollExpenses: Math.round(monthPayrollExpenses / 1000),
-        // Keep original values for tooltips - use KPI values if available
-        rawRevenue: kpiRevenue || monthRevenue,
-        rawExpenses: kpiExpenses || displayExpenses,
-        rawNetIncome: kpiNetIncome || monthNetIncome
+        
+        // Raw values for tooltips (using actual aggregated values)
+        rawRevenue: combinedRevenue,
+        rawExpenses: combinedExpenses,
+        rawNetIncome: combinedNetIncome,
+        
+        // Raw E and O values for tooltips
+        rawERevenue: eRevenue,
+        rawEExpenses: eExpenses,
+        rawENetIncome: eNetIncome,
+        rawORevenue: oRevenue,
+        rawOExpenses: oExpenses,
+        rawONetIncome: oNetIncome
       });
     });
     
