@@ -258,9 +258,39 @@ const DeepAnalysis = () => {
   
   // Monthly performance metrics
   const monthlyPerformance = useMemo(() => {
-    return availableMonths.map((month: string) => {
+    console.log("Processing monthly performance data for months:", availableMonths);
+    
+    // Create an array of all months in order, regardless of data availability
+    const allMonths = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    
+    // Map data for each month, using zeros for missing months
+    const validPerformanceData = allMonths.map((monthName: string) => {
+      const month = monthName;
       const monthData = monthlyData[month.toLowerCase()];
-      if (!monthData) return null;
+      
+      // If no data exists for this month, create a placeholder with the month name
+      // This ensures the month always appears on the X-axis
+      if (!monthData) {
+        console.log(`No data found for month ${month}`);
+        return {
+          month: month.charAt(0).toUpperCase() + month.slice(1),
+          doctorRevenue: 0,
+          doctorExpenses: 0,
+          doctorNetIncome: 0,
+          doctorMargin: 0,
+          businessRevenue: 0,
+          businessExpenses: 0,
+          businessNetIncome: 0,
+          businessMargin: 0,
+          totalRevenue: 0,
+          totalExpenses: 0,
+          totalNetIncome: 0,
+          totalMargin: 0
+        };
+      }
       
       let eRevenue = 0;
       let eExpenses = 0;
@@ -502,7 +532,7 @@ const DeepAnalysis = () => {
               className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'combined' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               onClick={() => setDataView('combined')}
             >
-              Total (E+O)
+              Total
             </button>
             <button 
               className={`px-4 py-1.5 text-sm font-medium rounded-md ${dataView === 'doctor' ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
