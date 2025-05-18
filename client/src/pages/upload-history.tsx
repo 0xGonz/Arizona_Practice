@@ -277,7 +277,15 @@ export default function UploadHistory() {
                                                           {Object.entries(row).map(([key, value], cellIdx) => (
                                                             <td key={cellIdx} className="p-2 border-b whitespace-nowrap">
                                                               <div className="min-w-[120px] max-w-[300px] overflow-hidden text-ellipsis">
-                                                                {String(value)}
+                                                                {typeof value === 'number' 
+                                                                  ? (
+                                                                      // For numeric values, ensure exact precision display
+                                                                      Number.isInteger(value) 
+                                                                        ? value.toString()
+                                                                        : value.toFixed(2)
+                                                                    )
+                                                                  : String(value)
+                                                                }
                                                               </div>
                                                             </td>
                                                           ))}
