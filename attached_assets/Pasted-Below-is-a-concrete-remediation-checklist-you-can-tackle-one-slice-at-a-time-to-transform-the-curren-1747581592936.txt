@@ -1,0 +1,131 @@
+Below is a concrete remediation checklist you can tackle one slice at a time to transform the current codebase into the architecture we outlined in the PRD — without doing a full rewrite on day 1. Work through each box, commit, and deploy; you’ll see stability improve at every stage.
+
+#	Area	What to do	Key files / libs
+1	Schema‑first validation	1. Create validation/FinancialRowSchema.ts with the Zod schema below.
+2. Import it into your Express /api/upload route and call safeParse before saving anything.
+3. Return 422 Unprocessable Entity with an array of {row, message} objects if validation fails.	server/routes/upload.ts, yarn add zod
+2	Object‑storage for raw files	1. Sign up for DigitalOcean Spaces (or AWS S3).
+2. Install @aws-sdk/client-s3.
+3. Replace fs.writeFile with an S3 PutObjectCommand.
+4. Store only the s3Key in the uploads table.	server/storage.ts
+3	Database migrations	1. yarn add -D drizzle-kit.
+2. npx drizzle-kit generate to snapshot your existing tables.
+3. Commit the migrations/ folder and remove the runtime pushSchema() call from server/db.ts.	drizzle.config.ts, package.json
+4	Worker queue for parsing	1. yarn add bullmq ioredis.
+2. Create worker/index.ts; inside, fetch the S3 file, stream it through Papa Parse, run FinancialRowSchema on each row, and batch‑insert with Drizzle’s db.insert().values().onConflict('…').
+3. From the upload route, push a job instead of parsing synchronously.
+4. Run a separate “worker” process in Procfile or fly.toml.	worker/index.ts, Procfile
+5	Duplicate‑row idempotency	1. Add a composite unique index on (clinic_id, year, month, line_item) in a new migration.
+2. Use onConflict().merge() (Drizzle) when inserting rows from the worker.	migration 20250518_add_unique_idx.sql
+6	Soft‑delete uploads	1. Add is_deleted BOOLEAN DEFAULT false to uploads.
+2. Expose DELETE /api/upload/:id that flips the flag and deletes child financial_rows in a transaction.
+3. All summary queries filter on uploads.is_deleted = false.	server/routes/upload.ts, Drizzle models
+7	API response shape freeze	Make sure every existing hook returns the same JSON keys: e.g. { months, totals }. If you changed DB column names, map them in the query (SELECT amount AS netIncome …).	server/controllers/*.ts
+8	Redis‑backed WebSockets	1. yarn add socket.io socket.io-redis.
+2. Emit upload:progress, upload:complete, upload:error from the worker.
+3. In React, subscribe in the UploadModal to replace your polling loop.	server/websocket.ts, frontend/components/UploadModal.tsx
+9	Performance indexes	Run: \nsql\nCREATE INDEX IF NOT EXISTS idx_financial_year_month ON financial_rows(year, month);\nCREATE INDEX IF NOT EXISTS idx_financial_clinic ON financial_rows(clinic_id);\n	psql / Neon dashboard
+10	Chromatic visual regression (optional)	1. npx chromatic --project-token … in CI.
+2. Approve baseline snapshots to guarantee UI never drifts while back‑end evolves.	.github/workflows/ci.yml
+
+Snippets you can paste right now
+validation/FinancialRowSchema.ts
+
+ts
+Copy
+Edit
+import { z } from "zod";
+
+export const FinancialRowSchema = z.object({
+  lineItem: z.string().min(1),
+  month:    z.string().regex(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$/),
+  year:     z.coerce.number().int().gte(2000),
+  amount:   z.coerce.number()
+});
+
+export type FinancialRow = z.infer<typeof FinancialRowSchema>;
+Express upload route (trimmed)
+
+ts
+Copy
+Edit
+router.post("/upload", async (req, res) => {
+  const { clinicId, month, year } = req.body;
+  const file = req.file;                         // via Multer
+
+  // 1.  push raw file to S3
+  const s3Key = `${clinicId}/${year}-${month}-${Date.now()}.csv`;
+  await s3.send(new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: s3Key,
+    Body: file.buffer,
+    ContentType: "text/csv",
+  }));
+
+  // 2.  record upload, enqueue job
+  const [upload] = await db.insert(uploads)
+        .values({ clinicId, month, year, s3Key, status: "pending" })
+        .returning();
+  await queue.add("parse-upload", { uploadId: upload.id });
+
+  res.json({ ok: true, uploadId: upload.id });
+});
+Worker parser skeleton
+
+ts
+Copy
+Edit
+queue.process("parse-upload", async job => {
+  const { uploadId } = job.data;
+  const upload = await db.query.uploads.findFirst({ where: eq(id, uploadId) });
+
+  const fileStream = await s3.send(new GetObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: upload.s3Key,
+  })).then(r => r.Body as Readable);
+
+  const rows: FinancialRow[] = [];
+  for await (const chunk of papaParse(fileStream, { header: true })) {
+    const parsed = FinancialRowSchema.safeParse(chunk);
+    if (!parsed.success) {
+      await db.insert(uploadErrors).values({
+        uploadId,
+        rowNumber: chunk.__parsed_extra.index,
+        errorJson: JSON.stringify(parsed.error),
+      });
+      continue;
+    }
+    rows.push({ ...parsed.data, clinicId: upload.clinicId, sourceUpload: uploadId });
+  }
+
+  if (rows.length)
+    await db.insert(financialRows).values(rows)
+            .onConflictDoUpdate({ target: ["clinic_id","year","month","line_item"], set: { amount: sql`EXCLUDED.amount` } });
+
+  await db.update(uploads).set({ status: "processed" }).where(eq(id, uploadId));
+  io.of("/uploads").emit("upload:complete", { uploadId });
+});
+Roll forward, not big‑bang
+Stage 1 (local only) – wire S3, Zod validation, and worker queue; point React dev server at localhost:4000 to confirm upload pipeline is solid.
+
+Stage 2 (staging) – deploy new API & worker on Fly.io, leave the legacy DB untouched; run side‑by‑side and compare monthly totals.
+
+Stage 3 (prod) – flip the .env on Vercel to the new API URL and decommission old code after a week of clean metrics.
+
+Follow the checklist row‑by‑row; each fix is isolated and testable. Ping me when you hit the next speed‑bump and we’ll tighten that section.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
