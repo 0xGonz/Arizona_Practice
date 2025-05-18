@@ -37,9 +37,10 @@ const DeepAnalysis = () => {
       const monthData = monthlyData[month.toLowerCase()];
       if (!monthData) return;
       
-      // Get provider data from E files
+      // Get provider data from E files (doctors/employees)
       if (monthData.e) {
         const providers: string[] = monthData.e.entityColumns || [];
+        console.log(`Found providers in E file for ${month}:`, providers);
         
         providers.forEach(provider => {
           // Skip non-provider columns like "Total"
@@ -65,9 +66,10 @@ const DeepAnalysis = () => {
         });
       }
       
-      // Get provider data from O files
+      // Get provider data from O files (businesses/departments)
       if (monthData.o) {
         const providers: string[] = monthData.o.entityColumns || [];
+        console.log(`Found providers in O file for ${month}:`, providers);
         
         providers.forEach(provider => {
           // Skip non-provider columns like "Total"
@@ -94,21 +96,28 @@ const DeepAnalysis = () => {
       }
     });
     
+    console.log(`Total provider data records: ${result.length}`);
+    if (result.length > 0) {
+      console.log("Sample provider data:", result.slice(0, 3));
+    }
+    
     return result;
   }, [monthlyData, availableMonths, getProviderRevenue, getProviderPayroll, getProviderNetIncome]);
   
   // Get top performing providers by revenue
   const topPerformers = useMemo(() => {
-    // Group by provider and sum their revenue
+    // Group by provider and sum their revenue, but keep E and O files separate
     const providerTotals = providerData.reduce((acc, item) => {
-      const key = item.provider;
+      // Create a unique key combining provider name and file type to keep E and O separated
+      const key = `${item.provider}_${item.fileType}`;
       if (!acc[key]) {
         acc[key] = {
-          provider: key,
+          provider: item.provider,
           revenue: 0,
           expenses: 0, 
           netIncome: 0,
-          fileType: item.fileType
+          fileType: item.fileType,
+          displayName: `${item.provider} (${item.fileType === 'Employee (E)' ? 'Doctor' : 'Business'})`
         };
       }
       acc[key].revenue += item.revenue;
@@ -118,9 +127,13 @@ const DeepAnalysis = () => {
     }, {});
     
     // Convert to array and sort by revenue
-    return Object.values(providerTotals)
+    const result = Object.values(providerTotals)
       .sort((a: any, b: any) => b.revenue - a.revenue)
-      .slice(0, 10); // Top 10
+      .filter((item: any) => item.revenue > 0); // Only include positive revenue
+      
+    console.log("Top performers:", result.slice(0, 5));
+    
+    return result;
   }, [providerData]);
   
   // Calculate monthly performance metrics
@@ -191,14 +204,16 @@ const DeepAnalysis = () => {
   
   // Calculate revenue distribution by provider
   const revenueDistribution = useMemo(() => {
-    // Group by provider and sum their revenue
+    // Group by provider and sum their revenue, but keep E and O files separate
     const providerRevenue = providerData.reduce((acc, item) => {
-      const key = item.provider;
+      // Create a unique key combining provider name and file type
+      const key = `${item.provider}_${item.fileType}`;
       if (!acc[key]) {
         acc[key] = {
-          provider: key,
+          provider: item.provider,
           value: 0,
-          fileType: item.fileType
+          fileType: item.fileType,
+          displayName: `${item.provider} (${item.fileType === 'Employee (E)' ? 'Doctor' : 'Business'})`
         };
       }
       acc[key].value += item.revenue;
@@ -206,9 +221,14 @@ const DeepAnalysis = () => {
     }, {});
     
     // Convert to array and sort by revenue
-    return Object.values(providerRevenue)
+    const result = Object.values(providerRevenue)
       .sort((a: any, b: any) => b.value - a.value)
-      .filter((item: any) => item.value > 0); // Only include positive revenue
+      .filter((item: any) => item.value > 0) // Only include positive revenue
+      .slice(0, 15); // Limit to top 15 for better visualization
+      
+    console.log("Revenue distribution data:", result.slice(0, 5));
+    
+    return result;
   }, [providerData]);
 
   // Color scale for pie charts
@@ -291,14 +311,37 @@ const DeepAnalysis = () => {
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
-                    nameKey="provider"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    nameKey="displayName"
+                    label={({ displayName, percent }) => `${displayName.split(' ')[0]}: ${(percent * 100).toFixed(0)}%`}
                   >
                     {revenueDistribution.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.fileType === 'Employee (E)' ? 
+                          COLORS[index % 7] : // Use first set of colors for E data
+                          COLORS[(index % 7) + 7]} // Use second set for O data
+                      />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
+                            <p className="font-semibold">{data.displayName}</p>
+                            <p className="text-sm" style={{ color: payload[0].color }}>
+                              Revenue: {formatCurrency(data.value)}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {data.fileType}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -316,8 +359,8 @@ const DeepAnalysis = () => {
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={topPerformers}
-                  margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+                  data={topPerformers.slice(0, 10)}
+                  margin={{ top: 20, right: 30, left: 80, bottom: 5 }}
                   layout="vertical"
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -328,8 +371,33 @@ const DeepAnalysis = () => {
                           ? `${(value / 1000).toFixed(0)}K` 
                           : value)}`
                   } />
-                  <YAxis dataKey="provider" type="category" width={120} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <YAxis 
+                    dataKey="displayName" 
+                    type="category" 
+                    width={150}
+                    tickFormatter={(value) => value.length > 18 ? `${value.substring(0, 15)}...` : value}
+                  />
+                  <Tooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
+                            <p className="font-semibold">{data.displayName}</p>
+                            {payload.map((entry: any, index: number) => (
+                              <p key={index} className="text-sm" style={{ color: entry.color }}>
+                                {entry.name}: {formatCurrency(entry.value)}
+                              </p>
+                            ))}
+                            <p className="text-xs text-gray-500 mt-1">
+                              {data.fileType}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Legend />
                   <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
                   <Bar dataKey="expenses" name="Expenses" fill="#82ca9d" />

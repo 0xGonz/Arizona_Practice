@@ -302,15 +302,35 @@ export const useStore = create<DataStore>((set, get) => ({
     
     const data = monthlyData[cleanMonth][fileType];
     
-    // Look for revenue line items
+    // Look for revenue line items with multiple variations to ensure we find the right one
     const revenueItem = data?.lineItems.find(item => 
-      item.name === "Total Revenue" && item.isTotal
+      (item.name === "Total Revenue" || 
+       item.name === "Total Practice Revenue" ||
+       item.name === "Gross Revenue") && 
+      (item.isTotal || item.depth === 1)
     );
     
+    // If we found a matching revenue item with entity values
     if (revenueItem && revenueItem.entityValues && revenueItem.entityValues[provider]) {
+      console.log(`Found revenue for ${provider} in ${month}: ${revenueItem.entityValues[provider]}`);
       return Math.abs(revenueItem.entityValues[provider] || 0);
     }
     
+    // If we couldn't find the item, try to search through all items for a potential match
+    if (data?.lineItems) {
+      for (const item of data.lineItems) {
+        if (item.name && 
+            (item.name.includes("Revenue") || item.name.includes("Income")) && 
+            item.entityValues && 
+            item.entityValues[provider] && 
+            (item.depth === 1 || item.isTotal)) {
+          console.log(`Found alternative revenue for ${provider} in ${month}: ${item.entityValues[provider]}`);
+          return Math.abs(item.entityValues[provider] || 0);
+        }
+      }
+    }
+    
+    console.log(`No revenue found for ${provider} in ${month} ${fileType} file`);
     return 0;
   },
   
@@ -324,17 +344,49 @@ export const useStore = create<DataStore>((set, get) => ({
     
     const data = monthlyData[cleanMonth][fileType];
     
-    // Find Total Payroll and Related Expense line item
+    // Find Total Payroll and Related Expense line item with multiple variations
     const payrollItem = data?.lineItems.find(item => 
       (item.name === "Total Payroll and Related Expense" || 
        item.name === "Total Payroll & Related Expense" ||
-       item.name.includes("Payroll") && item.isTotal)
+       (item.name.includes("Payroll") && item.isTotal))
     );
     
+    // If we found a matching payroll item with entity values
     if (payrollItem && payrollItem.entityValues && payrollItem.entityValues[provider]) {
+      console.log(`Found payroll expense for ${provider} in ${month}: ${payrollItem.entityValues[provider]}`);
       return Math.abs(payrollItem.entityValues[provider] || 0);
     }
     
+    // If we couldn't find the payroll item specifically, look for expense items
+    if (data?.lineItems) {
+      for (const item of data.lineItems) {
+        if (item.name && 
+            (item.name.includes("Payroll") || 
+             item.name.includes("Salary") || 
+             item.name.includes("Wage") || 
+             item.name.includes("Staff")) && 
+            item.entityValues && 
+            item.entityValues[provider]) {
+          console.log(`Found alternative payroll expense for ${provider} in ${month}: ${item.entityValues[provider]}`);
+          return Math.abs(item.entityValues[provider] || 0);
+        }
+      }
+      
+      // Try to find any expense items if payroll is not found
+      for (const item of data.lineItems) {
+        if (item.name && 
+            (item.name.includes("Expense") || 
+             item.name === "Total Operating Expenses") && 
+            item.isTotal &&
+            item.entityValues && 
+            item.entityValues[provider]) {
+          console.log(`Found general expense for ${provider} in ${month}: ${item.entityValues[provider]}`);
+          return Math.abs(item.entityValues[provider] || 0);
+        }
+      }
+    }
+    
+    console.log(`No payroll expense found for ${provider} in ${month} ${fileType} file`);
     return 0;
   },
   
@@ -348,7 +400,7 @@ export const useStore = create<DataStore>((set, get) => ({
     
     const data = monthlyData[cleanMonth][fileType];
     
-    // Find Net Income line item
+    // Find Net Income line item with multiple variations
     const netIncomeItem = data?.lineItems.find(item => 
       (item.name === "Net Income (Loss)" || 
        item.name === "Net Income" || 
@@ -357,10 +409,24 @@ export const useStore = create<DataStore>((set, get) => ({
       item.isTotal
     );
     
+    // If we found a matching net income item with entity values
     if (netIncomeItem && netIncomeItem.entityValues && netIncomeItem.entityValues[provider]) {
+      console.log(`Found net income for ${provider} in ${month}: ${netIncomeItem.entityValues[provider]}`);
       return netIncomeItem.entityValues[provider] || 0;
     }
     
+    // If we couldn't find the net income item specifically, calculate it
+    // Net Income = Revenue - Expenses
+    const revenue = get().getProviderRevenue(month, provider, fileType);
+    const expenses = get().getProviderPayroll(month, provider, fileType);
+    
+    if (revenue > 0 || expenses > 0) {
+      const calculatedNetIncome = revenue - expenses;
+      console.log(`Calculated net income for ${provider} in ${month}: ${calculatedNetIncome}`);
+      return calculatedNetIncome;
+    }
+    
+    console.log(`No net income found for ${provider} in ${month} ${fileType} file`);
     return 0;
   },
   
