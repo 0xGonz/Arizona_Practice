@@ -720,7 +720,7 @@ const DeepAnalysis = () => {
                     type="monotone"
                     dataKey="profitMargin"
                     name="Profit Margin %"
-                    stroke="#8884d8"
+                    stroke={COLORS.doctor} // Using purple color from the doctor/E data in top chart
                     strokeDasharray="5 5"
                     strokeWidth={2}
                     yAxisId="right"
