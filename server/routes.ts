@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
@@ -12,9 +12,12 @@ import {
   uploadStatus,
   financialLineItems,
   financialValues,
-  financialCategories
+  financialCategories,
+  csvUploads,
+  csvData,
+  type CSVFileType
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, inArray, SQL } from "drizzle-orm";
 import { FinancialDataManager } from "./financial-data-manager";
 import Papa from "papaparse";
 
@@ -321,6 +324,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error retrieving upload:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // Handle DELETE requests to clear all uploads
+  app.delete("/api/uploads/clear-all", async (req, res) => {
+    try {
+      console.log("Deleting all CSV uploads");
+      
+      // Delete all entries from related tables first
+      await db.delete(csvData);
+      await db.delete(financialLineItems);
+      await db.delete(financialValues);
+      await db.delete(monthlyFinancialData);
+      await db.delete(departmentPerformance);
+      await db.delete(doctorPerformance);
+      
+      // Finally delete from main uploads table
+      await db.delete(csvUploads);
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "All data cleared successfully" 
+      });
+    } catch (error) {
+      console.error("Error clearing all data:", error);
+      res.status(500).json({ message: "Error clearing data" });
+    }
+  });
+  
+  // Handle DELETE requests to clear specific type/month
+  app.delete("/api/uploads/clear", async (req, res) => {
+    try {
+      const { type, month } = req.query;
+      
+      if (!type || typeof type !== 'string') {
+        return res.status(400).json({ message: "Type parameter is required" });
+      }
+      
+      console.log(`Deleting data of type ${type}${month ? ` for month ${month}` : ''}`);
+      
+      // Find uploads matching the criteria
+      const uploads = await db.select()
+        .from(csvUploads)
+        .where(
+          and(
+            eq(csvUploads.type, type),
+            month ? eq(csvUploads.month, month as string) : undefined
+          )
+        );
+      
+      if (uploads.length === 0) {
+        return res.status(404).json({ message: "No matching uploads found" });
+      }
+      
+      // Get the IDs of the uploads to delete
+      const uploadIds = uploads.map(u => u.id);
+      
+      // Start a transaction to ensure all related data is deleted
+      await db.transaction(async (tx) => {
+        // Delete from related tables first
+        await tx.delete(csvData).where(inArray(csvData.uploadId, uploadIds));
+        await tx.delete(financialLineItems).where(inArray(financialLineItems.uploadId, uploadIds));
+        await tx.delete(financialValues).where(inArray(financialValues.uploadId, uploadIds));
+        await tx.delete(monthlyFinancialData).where(inArray(monthlyFinancialData.uploadId, uploadIds));
+        await tx.delete(departmentPerformance).where(inArray(departmentPerformance.uploadId, uploadIds));
+        await tx.delete(doctorPerformance).where(inArray(doctorPerformance.uploadId, uploadIds));
+        
+        // Finally delete the uploads themselves
+        await tx.delete(csvUploads).where(inArray(csvUploads.id, uploadIds));
+      });
+      
+      res.status(200).json({ 
+        success: true, 
+        message: `Successfully deleted ${uploads.length} uploads and related data`
+      });
+    } catch (error) {
+      console.error("Error clearing data:", error);
+      res.status(500).json({ message: "Error clearing data" });
     }
   });
   
