@@ -629,7 +629,10 @@ export const useStore = create<DataStore>((set, get) => ({
         if (type === 'all') {
           // Delete all data from the database first
           const response = await fetch('/api/uploads/clear-all', {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            }
           });
           
           if (response.ok) {
@@ -637,6 +640,7 @@ export const useStore = create<DataStore>((set, get) => ({
             
             // Now update local state to reflect this
             set({
+              annualData: [],
               monthlyData: {},
               revenueMix: [],
               marginTrend: [],
@@ -644,6 +648,7 @@ export const useStore = create<DataStore>((set, get) => ({
               bottomPerformers: [],
               ancillaryComparison: [],
               uploadStatus: {
+                annual: false,
                 monthly: {}
               },
               uploadHistory: []
