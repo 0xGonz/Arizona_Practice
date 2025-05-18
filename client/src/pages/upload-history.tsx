@@ -387,7 +387,7 @@ export default function UploadHistory() {
                                           
                                           <div className="overflow-x-auto max-h-80 overflow-y-auto">
                                             {fileData && fileData.raw && fileData.raw.length > 0 ? (
-                                              <React.Fragment>
+                                              <React.Fragment key={`monthly-data-${month}-${index}`}>
                                                 <table className="w-full border-collapse text-sm">
                                                   <thead>
                                                     <tr className="bg-slate-100">
