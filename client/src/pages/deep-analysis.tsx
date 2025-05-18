@@ -32,7 +32,33 @@ const DeepAnalysis = () => {
     getAvailableMonths
   } = useStore();
   
-  const availableMonths = useMemo(() => getAvailableMonths(), [getAvailableMonths]);
+  // Get available months and sort them chronologically (January to December)
+  const availableMonths = useMemo(() => {
+    const months = getAvailableMonths();
+    
+    // Define month order for proper sorting
+    const monthOrder = {
+      'january': 1,
+      'february': 2, 
+      'march': 3,
+      'april': 4,
+      'may': 5,
+      'june': 6,
+      'july': 7,
+      'august': 8,
+      'september': 9,
+      'october': 10,
+      'november': 11,
+      'december': 12
+    };
+    
+    // Sort months chronologically
+    return months.sort((a, b) => {
+      const aMonth = a.toLowerCase();
+      const bMonth = b.toLowerCase();
+      return monthOrder[aMonth] - monthOrder[bMonth];
+    });
+  }, [getAvailableMonths]);
   const [selectedView, setSelectedView] = useState<'doctors' | 'business'>('doctors');
 
   // Extract provider data from both E and O files
