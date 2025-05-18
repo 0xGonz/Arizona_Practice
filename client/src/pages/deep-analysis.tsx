@@ -72,7 +72,14 @@ const DeepAnalysis = () => {
     // Process each month's data
     availableMonths.forEach((month: string) => {
       const monthData = monthlyData[month.toLowerCase()];
-      if (!monthData) return;
+      if (!monthData) {
+        console.log(`No data found for month ${month}, creating placeholder`);
+        result.push({
+          month: month.charAt(0).toUpperCase() + month.slice(1),
+          providers: []
+        });
+        return;
+      }
       
       // Get provider data from E files (doctors/employees)
       if (monthData.e) {
@@ -269,7 +276,7 @@ const DeepAnalysis = () => {
     // Map data for each month, using zeros for missing months
     const validPerformanceData = allMonths.map((monthName: string) => {
       const month = monthName;
-      const monthData = monthlyData[month.toLowerCase()];
+      const monthData = monthlyData[month.toLowerCase()] || { e: null, o: null };
       
       // If no data exists for this month, create a placeholder with the month name
       // This ensures the month always appears on the X-axis

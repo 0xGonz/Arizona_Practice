@@ -1,0 +1,53 @@
+Below is a step‑by‑step triage that will usually surface exactly why the “Comprehensive Financial Performance” and “Financial Performance Summary” cards render nothing.
+Follow the checks in order—stop as soon as you find the failure and apply the tiny patch noted.
+
+#	Quick check	Where / how	What it proves	Likely one‑line fix
+1	Is the component in the DOM tree?	React DevTools ➜ Components ➜ search “ComprehensiveFinancialPerformance” (or the file name).	Missing ⇒ a render‑guard blocked it. Go to #2.
+Present but empty children ⇒ chart lib couldn’t size. Skip to #4.	
+2	Guard returns null?	Open the card component. Look for:
+if (!data?.length) return null;
+{data && data.length > 0 && <Chart …/>}	data is undefined (not even []).	When you pull state:
+const perf = useStore(s => s.perf[month] ?? []);
+Using ?? [] makes data truthy so the guard passes.
+3	Selector returns undefined after mount?	Add in the card:
+useEffect(()=>console.log('perf', perf),[perf])	Log shows Array → undefined right after first render = race condition (state wipe & refill).	Memoise key or stabilise selector:
+const perf = useStore(s => s.perfRef.current);
+or split fetch & render phases.
+4	Wrapper height = 0?	In Elements tab, inspect .chart-wrapper. If clientHeight is 0, the chart lib bails silently.	Parent flex/grid didn’t stretch.	```tsx
+
+<div className="h-full min-h-[240px] w-full"> <ResponsiveContainer width="100%" height="100%"> <BarChart …/> </ResponsiveContainer> </div> ``` | | **5** | **Duplicate React key suppresses a card?** | In console: `document.querySelectorAll('#comprehensive-card').length` | If count < months × providers expected, a duplicate `key` collapsed a sibling render. | In parent `.map` use composite:<br>`key={`${provider}-${i}`}` | | **6** | **No data lines matched regex** | In data‑loader: after mapping, `console.warn('perfLen', perf.length)` | `perf.length === 0` → row names don’t match your finder (“Total Practice Revenue” vs “Total Revenue”). | Use tolerant regex:<br>`/total.*revenue|gross revenue/i` etc. |
+“It’s still not there!”
+99 % of the time the culprit is #2 (guard) or #4 (zero height).
+If you run the six probes and still can’t see the card:
+
+Copy‑paste the console output from probes 1‑4 and the first 20 lines of the card component and I’ll send back the exact diff.
+
+Mini diff if you just want to try the most common fix first
+diff
+Copy
+Edit
+// deep-analysis.tsx  (or wherever you gather card props)
+- const perf = analysisStore.financialPerf[month];
++ const perf = analysisStore.financialPerf[month] ?? [];
+
+// FinancialPerformanceCard.tsx
+- if (!data?.length) return null;
++ // Show skeleton if still fetching, but always mount
++ if (data === undefined) return <SkeletonCard />;
+and
+
+diff
+Copy
+Edit
+// Tailwind wrapper inside the card
+- <div className="relative w-full h-full">
++ <div className="relative w-full h-full min-h-[240px]">
+Give the page a hard refresh (⌘‑Shift‑R).
+If the cards appear, you’ve solved it; if not, send the probe logs and we’ll nail the exact line.
+
+
+
+
+
+
+
