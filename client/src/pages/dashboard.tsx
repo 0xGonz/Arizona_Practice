@@ -170,29 +170,57 @@ export default function Dashboard() {
       // Debug logs to track where values come from
       console.log(`Month: ${month} - Revenue: ${monthRevenue}, Expenses: ${monthExpenses}, NetIncome: ${monthNetIncome}`);
       
-      // Fix negative values for expense display in charts (expenses should be positive values)
+      // IMPORTANT: Extract values directly from line items that match EXACTLY what appears on the monthly KPI cards
+      // First, find the explicit Total Revenue, Total Operating Expenses, and Net Income lines
+      const totalRevenueItem = monthData?.e?.lineItems?.find(item => 
+        item.name === "Total Revenue" && item.isTotal
+      ) || monthData?.e?.lineItems?.find(item => 
+        item.name === "Total Revenue" || (item.name === "Revenue" && (item.isTotal || item.depth === 1))
+      );
+      
+      const totalExpensesItem = monthData?.e?.lineItems?.find(item => 
+        item.name === "Total Operating Expenses" && item.isTotal
+      ) || monthData?.e?.lineItems?.find(item => 
+        item.name === "Total Operating Expenses" || (item.name.includes("Operating Expense") && (item.isTotal || item.depth === 1))
+      );
+      
+      const netIncomeItem = monthData?.e?.lineItems?.find(item => 
+        (item.name === "Net Income (Loss)" || item.name === "Net Income") && item.isTotal
+      ) || monthData?.e?.lineItems?.find(item => 
+        item.name === "Net Income (Loss)" || item.name === "Net Income" 
+      );
+      
+      // Get the exact values that appear on the KPI cards
+      const kpiRevenue = totalRevenueItem ? Math.abs(totalRevenueItem.summaryValue || 0) : 0; 
+      const kpiExpenses = totalExpensesItem ? Math.abs(totalExpensesItem.summaryValue || 0) : 0;
+      const kpiNetIncome = netIncomeItem ? netIncomeItem.summaryValue || 0 : 0;
+      
+      // Ensure expenses are always positive for display purposes
       const displayExpenses = monthExpenses < 0 ? Math.abs(monthExpenses) : monthExpenses;
       const displayEExpenses = monthEExpenses < 0 ? Math.abs(monthEExpenses) : monthEExpenses;
       const displayOExpenses = monthOExpenses < 0 ? Math.abs(monthOExpenses) : monthOExpenses;
       
+      // Add month to trends data for chart with correct abbreviation
       monthlyTrends.push({
         // Use standard month abbreviations with proper capitalization 
         month: monthAbbreviations[month.toLowerCase()] || month.charAt(0).toUpperCase() + month.slice(1, 3),
+        // Use KPI card values if available, otherwise fall back to calculated values
         // Scale down values for better chart display (in thousands)
-        revenue: Math.round(monthRevenue / 1000),
+        revenue: Math.round((kpiRevenue || monthRevenue) / 1000),
+        expenses: Math.round((kpiExpenses || displayExpenses) / 1000),
+        netIncome: Math.round((kpiNetIncome || monthNetIncome) / 1000),
+        // Keep component values for detailed analysis
         eRevenue: Math.round(monthERevenue / 1000),
         oRevenue: Math.round(monthORevenue / 1000),
-        expenses: Math.round(displayExpenses / 1000),
         eExpenses: Math.round(displayEExpenses / 1000),
         oExpenses: Math.round(displayOExpenses / 1000),
-        netIncome: Math.round(monthNetIncome / 1000),
         eNetIncome: Math.round(monthENetIncome / 1000),
         oNetIncome: Math.round(monthONetIncome / 1000),
         payrollExpenses: Math.round(monthPayrollExpenses / 1000),
-        // Keep original values for tooltips
-        rawRevenue: monthRevenue,
-        rawExpenses: displayExpenses,
-        rawNetIncome: monthNetIncome
+        // Keep original values for tooltips - use KPI values if available
+        rawRevenue: kpiRevenue || monthRevenue,
+        rawExpenses: kpiExpenses || displayExpenses,
+        rawNetIncome: kpiNetIncome || monthNetIncome
       });
     });
     
