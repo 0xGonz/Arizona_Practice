@@ -221,12 +221,107 @@ export default function Monthly() {
       netIncome: 0
     };
     
-    // Use the selected view's data
-    const data = selectedView === 'employees' ? monthData.eData : monthData.oData;
+    // Get the structured line items directly from the data store
+    // This uses the properly structured data with lineItems
+    const dataSource = selectedView === 'employees' ? monthData.e : monthData.o;
+    const lineItems = dataSource?.lineItems || [];
     
-    if (!data || data.length === 0) {
+    console.log(`Selected view: ${selectedView}`);
+    console.log(`Found ${lineItems.length} line items for ${activeMonth}`);
+    
+    if (!lineItems || lineItems.length === 0) {
       return defaultMetrics;
     }
+    
+    // Function to extract values from line items - first searches for exact match,
+    // then includes partial matches if needed
+    const findLineItemValue = (searchTerms: string[], items: any[]): number => {
+      // First try exact match (most reliable)
+      for (const term of searchTerms) {
+        const exactMatch = items.find(item => item.name === term);
+        if (exactMatch) {
+          console.log(`Found exact match for "${term}": ${exactMatch.summaryValue}`);
+          
+          // If summaryValue is 0 but there are entity values, calculate the sum
+          if (exactMatch.summaryValue === 0 && exactMatch.entityValues) {
+            const sum = Object.values(exactMatch.entityValues).reduce((total: number, val: any) => {
+              return total + (typeof val === 'number' ? val : 0);
+            }, 0);
+            
+            if (sum > 0) {
+              console.log(`Using sum of entity values instead: ${sum}`);
+              return sum;
+            }
+          }
+          
+          return exactMatch.summaryValue;
+        }
+      }
+      
+      // If no exact match, try includes/contains match
+      for (const term of searchTerms) {
+        const partialMatches = items.filter(item => 
+          item.name && item.name.toLowerCase().includes(term.toLowerCase())
+        );
+        
+        if (partialMatches.length > 0) {
+          // Get the item with highest depth (most specific)
+          const bestMatch = partialMatches.sort((a, b) => b.depth - a.depth)[0];
+          console.log(`Found partial match for "${term}": ${bestMatch.name} = ${bestMatch.summaryValue}`);
+          
+          // If summaryValue is 0 but there are entity values, calculate the sum
+          if (bestMatch.summaryValue === 0 && bestMatch.entityValues) {
+            const sum = Object.values(bestMatch.entityValues).reduce((total: number, val: any) => {
+              return total + (typeof val === 'number' ? val : 0);
+            }, 0);
+            
+            if (sum > 0) {
+              console.log(`Using sum of entity values instead: ${sum}`);
+              return sum;
+            }
+          }
+          
+          return bestMatch.summaryValue;
+        }
+      }
+      
+      console.log(`No matches found for: ${searchTerms.join(', ')}`);
+      return 0;
+    };
+    
+    // Find the specific line items values using our comprehensive search function
+    const revenueAmount = findLineItemValue([
+      'Total Revenue',
+      'Total Service Revenue',
+      'Revenue',
+      'Total Income'
+    ], lineItems);
+    
+    const expensesAmount = findLineItemValue([
+      'Total Payroll and Related Expense',
+      'Payroll and Related Expense',
+      'Total Operating Expenses',
+      'Total Expenses',
+      'Operating Expenses'
+    ], lineItems);
+    
+    const netIncomeAmount = findLineItemValue([
+      'Net Income',
+      'Net Income (Loss)'
+    ], lineItems);
+    
+    // If net income is not found, calculate it from revenue and expenses
+    const calculatedNetIncome = netIncomeAmount === 0 ? (revenueAmount - expensesAmount) : netIncomeAmount;
+    
+    console.log(`Final amounts - Revenue: ${revenueAmount}, Expenses: ${expensesAmount}, Net Income: ${calculatedNetIncome}`);
+    
+    return {
+      revenue: revenueAmount,
+      expenses: expensesAmount,
+      netIncome: calculatedNetIncome
+    };
+    
+    // The rest of this function isn't used anymore since we're directly accessing the line items
     
     // Define some commonly used category names
     const mainCategories = ['Revenue', 'Expenses', 'Operating Expenses', 'Net Income'];
