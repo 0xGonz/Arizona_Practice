@@ -253,6 +253,11 @@ const DeepAnalysis = () => {
   
   // Top performing businesses by revenue
   const topBusinesses = useMemo(() => {
+    if (!businessData || !Array.isArray(businessData) || businessData.length === 0) {
+      console.warn("No business data available for top businesses");
+      return [];
+    }
+    
     return [...businessData]
       .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 10);
@@ -260,16 +265,26 @@ const DeepAnalysis = () => {
   
   // Most profitable doctors by profit margin
   const topProfitableDoctors = useMemo(() => {
+    if (!doctorData || !Array.isArray(doctorData) || doctorData.length === 0) {
+      console.warn("No doctor data available for profitable doctors");
+      return [];
+    }
+    
     return [...doctorData]
-      .filter((d: any) => d.revenue > 50000) // Only significant revenue
+      .filter((d: any) => d && d.revenue > 50000) // Only significant revenue
       .sort((a: any, b: any) => b.profitMargin - a.profitMargin)
       .slice(0, 10);
   }, [doctorData]);
   
   // Most profitable businesses by profit margin
   const topProfitableBusinesses = useMemo(() => {
+    if (!businessData || !Array.isArray(businessData) || businessData.length === 0) {
+      console.warn("No business data available for profitable businesses");
+      return [];
+    }
+    
     return [...businessData]
-      .filter((d: any) => d.revenue > 20000) // Only significant revenue
+      .filter((d: any) => d && d.revenue > 20000) // Only significant revenue
       .sort((a: any, b: any) => b.profitMargin - a.profitMargin)
       .slice(0, 10);
   }, [businessData]);
