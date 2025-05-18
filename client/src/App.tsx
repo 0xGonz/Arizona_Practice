@@ -125,6 +125,7 @@ function Router() {
         <Route path="/monthly" component={Monthly} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/upload" component={Upload} />
+        <Route path="/upload-new" component={UploadNew} />
         <Route path="/upload-history" component={UploadHistory} />
         <Route path="/financial-query" component={FinancialQuery} />
         <Route path="/deep-analysis" component={DeepAnalysis} />
