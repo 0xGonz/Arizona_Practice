@@ -545,7 +545,18 @@ const DeepAnalysis = () => {
                   {dataView === 'doctor' && (
                     <>
                       <Bar dataKey="doctorRevenue" name="Doctor Revenue" fill={COLORS.revenue} />
-                      <Bar dataKey="doctorExpenses" name="Doctor Total Expenses" fill={COLORS.expenses} stackId="expenses" />
+                      <Bar 
+                        dataKey={(entry) => {
+                          // Find the payroll amount for this month
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          const doctorPayroll = payrollData?.doctorPayroll || 0;
+                          // Return the amount that represents only non-payroll expenses
+                          return Math.max(0, entry.doctorExpenses - doctorPayroll);
+                        }}
+                        name="Doctor Other Expenses" 
+                        fill={COLORS.expenses} 
+                        stackId="expenses" 
+                      />
                       <Bar dataKey="doctorPayroll" name="Doctor Payroll" fill={COLORS.payrollDoctor} stackId="expenses" />
                       <Line 
                         type="monotone" 
@@ -561,7 +572,18 @@ const DeepAnalysis = () => {
                   {dataView === 'business' && (
                     <>
                       <Bar dataKey="businessRevenue" name="Business Revenue" fill={COLORS.revenue} />
-                      <Bar dataKey="businessExpenses" name="Business Total Expenses" fill={COLORS.expenses} stackId="expenses" />
+                      <Bar 
+                        dataKey={(entry) => {
+                          // Find the payroll amount for this month
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          const businessPayroll = payrollData?.businessPayroll || 0;
+                          // Return the amount that represents only non-payroll expenses
+                          return Math.max(0, entry.businessExpenses - businessPayroll);
+                        }}
+                        name="Business Other Expenses" 
+                        fill={COLORS.expenses} 
+                        stackId="expenses" 
+                      />
                       <Bar dataKey="businessPayroll" name="Business Payroll" fill={COLORS.payrollBusiness} stackId="expenses" />
                       <Line 
                         type="monotone" 
@@ -577,8 +599,27 @@ const DeepAnalysis = () => {
                   {dataView === 'combined' && (
                     <>
                       <Bar dataKey="totalRevenue" name="Total Revenue" fill={COLORS.revenue} />
-                      <Bar dataKey="totalExpenses" name="Total Expenses" fill={COLORS.expenses} />
-                      <Bar dataKey="totalPayroll" name="Total Payroll" fill={COLORS.payroll} />
+                      <Bar 
+                        dataKey={(entry) => {
+                          // Find the payroll amount for this month
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          const totalPayroll = (payrollData?.doctorPayroll || 0) + (payrollData?.businessPayroll || 0);
+                          // Return the amount that represents only non-payroll expenses
+                          return Math.max(0, entry.totalExpenses - totalPayroll);
+                        }}
+                        name="Other Expenses" 
+                        fill={COLORS.expenses} 
+                        stackId="expenses" 
+                      />
+                      <Bar 
+                        dataKey={(entry) => {
+                          const payrollData = monthlyPayroll.find(p => p?.month === entry.month);
+                          return payrollData?.totalPayroll || 0;
+                        }} 
+                        name="Total Payroll" 
+                        fill={COLORS.payroll} 
+                        stackId="expenses" 
+                      />
                       <Line 
                         type="monotone" 
                         dataKey="totalNetIncome" 
