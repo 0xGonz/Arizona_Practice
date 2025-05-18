@@ -352,7 +352,7 @@ export default function Monthly() {
       
       // Calculate values for each provider column
       const columnValues = {};
-      const allEmployeeValues = {};
+      const allEmployeeValues = { 'All Employees': 0 };
       
       if (isNewFormat) {
         // New format handling with entityValues
@@ -368,30 +368,39 @@ export default function Monthly() {
           columnValues[header] = totalValue;
         });
         
-        // Calculate the total by summing up individual entity values
-        // This ensures that even if summaryValue is 0, we'll still get an accurate total
-        matchingRows.forEach(row => {
-          let rowTotal = 0;
-          
-          // Sum up all entity values for this row
-          if (row.entityValues) {
-            Object.values(row.entityValues).forEach((value: any) => {
-              if (typeof value === 'number') {
-                rowTotal += value;
-              }
-            });
-            
-            // If the summaryValue is 0 but we calculated a positive total from entities,
-            // use the calculated total instead
-            const effectiveValue = (row.summaryValue === 0 && rowTotal > 0) 
-              ? rowTotal 
-              : (typeof row.summaryValue === 'number' ? row.summaryValue : 0);
-              
-            // Add to the overall total for this category
-            allEmployeeValues['All Employees'] = 
-              (allEmployeeValues['All Employees'] || 0) + effectiveValue;
+        // Calculate the "All Employees" total by summing up all the column totals
+        // This is more reliable than using summaryValue which is sometimes missing
+        let totalAcrossAllColumns = 0;
+        Object.values(columnValues).forEach((value: any) => {
+          if (typeof value === 'number') {
+            totalAcrossAllColumns += value;
           }
         });
+        
+        // Use the sum of all columns as the total
+        allEmployeeValues['All Employees'] = totalAcrossAllColumns;
+        
+        console.log(`Total for ${category}: ${totalAcrossAllColumns}`);
+        
+        // If total is still 0, try using the old method of summing entity values
+        if (totalAcrossAllColumns === 0) {
+          matchingRows.forEach(row => {
+            let rowTotal = 0;
+            
+            // Sum up all entity values for this row
+            if (row.entityValues) {
+              Object.values(row.entityValues).forEach((value: any) => {
+                if (typeof value === 'number') {
+                  rowTotal += value;
+                }
+              });
+              
+              allEmployeeValues['All Employees'] += rowTotal;
+            }
+          });
+          
+          console.log(`Fallback total for ${category}: ${allEmployeeValues['All Employees']}`);
+        }
       } else {
         // Old format handling with direct column access
         monthData.columnHeaders.forEach(header => {
