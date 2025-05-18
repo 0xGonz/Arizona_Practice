@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { CSVType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Upload, Check, AlertCircle } from "lucide-react";
-import { useStore } from "@/store/data-store";
+import { useStore } from "@/store/working-store";
 import { useToast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 
