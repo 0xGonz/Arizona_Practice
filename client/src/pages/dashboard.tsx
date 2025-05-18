@@ -167,14 +167,19 @@ export default function Dashboard() {
       };
       
       // Add month to trends data for chart with correct abbreviation
+      // Debug logs to track where values come from
+      console.log(`Month: ${month} - Revenue: ${monthRevenue}, Expenses: ${monthExpenses}, NetIncome: ${monthNetIncome}`);
+      
       monthlyTrends.push({
+        // Use standard month abbreviations with proper capitalization 
         month: monthAbbreviations[month.toLowerCase()] || month.charAt(0).toUpperCase() + month.slice(1, 3),
+        // Use the values from direct line item lookups rather than calculations
         revenue: monthRevenue,
         eRevenue: monthERevenue,
         oRevenue: monthORevenue,
-        expenses: monthExpenses,
-        eExpenses: monthEExpenses,
-        oExpenses: monthOExpenses,
+        expenses: Math.abs(monthExpenses), // Use absolute value for expenses to ensure consistent display
+        eExpenses: Math.abs(monthEExpenses),
+        oExpenses: Math.abs(monthOExpenses),
         netIncome: monthNetIncome,
         eNetIncome: monthENetIncome,
         oNetIncome: monthONetIncome,
