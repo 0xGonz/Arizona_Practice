@@ -42,12 +42,18 @@ export default function CSVUpload({
   const [isProcessing, setIsProcessing] = useState(false);
   const [processStatus, setProcessStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [previewTab, setPreviewTab] = useState<'csv' | 'validate'>('csv');
-  const [validationResults, setValidationResults] = useState<any>({
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [csvValidation, setCsvValidation] = useState<any>({
     isValid: false,
     errors: [],
     warnings: [],
-    stats: {}
+    stats: {
+      rowCount: 0,
+      columnCount: 0
+    }
   });
+  // Step in the upload process: 'upload', 'validation', 'processing', 'complete'
+  const [uploadStep, setUploadStep] = useState<'upload' | 'validation' | 'processing' | 'complete'>('upload');
 
   // This effect checks if the data for this month/type is already uploaded and ready
   useEffect(() => {
@@ -228,6 +234,55 @@ export default function CSVUpload({
     return result;
   };
 
+  const parseFileLocally = (file: File) => {
+    // Parse the file in the browser for validation
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header) => {
+        // Remove BOM characters or any special characters that might be in the header
+        return header.replace(/^\uFEFF/, '').trim();
+      },
+      complete: (results) => {
+        try {
+          if (results.errors && results.errors.length > 0) {
+            console.error("CSV parsing errors:", results.errors);
+            setError(`CSV parsing error: ${results.errors[0].message}`);
+            setIsUploading(false);
+            return;
+          }
+          
+          console.log("CSV parse complete, parsed", results.data.length, "rows");
+          
+          // Validate the CSV data
+          const validation = validateCSVData(results.data);
+          setCsvValidation(validation);
+          
+          if (!validation.isValid && validation.errors.length > 0) {
+            setError(`CSV validation error: ${validation.errors[0]}`);
+            setIsUploading(false);
+            return;
+          }
+          
+          // Store the parsed data
+          setCsvData(results.data);
+          setIsUploading(false);
+          setUploadStep('validation'); // Move to the validation step
+          setFileToUpload(file); // Store the file for later upload when user confirms
+        } catch (error) {
+          console.error("Error processing CSV data:", error);
+          setError("Error processing CSV data");
+          setIsUploading(false);
+        }
+      },
+      error: (error) => {
+        console.error("CSV parsing error:", error);
+        setError(`CSV parsing error: ${error.message}`);
+        setIsUploading(false);
+      }
+    });
+  };
+
   const uploadAndParseFile = async (file: File) => {
     setIsUploading(true);
     setError(null);
@@ -241,59 +296,16 @@ export default function CSVUpload({
     }
 
     try {
-      // Upload file to server first
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Determine the API endpoint based on the CSV type
-      let apiEndpoint = '';
-      if (type === 'annual') {
-        apiEndpoint = '/api/upload/annual';
-      } else if (type === 'monthly-e' && month) {
-        apiEndpoint = `/api/upload/monthly/e?month=${encodeURIComponent(month)}`;
-      } else if (type === 'monthly-o' && month) {
-        apiEndpoint = `/api/upload/monthly/o?month=${encodeURIComponent(month)}`;
-      } else {
-        throw new Error('Invalid upload type or missing month parameter');
-      }
-
-      console.log(`Uploading file to server at ${apiEndpoint}`);
-      
-      // Send the file to the server
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Server error during upload');
-      }
-
-      // Continue with client-side parsing for UI updates
-      const uploadResult = await response.json();
-      console.log('Server upload successful:', uploadResult);
-      
-      // Save upload ID for processing later
-      if (uploadResult.id) {
-        setUploadId(uploadResult.id);
-      }
-    } catch (uploadError) {
-      console.error("File upload error:", uploadError);
-      setError(`Error uploading file to server: ${uploadError.message}`);
+      // First parse the file in the browser for validation
+      // We won't upload to the server until the user confirms the data is correct
+      parseFileLocally(file);
+    } catch (parseError) {
+      console.error("Error parsing file:", parseError);
+      setError(`Error parsing file: ${String(parseError)}`);
       setIsUploading(false);
       return;
     }
-
-    // Now parse the file in the browser for immediate UI updates
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => {
-        // Remove BOM characters or any special characters that might be in the header
-        return header.replace(/^\uFEFF/, '').trim();
-      },
-      complete: (results) => {
+  };
         try {
           if (results.errors && results.errors.length > 0) {
             console.error("CSV parsing errors:", results.errors);
