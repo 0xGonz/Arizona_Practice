@@ -27,6 +27,27 @@ interface LineItem {
   originalLineItem?: string; // Added to preserve original indentation
 }
 
+// Calculate the total value for a line item by summing all entity values
+// If summaryValue is not zero, use that instead (it's already calculated)
+const calculateTotalValue = (item: LineItem): number => {
+  // If the summaryValue is already provided and not zero, use it
+  if (item.summaryValue !== 0) {
+    return item.summaryValue;
+  }
+  
+  // Otherwise, calculate by summing all entity values
+  let total = 0;
+  if (item.entityValues) {
+    Object.values(item.entityValues).forEach(value => {
+      if (typeof value === 'number') {
+        total += value;
+      }
+    });
+  }
+  
+  return total;
+};
+
 interface RecursiveLineItemTableProps {
   data: LineItem[];
   entityColumns: string[];
@@ -181,16 +202,15 @@ export default function RecursiveLineItemTable({
             );
           })}
           
-          {summaryColumn !== 'All Employees' && (
-            <td 
-              className={cn(
-                "py-1 px-2 text-right font-medium whitespace-nowrap text-xs",
-                (item.summaryValue || 0) < 0 ? "text-red-600" : ""
-              )}
-            >
-              {formatCurrency(item.summaryValue || 0)}
-            </td>
-          )}
+          {/* Always display the Total column, calculated as sum of all entity values if summaryValue is 0 */}
+          <td 
+            className={cn(
+              "py-1 px-2 text-right font-medium whitespace-nowrap text-xs",
+              (calculateTotalValue(item) < 0) ? "text-red-600" : ""
+            )}
+          >
+            {formatCurrency(calculateTotalValue(item))}
+          </td>
         </tr>
         
         {/* Render children recursively */}
