@@ -337,22 +337,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Clear all uploads
   app.delete("/api/uploads/clear-all", async (req, res) => {
+    // Use a client with transaction for proper foreign key handling
+    const client = await pool.connect();
+    
     try {
-      // Delete in the correct order to respect foreign key constraints
-      // First, delete the tables that reference csv_uploads
-      await db.execute(`DELETE FROM monthly_financial_data`);
-      await db.execute(`DELETE FROM department_performance`);
-      await db.execute(`DELETE FROM doctor_performance`);
-      await db.execute(`DELETE FROM upload_status`);
+      // Start a transaction to ensure either all operations succeed or all fail
+      await client.query('BEGIN');
       
-      // Then delete the uploads themselves
-      await db.execute(`DELETE FROM csv_uploads`);
+      // Delete from the dependent tables first, in order of their dependencies
+      await client.query('DELETE FROM monthly_financial_data');
+      await client.query('DELETE FROM department_performance');
+      await client.query('DELETE FROM doctor_performance');
+      await client.query('DELETE FROM upload_status');
       
-      console.log("All database data has been cleared");
+      // Then delete the parent records
+      await client.query('DELETE FROM csv_uploads');
+      
+      // Commit the transaction
+      await client.query('COMMIT');
+      
+      console.log("All database data has been cleared successfully");
       res.status(200).json({ success: true, message: "All data cleared" });
     } catch (error) {
+      // If any error occurs, roll back the transaction
+      await client.query('ROLLBACK');
       console.error("Error clearing all data:", error);
       res.status(500).json({ message: "Error clearing data", error: String(error) });
+    } finally {
+      // Always release the client back to the pool
+      client.release();
     }
   });
   
