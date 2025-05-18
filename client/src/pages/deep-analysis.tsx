@@ -85,6 +85,10 @@ const DeepAnalysis = () => {
           const revenue = getProviderRevenue('e', month, provider);
           const expenses = getProviderPayroll('e', month, provider);
           const netIncome = getProviderNetIncome('e', month, provider);
+          // Get payroll data specifically for this provider and month
+          const payroll = monthData.e?.lineItems.find(
+            item => item.name.toLowerCase().includes('total payroll and related expense')
+          )?.values?.[provider] || 0;
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
@@ -94,6 +98,8 @@ const DeepAnalysis = () => {
             revenue,
             expenses,
             netIncome,
+            payroll,
+            otherExpenses: expenses - payroll,
             profitMargin,
             month
           });
@@ -110,6 +116,10 @@ const DeepAnalysis = () => {
           const revenue = getProviderRevenue('o', month, provider);
           const expenses = getProviderPayroll('o', month, provider);
           const netIncome = getProviderNetIncome('o', month, provider);
+          // Get payroll data specifically for this provider and month
+          const payroll = monthData.o?.lineItems.find(
+            item => item.name.toLowerCase().includes('total payroll and related expense')
+          )?.values?.[provider] || 0;
           
           // Calculate profit margin percentage
           const profitMargin = revenue > 0 ? (netIncome / revenue) * 100 : 0;
@@ -119,6 +129,8 @@ const DeepAnalysis = () => {
             revenue,
             expenses,
             netIncome,
+            payroll,
+            otherExpenses: expenses - payroll,
             profitMargin,
             month
           });
@@ -140,6 +152,8 @@ const DeepAnalysis = () => {
           revenue: 0,
           expenses: 0,
           netIncome: 0,
+          payroll: 0,
+          otherExpenses: 0,
           profitMargin: 0,
           count: 0
         });
@@ -149,13 +163,15 @@ const DeepAnalysis = () => {
       existingDoctor.revenue += doctor.revenue;
       existingDoctor.expenses += doctor.expenses;
       existingDoctor.netIncome += doctor.netIncome;
+      existingDoctor.payroll += doctor.payroll || 0;
       existingDoctor.count += 1;
     });
     
-    // Calculate average profit margin
+    // Calculate derived metrics
     doctorMap.forEach(doctor => {
       if (doctor.count > 0) {
         doctor.profitMargin = doctor.revenue > 0 ? (doctor.netIncome / doctor.revenue) * 100 : 0;
+        doctor.otherExpenses = doctor.expenses - doctor.payroll;
       }
     });
     
@@ -176,6 +192,8 @@ const DeepAnalysis = () => {
           revenue: 0,
           expenses: 0,
           netIncome: 0,
+          payroll: 0,
+          otherExpenses: 0,
           profitMargin: 0,
           count: 0
         });
@@ -185,13 +203,15 @@ const DeepAnalysis = () => {
       existingBusiness.revenue += business.revenue;
       existingBusiness.expenses += business.expenses;
       existingBusiness.netIncome += business.netIncome;
+      existingBusiness.payroll += business.payroll || 0;
       existingBusiness.count += 1;
     });
     
-    // Calculate average profit margin
+    // Calculate derived metrics
     businessMap.forEach(business => {
       if (business.count > 0) {
         business.profitMargin = business.revenue > 0 ? (business.netIncome / business.revenue) * 100 : 0;
+        business.otherExpenses = business.expenses - business.payroll;
       }
     });
     
@@ -591,19 +611,13 @@ const DeepAnalysis = () => {
                     fill={COLORS.revenue}
                   />
                   <Bar 
-                    dataKey={(entry) => {
-                      // Calculate non-payroll expenses
-                      return Math.max(0, entry.expenses - (entry.expenses * 0.75)); // Estimate non-payroll expenses
-                    }}
+                    dataKey="otherExpenses"
                     name="Other Expenses" 
                     fill={COLORS.expenses} 
                     stackId="expenses" 
                   />
                   <Bar 
-                    dataKey={(entry) => {
-                      // Estimate payroll expenses at 75% of total expenses
-                      return entry.expenses * 0.75;
-                    }}
+                    dataKey="payroll"
                     name="Est. Payroll" 
                     fill={selectedView === 'doctors' ? COLORS.payrollDoctor : COLORS.payrollBusiness} 
                     stackId="expenses" 
