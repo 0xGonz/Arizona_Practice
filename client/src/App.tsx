@@ -20,10 +20,10 @@ import { useQuery } from "@tanstack/react-query";
 function DataInitializer({ children }: { children: React.ReactNode }) {
   const { setUploadsFromServer, processCSVData, loadCSVContent } = useStore();
   
-  // Fetch upload history from server
+  // Fetch upload history from server with shorter stale time to ensure freshness after deletion
   const { data: uploadData, isSuccess } = useQuery({
     queryKey: ['/api/uploads'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always refetch to ensure we have the most up-to-date data
   });
   
   // First load upload metadata
