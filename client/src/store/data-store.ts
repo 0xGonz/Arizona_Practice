@@ -429,67 +429,97 @@ export const useStore = create<DataStore>((set, get) => ({
     return state;
   }),
   
-  // Clear uploaded data by type
-  clearUploadedData: (type, month) => set(state => {
-    // After updating state, trigger server deletion in background
-    const doServerDelete = async () => {
-      try {
-        if (type === 'all') {
-          // Delete all data from server
-          const deleteParams = {
-            deleteAll: true,
-            confirmDeleteAll: "CONFIRM_DELETE_ALL"
-          };
-          
-          await apiRequest('DELETE', '/api/finance/delete', deleteParams);
-          console.log('Successfully deleted all data from server');
-        } else if (type.startsWith('monthly-') && month) {
-          // Delete specific month/type data
-          const fileType = type;
-          const cleanMonth = month.toLowerCase().trim();
-          
-          // Use the uploads from state
-          const relevantUploads = state.uploadHistory.filter(upload => 
-            upload.type === fileType && upload.month?.toLowerCase() === cleanMonth
-          );
-          
-          const uploadIds = relevantUploads.map(upload => upload.id).filter(id => id !== undefined);
-          
-          if (uploadIds.length > 0) {
-            // Delete each upload individually
-            for (const uploadId of uploadIds) {
-              await apiRequest('DELETE', '/api/finance/delete', { uploadId });
-            }
-            console.log(`Deleted ${uploadIds.length} uploads for ${cleanMonth} ${type} from server`);
-          } else {
-            // If no specific upload IDs, delete by month and type
-            await apiRequest('DELETE', '/api/finance/delete', {
-              month: cleanMonth,
-              fileType: fileType
-            });
-            console.log(`Deleted data for ${cleanMonth} ${type} from server by criteria`);
-          }
-        }
-      } catch (error) {
-        console.error('Error deleting data from server:', error);
-      }
-    };
-    
-    // Schedule the server deletion for after state update
-    setTimeout(doServerDelete, 0);
-    
-    // Update the local state immediately
-    let newState;
-      if (type === 'all') {
-        // Delete all data from server
-        const deleteParams = {
+  // Basic data deletion function - fixed version
+  clearUploadedData: (type, month) => {
+    // Delete all data
+    if (type === 'all') {
+      // Send delete request to server (fire and forget)
+      fetch('/api/finance/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           deleteAll: true,
           confirmDeleteAll: "CONFIRM_DELETE_ALL"
+        })
+      }).catch(err => console.error('Error deleting all data:', err));
+      
+      // Reset the state
+      set({
+        annualData: null,
+        monthlyData: {},
+        uploadHistory: [],
+        uploadStatus: {
+          annual: null,
+          monthly: {}
+        }
+      });
+      return;
+    }
+    
+    // Delete single month/type data
+    if (type.startsWith('monthly-') && month) {
+      const cleanMonth = month.toLowerCase().trim();
+      
+      // Send delete request (fire and forget)
+      fetch('/api/finance/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          month: cleanMonth,
+          fileType: type
+        })
+      }).catch(err => console.error(`Error deleting ${type} data for ${cleanMonth}:`, err));
+      
+      // Update state
+      set(state => {
+        // Create copies of the data
+        const newMonthlyData = {...state.monthlyData};
+        const newUploadStatus = {...state.uploadStatus};
+        
+        // Update monthly data
+        if (newMonthlyData[cleanMonth]) {
+          if (type === 'monthly-e') {
+            newMonthlyData[cleanMonth] = {
+              ...newMonthlyData[cleanMonth],
+              e: null
+            };
+          } else {
+            newMonthlyData[cleanMonth] = {
+              ...newMonthlyData[cleanMonth],
+              o: null
+            };
+          }
+          
+          if (!newMonthlyData[cleanMonth].e && !newMonthlyData[cleanMonth].o) {
+            delete newMonthlyData[cleanMonth];
+          }
+        }
+        
+        // Update status
+        if (newUploadStatus.monthly && newUploadStatus.monthly[cleanMonth]) {
+          if (type === 'monthly-e') {
+            newUploadStatus.monthly[cleanMonth].e = false;
+          } else {
+            newUploadStatus.monthly[cleanMonth].o = false;
+          }
+          
+          if (!newUploadStatus.monthly[cleanMonth].e && !newUploadStatus.monthly[cleanMonth].o) {
+            delete newUploadStatus.monthly[cleanMonth];
+          }
+        }
+        
+        // Filter out history entries
+        const newHistory = state.uploadHistory.filter(
+          upload => !(upload.type === type && upload.month?.toLowerCase() === cleanMonth)
+        );
+        
+        return {
+          ...state,
+          monthlyData: newMonthlyData,
+          uploadStatus: newUploadStatus,
+          uploadHistory: newHistory
         };
-        
-        await apiRequest('DELETE', '/api/finance/delete', deleteParams);
-        
-        console.log('Successfully deleted all data from server');
+      });
       } else if (type.startsWith('monthly-') && month) {
         // Delete specific month/type data
         const fileType = type as CSVFileType;
