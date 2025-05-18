@@ -682,19 +682,9 @@ const DeepAnalysis = () => {
                       'Dr Wright', 'Barnes, James', 'Aggarwal, Nitish', 'Sitzer, Tiarra', "O'Haver"
                     ].includes(d.provider))
                     : 
-                    // Filter for specific business units from O files exactly as listed
-                    topBusinesses.filter(b => [
-                      'MedShip', 'MedShip',
-                      'Therapy, Physical',
-                      'Imaging', 'imaging',
-                      'Pharmacy',
-                      'MRI', 'MRI',
-                      'DME', 'DME',
-                      'NXT STIM',
-                      'UDA', 'UDA',
-                      'Procedure Charges',
-                      'ProMed', 'ProMed'
-                    ].includes(b.provider))
+                    // Use the preconfigured list of business units
+                    // This will display all units even if some have no data
+                    topBusinesses
                   }
                   margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
                 >

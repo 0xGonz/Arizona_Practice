@@ -360,8 +360,12 @@ export const useStore = create<DataStore>((set, get) => ({
     const data = monthlyData[cleanMonth][fileType];
     
     // DEBUG: Print out all line items to see exact names available
-    if (fileType === 'e') {
-      console.log(`${month} ${fileType} file line items:`, data?.lineItems.map(item => item.name));
+    console.log(`${month} ${fileType} file line items:`, data?.lineItems.map(item => item.name));
+    
+    // DEBUG: List all available providers for this month/file type
+    if (data?.lineItems?.length > 0 && data.lineItems[0].entityValues) {
+      console.log(`All available ${fileType} providers in ${month}:`, 
+                  Object.keys(data.lineItems[0].entityValues));
     }
     
     // First and foremost, look specifically for "Total Payroll and Related Expense"
