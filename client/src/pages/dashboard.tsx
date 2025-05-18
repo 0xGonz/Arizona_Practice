@@ -735,7 +735,7 @@ export default function Dashboard() {
         <Card className="shadow-md border-t-4 border-green-400">
           <CardHeader className="bg-gray-50 p-4">
             <CardTitle className="text-lg font-semibold">Profit Margin Analysis</CardTitle>
-            <CardDescription>Monthly profit margin percentage</CardDescription>
+            <CardDescription>Monthly profit margin percentage by data source</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <div className="h-64">
@@ -743,20 +743,65 @@ export default function Dashboard() {
                 <LineChart
                   data={aggregatedData.monthlyTrends.map(month => ({
                     month: month.month,
-                    margin: month.revenue > 0 ? (month.netIncome / month.revenue) * 100 : 0
+                    // Calculate combined margin
+                    margin: month.revenue > 0 ? (month.netIncome / month.revenue) * 100 : 0,
+                    // Calculate E file margin 
+                    eMargin: month.eRevenue > 0 ? (month.eNetIncome / month.eRevenue) * 100 : 0,
+                    // Calculate O file margin
+                    oMargin: month.oRevenue > 0 ? (month.oNetIncome / month.oRevenue) * 100 : 0,
+                    // Calculate average margin
+                    avgMargin: ((month.eRevenue > 0 ? (month.eNetIncome / month.eRevenue) * 100 : 0) + 
+                               (month.oRevenue > 0 ? (month.oNetIncome / month.oRevenue) * 100 : 0)) / 2
                   }))}
                   margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
-                  <Tooltip formatter={(value) => [`${(value as number).toFixed(2)}%`, 'Profit Margin']} />
+                  <Tooltip 
+                    formatter={(value, name) => {
+                      const formattedValue = `${(value as number).toFixed(2)}%`;
+                      if (name === "margin") return [formattedValue, "Combined Margin (E+O)"];
+                      if (name === "eMargin") return [formattedValue, "Employee Margin (E)"];
+                      if (name === "oMargin") return [formattedValue, "Business Margin (O)"];
+                      if (name === "avgMargin") return [formattedValue, "Average Margin"];
+                      return [formattedValue, name];
+                    }} 
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Legend />
                   <Line 
                     type="monotone" 
                     dataKey="margin" 
+                    name="Combined (E+O)"
                     stroke="#10b981" 
                     strokeWidth={2}
                     dot={{ fill: '#10b981', r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="eMargin" 
+                    name="Employee (E)"
+                    stroke="#8884d8" 
+                    strokeWidth={2}
+                    dot={{ fill: '#8884d8', r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="oMargin" 
+                    name="Business (O)"
+                    stroke="#82ca9d" 
+                    strokeWidth={2}
+                    dot={{ fill: '#82ca9d', r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="avgMargin" 
+                    name="Average"
+                    stroke="#ffc658" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={{ fill: '#ffc658', r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
